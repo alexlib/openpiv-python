@@ -1,6 +1,12 @@
+#import sys
+#pip install future # if you have no future module installed
+#if sys.version_info.major <3:
+from __future__ import print_function, absolute_import
+from future.utils import iteritems  #for dict
+
 import os.path as _osp
 
-# the root directory of the package when installed.
+# the root directory of the package when installed.room
 # this is an os independent trick to know where the
 # package is installed, so we can access data files
 # we have provided with the python module

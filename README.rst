@@ -1,4 +1,26 @@
 =======
+port to python3 and tested on 64bit windows 7
+=======
+
+online document/exmaple script is outdated, API changed for same functions, so always use the lasted test script in "openpiv-python/openpiv/tutorial-part1"
+
+one bug fixed in lib.pyx  np.zeros()
+
+tested passed on windows 7 64bit anaconda
+
+migration to python3.4 on ubuntu 14.04 64bit, test passed by running the tutorial 
+
+   >>> sudo apt-get install python3-progressbar  python3-skimage cython3
+   >>> git clone https://github.com/qingfengxia/openpiv-python.git
+   >>> python3 setup.py build_ext --inplace
+   >>> cd openpiv-python/openpiv/tutorial-part1
+   >>> python3 tutorial-part1.py
+
+2015-03-15
+
+pull request will be sent to Alex soon tested
+
+=======
 Warning
 =======
 The OpenPIV Python version is still in its beta. This means that
