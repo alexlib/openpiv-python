@@ -7,8 +7,9 @@ openpiv/src/lib.c
 build/
 *.txt
 /setup.cfg
-openpiv/lib.so
-openpiv/process.so
+openpiv/lib.*
+openpiv/process.*
+openpiv/*.py.bak
 mark_data/Camera 1-120.tif
 mark_data/Camera 1-120.tif.png
 mark_data/Camera 1-121.tif

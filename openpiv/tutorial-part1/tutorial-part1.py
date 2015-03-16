@@ -1,5 +1,7 @@
-import sys
-sys.path.append('/Users/alex/Documents/OpenPIV/openpiv-python')
+import sys,os.path
+openpivfolder=os.path.abspath(os.path.join(os.path.dirname(__file__),'../..'))
+#print openpivfolder
+sys.path.append(openpivfolder)
 
 import openpiv.tools
 import openpiv.process

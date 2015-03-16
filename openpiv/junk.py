@@ -39,7 +39,8 @@ class ProcessParameters( UserDict ):
         # cast parameters to the right type.
         # this trick is necessary because the ConfigParser
         # class only understands strings
-        for k, v in self.iteritems():
+        # Py3 porting: changed from self.iteritems() to self.items()  it should works but not efficient in Py2
+        for k, v in self.items():
             try:
                 self[k] = int(v)
             except ValueError:
@@ -52,8 +53,8 @@ class ProcessParameters( UserDict ):
         """
         Pretty print all the processing parameters.
         """
-        for k, v in self.iteritems():
-            print "%s = %s" % ( k.rjust(30), repr(v).ljust(30) )
+        for k, v in self.items():
+            print("%s = %s" % ( k.rjust(30), repr(v).ljust(30) ))
 
 class Hdf5Database( ):
     """
