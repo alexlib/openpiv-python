@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/Users/alex/anaconda/bin/python
 """
 Copyright (C) 2011  www.openpiv.net
 
