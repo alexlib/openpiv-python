@@ -1,5 +1,6 @@
 # OpenPIV
 [![Build Status](https://travis-ci.org/OpenPIV/openpiv-python.svg?branch=master)](https://travis-ci.org/OpenPIV/openpiv-python)
+[![DOI](https://zenodo.org/badge/4213/OpenPIV/openpiv-python.svg)](https://zenodo.org/badge/latestdoi/4213/OpenPIV/openpiv-python)
 
 OpenPIV consists in a Python and Cython modules for scripting and executing the analysis of 
 a set of PIV image pairs. In addition, a Qt graphical user interface is in 
@@ -57,10 +58,4 @@ The OpenPIV documentation is available on the project web page at <http://openpi
 3. Zachary J. Taylor  
 4. David Lasagna  
 5. Mathias Aubert
-
-# Tutorial online (zero installation)
-
-Run tutorial on Binder with automatic installation of openpiv (and progressbar):
-
-[![Binder](http://mybinder.org/badge.svg)](http://mybinder.org/repo/alexlib/openpiv-python/openpiv/examples/tutorial-part1/openpiv-python-tutorial-part1.ipynb)
 
