@@ -8,6 +8,8 @@ import openpiv.process
 import openpiv.scaling
 import openpiv.preprocess
 from skimage import io
+from matplotlib.pyplot import imshow
+import numpy as np
 
 # %pylab inline
 

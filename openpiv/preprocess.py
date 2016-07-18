@@ -62,7 +62,7 @@ def dynamic_masking(image,method='edges',filter_size=7,threshold=0.005):
     imshow(frame_a) # masked 
         
     """
-    imcopy = np.copy(image)
+    imcopy = np.copy(img_as_float(image))
     # stretch the histogram
     image = exposure.rescale_intensity(img_as_float(image), in_range=(0, 1))
     # blur the image, low-pass
