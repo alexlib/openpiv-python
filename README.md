@@ -1,5 +1,5 @@
 # OpenPIV
-[![Build Status](https://travis-ci.org/OpenPIV/openpiv-python.svg?branch=master)](https://travis-ci.org/OpenPIV/openpiv-python)
+[![Build Status](https://travis-ci.org/alexlib/openpiv-python.svg?branch=master)](https://travis-ci.org/alexlib/openpiv-python)
 
 OpenPIV consists in a Python and Cython modules for scripting and executing the analysis of 
 a set of PIV image pairs. In addition, a Qt graphical user interface is in 
