@@ -2,7 +2,7 @@ include *.md
 include *.sh
 include *.txt
 include INSTALL
-include MANIFEST
+include LICENSE.txt
 include MILESTONES
 include TODO
 recursive-include openpiv *.bat
