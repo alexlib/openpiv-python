@@ -1,12 +1,8 @@
-# -*- coding: utf-8 -*-
-
-# Form implementation generated from reading ui file 'openpiv/data/ui/aboutwindow.ui'
-#
-# Created by: PyQt4 UI code generator 4.11.4
-#
-# WARNING! All changes made in this file will be lost!
-
-from PyQt4 import QtCore, QtGui
+#!/usr/bin/env python
+import sys
+# from PyQt import QtCore, QtGui, uic
+from PyQt5.QtWidgets import QMainWindow, QApplication
+from PyQt5 import QtCore, QtGui, uic
 
 try:
     _fromUtf8 = QtCore.QString.fromUtf8
@@ -101,5 +97,7 @@ class Ui_AboutWindow(object):
         self.label_2.setText(_translate("AboutWindow", "URAPIV for Qt 4 - Version 0.0", None))
         self.label_3.setText(_translate("AboutWindow", "Adapted to Qt 4 by Zachary Taylor", None))
         self.label_4.setText(_translate("AboutWindow", "Original version by Alex Liberzon and Roi Gurka", None))
+        
+        
+import ui_resources_rc
 
-import images_rc

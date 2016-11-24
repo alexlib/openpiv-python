@@ -16,12 +16,35 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 """
 
-from PySide import QtGui
+#!/usr/bin/env python
+import sys
+# from PyQt import QtCore, QtGui, uic
+from PyQt5.QtWidgets import QMainWindow, QApplication
+from PyQt5 import QtCore, QtGui, uic
+
+try:
+    _fromUtf8 = QtCore.QString.fromUtf8
+except AttributeError:
+    def _fromUtf8(s):
+        return s
+
+qtCreatorFile = "ui/mainwindow.ui" # Enter file here.
+ 
+Ui_MainWindow, QtBaseClass = uic.loadUiType(qtCreatorFile)
+
 
 import ui_mainwindow 
 
-class MainWindow(QtGui.QMainWindow, ui_mainwindow.Ui_MainWindow):
-    def __init__(self, parent=None):
-        super(MainWindow, self).__init__(parent)
-        self.setupUi(self)
+class MyApp(QMainWindow, Ui_MainWindow):
+    def __init__(self):
+        super(MyApp, self).__init__()
+        QMainWindow.__init__(self)
+        self.ui = Ui_MainWindow()
+        self.ui.setupUi(self)    
+        
+if __name__ == "__main__":
+    app = QApplication(sys.argv)
+    window = MyApp()
+    window.show()
+    sys.exit(app.exec_())
         

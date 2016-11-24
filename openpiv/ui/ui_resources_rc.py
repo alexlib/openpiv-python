@@ -1,13 +1,16 @@
-# -*- coding: utf-8 -*-
+#!/usr/bin/env python
+import sys
+# from PyQt import QtCore, QtGui, uic
+from PyQt5.QtWidgets import QMainWindow, QApplication
+from PyQt5 import QtCore, QtGui, uic
 
-# Resource object code
-#
-# Created: Fri Apr 25 11:33:15 2014
-#      by: The Resource Compiler for PyQt (Qt v4.8.6)
-#
-# WARNING! All changes made in this file will be lost!
+try:
+    _fromUtf8 = QtCore.QString.fromUtf8
+except AttributeError:
+    def _fromUtf8(s):
+        return s
 
-from PySide import QtCore
+
 
 qt_resource_data = "\
 \x00\x00\x06\x33\

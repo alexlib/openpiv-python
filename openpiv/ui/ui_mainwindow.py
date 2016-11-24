@@ -1,14 +1,15 @@
-#!/Users/alex/anaconda/bin/python
-# -*- coding: utf-8 -*-
+#!/usr/bin/env python
+import sys
+# from PyQt import QtCore, QtGui, uic
+from PyQt5.QtWidgets import QMainWindow, QApplication
+from PyQt5 import QtCore, QtGui, uic
 
-# Form implementation generated from reading ui file 'openpiv/data/ui/mainwindow.ui'
-#
-# Created: Fri Apr 25 11:33:15 2014
-#      by: pyside-uic 0.2.14 running on PySide 1.2.1
-#
-# WARNING! All changes made in this file will be lost!
+try:
+    _fromUtf8 = QtCore.QString.fromUtf8
+except AttributeError:
+    def _fromUtf8(s):
+        return s
 
-from PySide import QtCore, QtGui
 
 class Ui_MainWindow(object):
     def setupUi(self, MainWindow):
