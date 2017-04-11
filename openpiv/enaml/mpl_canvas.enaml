@@ -11,6 +11,7 @@
 """
 import os
 import numpy as np
+
 from enaml.image import Image
 from enaml.layout.api import vbox, hbox, spacer
 from enaml.widgets.api import (
@@ -25,7 +26,7 @@ from matplotlib.cm import gray
 
 
 import sys
-sys.path.append('/Users/alex/Documents/OpenPIV/openpiv-python')
+sys.path.append('/Users/alex/Documents/OpenPIV/alexlib/openpiv-python')
 
 import openpiv.tools
 import openpiv.process
@@ -52,12 +53,12 @@ ax2.imshow(img2,cmap=gray)
 
 fig3 = Figure()
 ax3 = fig1.add_subplot(111)
-a = np.loadtxt('exp1_001.txt')
+a = np.loadtxt('images/exp1_001.txt')
 invalid = a[:,4].astype('bool')
 valid = ~invalid
 
-xmax=np.amax(a[:,0]))
-ymax=np.amax(a[:,1]))
+xmax=np.amax(a[:,0])
+ymax=np.amax(a[:,1])
 ax3.imshow(img1, origin='lower', cmap="Greys_r",extent=[0.,xmax,0.,ymax])
 ax3.hold(True)
 ax3.quiver(a[invalid,0],a[invalid,1],a[invalid,2],a[invalid,3],color='r')
@@ -162,10 +163,10 @@ enamldef Main(Window): main:
 
                     x, y, u, v = openpiv.scaling.uniform(x, y, u, v, scaling_factor = 96.52 )
 
-                    openpiv.tools.save(x, y, u, v, mask, 'exp1_001.txt' )
+                    openpiv.tools.save(x, y, u, v, mask, 'images/exp1_001.txt' )
                     
                     print 'Done'
                     
 
-                    # openpiv.tools.display_vector_field('exp1_001.txt', scale=100, width=0.0025)
+                    # openpiv.tools.display_vector_field('images/exp1_001.txt', scale=100, width=0.0025)
                     

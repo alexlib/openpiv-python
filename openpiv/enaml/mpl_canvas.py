@@ -9,11 +9,11 @@ import enaml
 from enaml.qt.qt_application import QtApplication
 
 import sys
-sys.path.append('/Users/alex/Documents/OpenPIV/openpiv-python')
+sys.path.append('/Users/alex/Documents/OpenPIV/alexlib/openpiv-python')
 
-import openpiv.tools
-import openpiv.process
-import openpiv.scaling
+# import openpiv.tools
+# import openpiv.process
+# import openpiv.scaling
 import numpy as np
 
 from atom.api import Atom, Unicode, Range, Bool, Value, Int, Tuple, observe
