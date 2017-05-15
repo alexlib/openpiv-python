@@ -19,42 +19,38 @@ The dependencies are:
 * `Scipy <http://numpy.scipy.org/>`_
 * `Numpy <http://www.scipy.org/>`_
 * `Cython <http://cython.org/>`_
+* `Scikit-image <http://scikit-image.org/>`_
 
-On all platforms, the following Python distributions arerecommended:
+The Anaconda Python distribution is recommended for the simplest installation of dependicies:
 
-* Canopy <http://www.enthought.com>  
-* Anaconda <https://store.continuum.io/cshop/anaconda/>  
-* PythonXY <https://code.google.com/p/pythonxy/>  
-* WinPython <http://winpython.sourceforge.net/>  
+* Anaconda <https://store.continuum.io/cshop/anaconda/>   
 
-How to install the dependencies on Linux
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-On a Linux platform installing these dependencies should be trick. Often, if not always, 
-python is installed by default, while the other dependencies should appear in your package
-manager.
+How to install using Conda
+^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-How to install the dependencies on Windows
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-On Windows all these dependencies, as well as several other useful packages, can be installed
-using the Python(x,y) distribution, available at http://www.pythonxy.com/. Note: Install it in Custom Directories, 
-without spaces in the directory names (i.e. Program Files are prohibited), e.g. C:\Pythonxy\
+    conda install -c conda-forge openpiv
 
 
-How to install the dependencies on a Mac
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-The binary (32 or 64 bit) Enthought Python Distribution (EPD) is recommended.  Visit http://www.enthought.com. However, if you use EPD Free distribution, you need to install Cython from http://www.cython.org
+How to install using `pip`
+^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+    pip2 install OpenPIV
+    
 
-Missing package ``progressbar``
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ 
+If you encounter a missing package ``progressbar``
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ 
 
 Some distributions lack `progressbar` package. Install it separately using `pip`
 
+    conda install progressbar
+    
+or
+    
     pip install progressbar
 
 
-Get OpenPIV source code!
-========================
+If you wish to undertand the details - get the source code!
+===========================================================
 
 At this moment the only way to get OpenPIV's source code is using git. 
 `Git <http://en.wikipedia.org/wiki/Git_%28software%29>`_ Git is a distributed revision control system and 
@@ -143,17 +139,6 @@ the same error as above:
 .. where ``$DIR`` is the folder you want ot install OpenPIV in. If you want to install it system
 .. wide omit the ``--prefix`` option, but you should have root priviles to do so. Remember to 
 .. update the PYTHONPATH environment variable if you used a custom installation directory.
-
-
-.. Download pre-built binary distributions
-.. =======================================
-
-.. For Windows we provide pre-built distributions which can be used without the hassles
-.. of compilation and other boring things you may not want to dig into. This is currently a work
-.. in progress. Check back soon!
-
-
-
 
 
 Having problems?
