@@ -48,6 +48,12 @@ or
     
     pip install progressbar
 
+If you experience a problem installing Cython, follow these instructions:  
+=========================================================================  
+
+    sudo apt-get install cython python-numpy python-scipy  
+    
+    pip2.7 install OpenPIV  
 
 If you wish to undertand the details - get the source code!
 ===========================================================
