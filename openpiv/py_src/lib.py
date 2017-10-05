@@ -1,18 +1,12 @@
 """A module for various utilities and helper functions"""
 
 import numpy as np
-cimport numpy as np
-cimport cython
 
-DTYPEf = np.float
-ctypedef np.float_t DTYPEf_t
-DTYPEi = np.int
-ctypedef np.int_t DTYPEi_t
+DTYPEi = np.int32
+DTYPEf = np.float64
 
 
-@cython.boundscheck(False) # turn of bounds-checking for entire function
-@cython.wraparound(False) # turn of bounds-checking for entire function
-def replace_nans(np.ndarray[DTYPEf_t, ndim=2] array, int max_iter, float tol, int kernel_size=2, str method='disk'):
+def replace_nans(array, max_iter=3, tol=1e-3, kernel_size=2, method='disk'):
     """Replace NaN elements in an array using an iterative image inpainting algorithm.
     
     The algorithm is the following:
@@ -75,15 +69,12 @@ def replace_nans(np.ndarray[DTYPEf_t, ndim=2] array, int max_iter, float tol, in
         
     """
     
-    cdef int i, j, I, J, it, k, l
-    cdef float n
-
-    cdef np.ndarray[DTYPEf_t, ndim=2] kernel = np.empty( (2*kernel_size+1, 2*kernel_size+1), dtype=DTYPEf ) 
+    kernel = np.empty( (2*kernel_size+1, 2*kernel_size+1), dtype=DTYPEf ) 
     
-    cdef np.ndarray[DTYPEi_t, ndim=1] inans = np.empty([array.shape[0]*array.shape[1]], dtype=DTYPEi)
-    cdef np.ndarray[DTYPEi_t, ndim=1] jnans = np.empty([array.shape[0]*array.shape[1]], dtype=DTYPEi)
+    inans = np.empty([array.shape[0]*array.shape[1]], dtype=DTYPEi)
+    jnans = np.empty([array.shape[0]*array.shape[1]], dtype=DTYPEi)
 
-    cdef np.ndarray[DTYPEi_t, ndim=1] iter_seeds = np.zeros(max_iter, dtype=DTYPEi)
+    iter_seeds = np.zeros(max_iter, dtype=DTYPEi)
 
     # indices where array is NaN
     inans, jnans = [x.astype(DTYPEi) for x in np.nonzero(np.isnan(array))]
@@ -92,8 +83,8 @@ def replace_nans(np.ndarray[DTYPEf_t, ndim=2] array, int max_iter, float tol, in
     n_nans = len(inans)
     
     # arrays which contain replaced values to check for convergence
-    cdef np.ndarray[DTYPEf_t, ndim=1] replaced_new = np.zeros( n_nans, dtype=DTYPEf)
-    cdef np.ndarray[DTYPEf_t, ndim=1] replaced_old = np.zeros( n_nans, dtype=DTYPEf)
+    replaced_new = np.zeros( n_nans, dtype=DTYPEf)
+    replaced_old = np.zeros( n_nans, dtype=DTYPEf)
     
     # depending on kernel type, fill kernel array
     if method == 'localmean':

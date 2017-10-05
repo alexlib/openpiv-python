@@ -1,111 +1,57 @@
-import sys
-import glob
-import numpy
+import logging
+from setuptools.extension import Extension
+from setuptools.command.build_ext import build_ext
+from distutils.errors import CCompilerError, DistutilsExecError, DistutilsPlatformError
+
+logging.basicConfig()
+log = logging.getLogger(__file__)
+
+ext_errors = (CCompilerError, DistutilsExecError, DistutilsPlatformError, IOError)
+
+class BuildFailed(Exception):
+    pass
+
+def construct_build_ext(build_ext):
+    class WrappedBuildExt(build_ext):
+        # This class allows C extension building to fail.
+        def run(self):
+            try:
+                build_ext.run(self)
+            except DistutilsPlatformError as x:
+                raise BuildFailed(x)
+
+        def build_extension(self, ext):
+            try:
+                build_ext.build_extension(self, ext)
+            except ext_errors as x:
+                raise BuildFailed(x)
+    return WrappedBuildExt
+
+setup_args = {'name': 'openpiv', 'license': 'BSD', 'author': 'xxx',
+    'packages': ['openpiv', 'openpiv.py_src', 'openpiv.c_src'],
+    'cmdclass': {}
+    }
+
+ext_modules = [Extension("openpiv.c_src.lib", ["openpiv/c_src/lib.c"]),\
+Extension("openpiv.c_src.process", ["openpiv/c_src/process.c"])]
+cmd_classes = setup_args.setdefault('cmdclass', {})
 
 try:
-    from setuptools import setup
-    from setuptools import Extension
-except ImportError:
-    from distutils.core import setup
-    from distutils.extension import Extension
-#
-# Force `setup_requires` stuff like Cython to be installed before proceeding
-#
-from setuptools.dist import Distribution
-Distribution(dict(setup_requires='Cython'))
+    # try building with c code :
+    setup_args['cmdclass']['build_ext'] = construct_build_ext(build_ext)
+    setup(ext_modules=ext_modules, **setup_args)
+except BuildFailed as ex:
+    log.warn(ex)
+    log.warn("The C extension could not be compiled")
 
-try:
-    from Cython.Distutils import build_ext
-except ImportError:
-    print("Could not import Cython.Distutils. Install `cython` and rerun.")
-    sys.exit(1)
-    
+    ## Retry to install the openpiv without C extensions :
+    # Remove any previously defined build_ext command class.
+    if 'build_ext' in setup_args['cmdclass']:
+        del setup_args['cmdclass']['build_ext']
+    if 'build_ext' in cmd_classes:
+        del cmd_classes['build_ext']
 
-
-# from distutils.core import setup, Extension
-# from Cython.Distutils import build_ext
-
-
-
-# Build extensions 
-module1 = Extension(    name         = "openpiv.process",
-                        sources      = ["openpiv/src/process.pyx"],
-                        include_dirs = [numpy.get_include()],
-                    )
-                    
-module2 = Extension(    name         = "openpiv.lib",
-                        sources      = ["openpiv/src/lib.pyx"],
-                        include_dirs = [numpy.get_include()],
-                    )
-
-# a list of the extension modules that we want to distribute
-ext_modules = [module1, module2]
-
-
-# Package data are those filed 'strictly' needed by the program
-# to function correctly.  Images, default configuration files, et cetera.
-package_data =  [ 'data/defaults-processing-parameters.cfg', 
-                  'data/ui_resources.qrc',
-                  'data/images/*.png',
-                  'data/icons/*.png',
-                ]
-
-
-# data files are other files which are not required by the program but 
-# we want to ditribute as well, for example documentation.
-data_files = [ ('openpiv/examples/tutorial-part1', glob.glob('openpiv/examples/tutorial-part1/*') ),
-               ('openpiv/examples/masking_tutorial', glob.glob('openpiv/examples/masking_tutorial/*') ),
-               ('openpiv/docs/openpiv/examples/example1', glob.glob('openpiv/docs/examples/example1/*') ),
-               ('openpiv/docs/openpiv/examples/gurney-flap', glob.glob('openpiv/docs/examples/gurney-flap/*') ),
-               ('openpiv/docs/openpiv', ['README.md'] ),
-               ('openpiv/data/ui', glob.glob('openpiv/data/ui/*.ui') ),
-             ]
-
-
-# packages that we want to distribute. THis is how
-# we have divided the openpiv package.
-packages = ['openpiv', 'openpiv.ui']
-
-
-setup(  name = "OpenPIV",
-        version = "0.20.8",
-        author = "OpenPIV contributors",
-        author_email = "openpiv-users@googlegroups.com",
-        description = "An open source software for PIV data analysis",
-        license = "GNU General Public License v3 (GPLv3)",
-        url = "http://www.openpiv.net",
-        long_description =  """OpenPIV is a set of open source algorithms and methods
-                            for the state-of-the-art experimental tool
-                            of Particle Image Velocimetry (PIV) which 
-                            are free, open, and easy to operate.""",
-                            
-        ext_modules = ext_modules, 
-        packages = packages,
-        cmdclass = {'build_ext': build_ext},
-        package_data = {'': package_data},
-        data_files = data_files,
-        install_requires = ['scipy','numpy','cython','scikit-image >= 0.12.0','progressbar2 >= 3.8.1'],
-        classifiers = [
-        # PyPI-specific version type. The number specified here is a magic constant
-        # with no relation to this application's version numbering scheme. *sigh*
-        'Development Status :: 4 - Beta',
-
-        # Sublist of all supported Python versions.
-        'Programming Language :: Python :: 2.7',
-        'Programming Language :: Python :: 3.6',
-
-        # Sublist of all supported platforms and environments.
-        'Environment :: Console',
-        'Environment :: MacOS X',
-        'Environment :: Win32 (MS Windows)',
-        'Environment :: X11 Applications',
-
-        # Miscellaneous metadata.
-        'Intended Audience :: Science/Research',
-        'License :: OSI Approved :: GNU General Public License v3 (GPLv3)',
-        'Natural Language :: English',
-        'Operating System :: OS Independent',
-        'Topic :: Scientific/Engineering',
-    ]
-)
-
+    # If this new 'setup' call don't fail, the openpiv 
+    # will be successfully installed, without the C extension :
+    setup(**setup_args)
+    log.info("Plain-Python installation succeeded.")

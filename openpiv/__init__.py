@@ -1,4 +1,4 @@
 try:
-    from .c_src import *
+    from .c_src import lib, process
 except ImportError:
-    from .src import *
+    from .py_src import lib, process
