@@ -1,13 +1,7 @@
 #!/usr/bin/env python
 import sys
-
-if 'openpiv' not in sys.path:
-    sys.path.append('/Users/alex/Documents/OpenPIV/alexlib/openpiv-python')
-
-from openpiv import process
-from openpiv.pyprocess import piv
+import openpiv
 import numpy as np
-# import matplotlib.pyplot as plt
 
 
 from skimage.util import random_noise
@@ -19,7 +13,7 @@ def test_piv():
     frame_a = random_noise(frame_a)
     frame_a = img_as_ubyte(frame_a)
     frame_b = np.roll(np.roll(frame_a,3,axis=1),2,axis=0)
-    u,v = piv(frame_a,frame_b,window_size=32)
+    u,v = openpiv.process.piv(frame_a,frame_b,window_size=32)
     # print u,v
     assert(np.max(np.abs(u-3)) < 0.2)
     assert(np.max(np.abs(v+2)) < 0.2)
@@ -30,7 +24,7 @@ def test_piv_smaller_window():
     frame_a = random_noise(frame_a)
     frame_a = img_as_ubyte(frame_a)
     frame_b = np.roll(np.roll(frame_a,-3,axis=1),-2,axis=0)
-    u,v = piv(frame_a,frame_b,window_size=16,search_size=32)
+    u,v = openpiv.process.piv(frame_a,frame_b,window_size=16,search_size=32)
     # print u,v
     assert(np.max(np.abs(u+3)) < 0.2)
     assert(np.max(np.abs(v-2)) < 0.2)

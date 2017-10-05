@@ -1,6 +1,17 @@
 import logging
-from setuptools.extension import Extension
-from setuptools.command.build_ext import build_ext
+import numpy
+
+try:
+    from setuptools import setup
+    from setuptools import Extension
+    from setuptools.command.build_ext import build_ext
+    # from Cython.Distutils import build_ext
+except ImportError:
+    from distutils.core import setup
+    from distutils.extension import Extension
+    from distutils.command.build_ext import build_ext
+
+# from setuptools.extension import Extension
 from distutils.errors import CCompilerError, DistutilsExecError, DistutilsPlatformError
 
 logging.basicConfig()
@@ -27,13 +38,26 @@ def construct_build_ext(build_ext):
                 raise BuildFailed(x)
     return WrappedBuildExt
 
-setup_args = {'name': 'openpiv', 'license': 'BSD', 'author': 'xxx',
+setup_args = {'name': 'openpiv', 'license': 'GPL', 'author': 'OpenPIV',
     'packages': ['openpiv', 'openpiv.py_src', 'openpiv.c_src'],
     'cmdclass': {}
     }
+    
+USE_CYTHON = False  # command line option, try-import, ...
 
-ext_modules = [Extension("openpiv.c_src.lib", ["openpiv/c_src/lib.c"]),\
-Extension("openpiv.c_src.process", ["openpiv/c_src/process.c"])]
+ext = '.pyx' if USE_CYTHON else '.c'
+
+ext_modules = [Extension(
+                        name         = "openpiv.process",
+                        sources      = ["openpiv/c_src/process"+ext],
+                        include_dirs = [numpy.get_include()],
+                        ),
+                Extension(    name         = "openpiv.lib",
+                        sources      = ["openpiv/c_src/lib"+ext],
+                        include_dirs = [numpy.get_include()],
+                    )
+                ]
+
 cmd_classes = setup_args.setdefault('cmdclass', {})
 
 try:
