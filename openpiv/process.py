@@ -1,4 +1,5 @@
 """This module is dedicated to advanced algorithms for PIV image analysis."""
+from __future__ import division
 
 import numpy as np
 import numpy.ma as ma
@@ -13,14 +14,8 @@ from progressbar import *
 from pylab import * 
 
 
-#cimport numpy as np
-#cimport cython
-#
 DTYPEi = np.int32
-#ctypedef np.int32_t DTYPEi_t
-#
 DTYPEf = np.float64
-#ctypedef np.float64_t DTYPEf_t
 
 
 def extended_search_area_piv( frame_a, 
@@ -145,17 +140,17 @@ def extended_search_area_piv( frame_a,
                 for l in range( search_area_size ):
                     
                     # fill with zeros if we are out of the borders
-                    if i+window_size/2-search_area_size/2+k < 0 or i+window_size/2-search_area_size/2+k >= frame_b.shape[0]:
+                    if i+window_size//2-search_area_size//2+k < 0 or i+window_size//2-search_area_size//2+k >= frame_b.shape[0]:
                         search_area[k,l] = 0
-                    elif j+window_size/2-search_area_size/2+l < 0 or j+window_size/2-search_area_size/2+l >= frame_b.shape[1]:
+                    elif j+window_size//2-search_area_size//2+l < 0 or j+window_size//2-search_area_size//2+l >= frame_b.shape[1]:
                         search_area[k,l] = 0
                     else:
-                        search_area[k,l] = frame_b[ i+window_size/2-search_area_size/2+k, j+window_size/2-search_area_size/2+l ]
+                        search_area[k,l] = frame_b[ i+window_size//2-search_area_size//2+k, j+window_size//2-search_area_size//2+l ]
                        
-            imshow(window_a,cmap=cm.gray)
-            show()
-            imshow(search_area,cmap=cm.gray)
-            show()
+            # imshow(window_a,cmap=cm.gray)
+            # show()
+            # imshow(search_area,cmap=cm.gray)
+            # show()
         
             # compute correlation map 
             if any(window_a.flatten()):

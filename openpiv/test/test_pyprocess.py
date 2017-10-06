@@ -1,13 +1,6 @@
-#!/usr/bin/env python
-import sys
-
-if 'openpiv' not in sys.path:
-    sys.path.append('/Users/alex/Documents/OpenPIV/alexlib/openpiv-python')
-
 from openpiv import process
 from openpiv.pyprocess import piv
 import numpy as np
-# import matplotlib.pyplot as plt
 
 
 from skimage.util import random_noise

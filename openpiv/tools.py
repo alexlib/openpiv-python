@@ -30,7 +30,7 @@ import matplotlib.pyplot as pl
 import matplotlib.patches as pt
 import matplotlib.image as mpltimg
 from scipy import ndimage
-from skimage import filters, io
+from skimage import filter, io
 from builtins import range
 
 

@@ -1,5 +1,5 @@
 """This module is dedicated to advanced algorithms for PIV image analysis."""
-
+from __future__ import division
 import numpy as np
 import numpy.ma as ma
 from numpy.fft import rfft2,irfft2,fftshift
@@ -154,12 +154,12 @@ def extended_search_area_piv( np.ndarray[DTYPEi_t, ndim=2] frame_a,
                 for l in range( search_area_size ):
                     
                     # fill with zeros if we are out of the borders
-                    if i+window_size/2-search_area_size/2+k < 0 or i+window_size/2-search_area_size/2+k >= frame_b.shape[0]:
+                    if i+window_size//2-search_area_size//2+k < 0 or i+window_size//2-search_area_size//2+k >= frame_b.shape[0]:
                         search_area[k,l] = 0
-                    elif j+window_size/2-search_area_size/2+l < 0 or j+window_size/2-search_area_size/2+l >= frame_b.shape[1]:
+                    elif j+window_size//2-search_area_size//2+l < 0 or j+window_size//2-search_area_size//2+l >= frame_b.shape[1]:
                         search_area[k,l] = 0
                     else:
-                        search_area[k,l] = frame_b[ i+window_size/2-search_area_size/2+k, j+window_size/2-search_area_size/2+l ]
+                        search_area[k,l] = frame_b[ i+window_size//2-search_area_size//2+k, j+window_size//2-search_area_size//2+l ]
                         
             # compute correlation map 
             if any(window_a.flatten()):
