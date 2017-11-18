@@ -29,7 +29,7 @@ import matplotlib.pyplot as plt
 
 
 
-def get_coordinates(image_size, window_size, overlap):
+def get_coordinates(image_size, window_size, search_area_size, overlap):
     """Compute the x, y coordinates of the centers of the interrogation windows.
 
     Parameters
@@ -41,6 +41,9 @@ def get_coordinates(image_size, window_size, overlap):
 
     window_size: int
         the size of the interrogation windows.
+        
+    search_area_size: int
+        the size of the interrogation window in the next frame
 
     overlap: int
         the number of pixel by which two adjacent interrogation
@@ -59,8 +62,20 @@ def get_coordinates(image_size, window_size, overlap):
 
     """
 
+    if search_area_size is None:
+        search_area_size = window_size
+    
+    if overlap >= window_size:
+        raise ValueError('Overlap has to be smaller than the window_size')
+    
+    if search_area_size < window_size:
+        raise ValueError('Search size cannot be smaller than the window_size')
+        
+    # get field shape
+    # n_rows, n_cols = get_field_shape(image_size, search_area_size, overlap )
+
     # get shape of the resulting flow field
-    field_shape = get_field_shape(image_size, window_size, overlap)
+    field_shape = get_field_shape(image_size, search_area_size, overlap)
 
     # compute grid coordinates of the interrogation window centers
     x = np.arange(field_shape[1]) * (window_size -
@@ -238,11 +253,14 @@ def find_subpixel_peak_position(corr, subpixel_method='gaussian'):
 
     # initialization
     # default_peak_position = (np.floor(corr.shape[0] / 2.), np.floor(corr.shape[1] / 2.))
-    default_peak_position = (0,0)
+    default_peak_position = (0.0, 0.0)
 
     
     # the peak locations
     peak1_i, peak1_j, dummy = find_first_peak(corr)
+    if dummy == 0:
+        print('corr max is zero')
+        import pdb; pdb.set_trace()
     
 
     try:
@@ -253,8 +271,10 @@ def find_subpixel_peak_position(corr, subpixel_method='gaussian'):
         cd = corr[peak1_i,   peak1_j - 1]
         cu = corr[peak1_i,   peak1_j + 1]
 
+        
+
         # gaussian fit
-        if np.any(np.array([c, cl, cr, cd, cu]) < 0) and subpixel_method == 'gaussian':
+        if np.any(np.array([c, cl, cr, cd, cu]) <= 0) and subpixel_method == 'gaussian':
             subpixel_method = 'centroid'
 
         try:
@@ -263,17 +283,21 @@ def find_subpixel_peak_position(corr, subpixel_method='gaussian'):
                                       ((peak1_j - 1) * cd + peak1_j * c + (peak1_j + 1) * cu) / (cd + c + cu))
 
             elif subpixel_method == 'gaussian':
-                subp_peak_position = (peak1_i + ((log(cl) - log(cr)) / (2 * log(cl) - 4 * log(c) + 2 * log(cr))),
+                # print(c,cl,cr,cd,cu,peak1_i,peak1_j)
+                subp_peak_position = (peak1_i + ( (log(cl) - log(cr)) / (2 * log(cl) - 4 * log(c) + 2 * log(cr))),
                                       peak1_j + ((log(cd) - log(cu)) / (2 * log(cd) - 4 * log(c) + 2 * log(cu))))
+                # print(subp_peak_position)
 
             elif subpixel_method == 'parabolic':
                 subp_peak_position = (peak1_i + (cl - cr) / (2 * cl - 4 * c + 2 * cr),
                                       peak1_j + (cd - cu) / (2 * cd - 4 * c + 2 * cu))
 
         except:
+            import pdb; pdb.set_trace()
             subp_peak_position = default_peak_position
 
     except IndexError:
+        import pdb; pdb.set_trace()
         subp_peak_position = default_peak_position
         
 
@@ -573,7 +597,7 @@ def extended_search_area_piv(
 
             window_a = frame_a[il:ir, jt:jb]
 
-            if np.any(window_a):
+            if np.logical_and(np.any(window_a),np.any(window_b)):
                 corr = correlate_windows(window_a, window_b,
                                          corr_method=corr_method, 
                                          nfftx=nfftx, nffty=nffty)

@@ -77,7 +77,7 @@ def display_vector_field( filename, on_img=False, image_name='None', window_size
     
     a = np.loadtxt(filename)
     fig=pl.figure()
-    pl.hold(True)
+    # pl.hold(True)
     if on_img: # plot a background image
         im = imread(image_name)
         im = negative(im) #plot negative of the image for more clarity
