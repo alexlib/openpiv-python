@@ -24,18 +24,18 @@ jobs:
     maxParallel: 4
 
   steps:
-  - task: UsePythonVersion@0
-    inputs:
-      versionSpec: '$(python.version)'
-      architecture: 'x64'
+  - script: conda env create --quiet --file environment.yml
+    displayName: Create Anaconda environment
+  
+- bash: |
+    source activate openpiv
+    pytest -m unit --junitxml=junit/unit-test.xml
+  displayName: 'Unit tests'
 
-  - script: python -m pip install --upgrade pip && pip install -r requirements.txt
-    displayName: 'Install dependencies'
-
-  - script: |
-      pip install pytest
-      pytest tests --doctest-modules --junitxml=junit/test-results.xml
-    displayName: 'pytest'
+- bash: |
+    source activate openpiv
+    pytest -m integration --junitxml=junit/integration-test.xml
+  displayName: 'Integration tests'
 
   - task: PublishTestResults@2
     inputs:
