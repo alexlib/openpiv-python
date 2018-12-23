@@ -15,27 +15,23 @@ jobs:
     matrix:
       Python27:
         python.version: '2.7'
-      Python35:
-        python.version: '3.5'
       Python36:
         python.version: '3.6'
-      Python37:
-        python.version: '3.7'
     maxParallel: 4
 
   steps:
-  - script: conda env create --quiet --file environment.yml
-    displayName: Create Anaconda environment
-  
-- bash: |
-    source activate openpiv
-    pytest -m unit --junitxml=junit/unit-test.xml
-  displayName: 'Unit tests'
+  - task: UsePythonVersion@0
+    inputs:
+      versionSpec: '$(python.version)'
+      architecture: 'x64'
 
-- bash: |
-    source activate openpiv
-    pytest -m integration --junitxml=junit/integration-test.xml
-  displayName: 'Integration tests'
+  - script: python -m pip install --upgrade pip && pip install -r requirements.txt
+    displayName: 'Install dependencies'
+
+  - script: |
+      pip install pytest
+      pytest tests --doctest-modules --junitxml=junit/test-results.xml
+    displayName: 'pytest'
 
   - task: PublishTestResults@2
     inputs:
