@@ -6,9 +6,9 @@ settings = windef.Settings()
 
 'Data related settings'
 # Folder with the images to process
-settings.filepath_images = '../openpiv/examples/test1'
+settings.filepath_images = '../test1'
 # Folder for the outputs
-settings.save_path = '../openpiv/examples/'
+settings.save_path = '../'
 # Root name of the output Folder for Result Files
 settings.save_folder_suffix = 'Test_1'
 # Format and Image Sequence
