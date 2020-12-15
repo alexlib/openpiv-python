@@ -156,7 +156,7 @@ def smoothn(
   z0=None,W=None,s=None,MaxIter=100,TolZ=1e-3
   """
     if type(y) == ma.core.MaskedArray:  # masked array
-        is_masked = True
+        # is_masked = True
         mask = y.mask
         y = np.array(y)
         y[mask] = 0.0

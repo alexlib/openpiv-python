@@ -157,6 +157,7 @@ def replace_outliers(u, v, w=None, method="localmean",
         v, method=method, max_iter=max_iter, tol=tol, 
         kernel_size=kernel_size
     )
+    
 
     if isinstance(w, np.ndarray):
         wf = replace_nans(

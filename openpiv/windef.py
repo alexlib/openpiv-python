@@ -97,6 +97,7 @@ def piv(settings):
         )
 
         # " Image masking "
+        mask_coords = []
         if hasattr(settings, 'image_mask') and settings.image_mask:
             image_mask = np.logical_and(mask_a, mask_b)
             mask_coords = preprocess.mask_coordinates(image_mask)
@@ -106,6 +107,14 @@ def piv(settings):
             tmp.flat[xymask] = True
             u = np.ma.masked_array(u, mask=tmp)
             v = np.ma.masked_array(v, mask=tmp)
+
+            plt.figure()
+            plt.imshow(image_mask,alpha=0.1)
+            plt.quiver(x,y,u,v)
+            # plt.gca().invert_yaxis()
+            plt.gca().set_aspect(1)
+            plt.title('Inside image mask')
+            plt.show()
 
         """
         validation using gloabl limits and std and local median
@@ -138,7 +147,7 @@ def piv(settings):
             size of the kernel used for the filtering
         """
 
-        mask = np.full_like(x, False)
+        mask = np.full_like(x, False, dtype=bool)
         if settings.validation_first_pass is True:
             u, v, mask_g = validation.global_val(
                 u, v, settings.MinMax_U_disp, settings.MinMax_V_disp
@@ -157,7 +166,6 @@ def piv(settings):
 
             if (
                 settings.extract_sig2noise is True
-                and settings.num_iterations == 1
                 and settings.do_sig2noise_validation is True
             ):
                 u, v, mask_s2n = validation.sig2noise_val(
@@ -166,7 +174,14 @@ def piv(settings):
                 )
                 mask += mask_s2n
                 
-        
+        plt.figure()
+        plt.imshow(image_mask,alpha=0.1)
+        plt.quiver(x,y,u,v)
+        # plt.gca().invert_yaxis()
+        plt.gca().set_aspect(1)
+        plt.title('first pass raw')
+        plt.show()
+
         # "filter to replace the values that where marked by the validation"
         if settings.num_iterations == 1 and settings.replace_vectors is True:
             # for multi-pass we cannot have holes in the data
@@ -186,8 +201,20 @@ def piv(settings):
                 max_iter=settings.max_filter_iteration,
                 kernel_size=settings.filter_kernel_size,
             )
+        
+        import pdb; pdb.set_trace()
 
-            # "adding masks to add the effect of all the validations"
+        plt.figure()
+        plt.imshow(image_mask,alpha=0.1)
+        plt.quiver(x,y,u,v)
+        # plt.gca().invert_yaxis()
+        plt.gca().set_aspect(1)
+        plt.title('first pass replaced')
+        plt.show()
+
+        # "adding masks to add the effect of all the validations"
+        tmpu = u.mask
+
         if settings.smoothn is True:
             u, dummy_u1, dummy_u2, dummy_u3 = smoothn.smoothn(
                 u, s=settings.smoothn_p
@@ -195,16 +222,21 @@ def piv(settings):
             v, dummy_v1, dummy_v2, dummy_v3 = smoothn.smoothn(
                 v, s=settings.smoothn_p
             )
+        u = np.ma.masked_array(u, mask=tmpu)
+        v = np.ma.masked_array(v, mask=tmpu)
 
-        # plt.figure()
-        # plt.quiver(x,y,u,v)
+        plt.figure()
+        plt.imshow(image_mask,alpha=0.1)
+        plt.quiver(x,y,u,v)
         # plt.gca().invert_yaxis()
-        # plt.title('after first pass')
-        # plt.show()
+        plt.gca().set_aspect(1)
+        plt.title('after first pass')
+        plt.show()
     
         """ Multi pass """
         
         for i in range(1, settings.num_iterations):
+            print(f"going to {settings.windowsizes[i]}")
             x, y, u, v, s2n = multipass_img_deform(
                 frame_a,
                 frame_b,
@@ -223,8 +255,17 @@ def piv(settings):
                 sig2noise_method=settings.sig2noise_method,
                 sig2noise_mask=settings.sig2noise_mask,
                 interpolation_order=settings.interpolation_order,
-                normalized_correlation=settings.normalized_correlation
+                normalized_correlation=settings.normalized_correlation,
+                mask_coords=mask_coords
             )
+
+            plt.figure()
+            plt.imshow(image_mask,alpha=0.1)
+            plt.quiver(x,y,u,v)
+            # plt.gca().invert_yaxis()
+            plt.gca().set_aspect(1)
+            plt.title('multipass raw')
+            plt.show()
 
             mask = np.full_like(x, False, dtype=bool)
             # validation every step
@@ -249,7 +290,15 @@ def piv(settings):
                     u, v, s2n, threshold=settings.sig2noise_threshold
                 )
                 mask = mask + mask_s2n
-            
+
+            plt.figure()
+            plt.imshow(image_mask,alpha=0.1)
+            plt.quiver(x,y,u,v)
+            # plt.gca().invert_yaxis()
+            plt.gca().set_aspect(1)
+            plt.title('before replacement')
+            plt.show()
+
             # we have to replace outliers
             u, v = filters.replace_outliers(
                 u,
@@ -258,6 +307,14 @@ def piv(settings):
                 max_iter=settings.max_filter_iteration,
                 kernel_size=settings.filter_kernel_size,
             )
+
+            plt.figure()
+            plt.imshow(image_mask,alpha=0.1)
+            plt.quiver(x,y,u,v)
+            # plt.gca().invert_yaxis()
+            plt.gca().set_aspect(1)
+            plt.title('after replacement')
+            plt.show()
 
             # If the smoothing is active, we do it at each pass
             # but not the last one
@@ -269,26 +326,13 @@ def piv(settings):
                     v, s=settings.smoothn_p
                 )
 
-            if (
-                settings.extract_sig2noise is True
-                and i == settings.iterations
-                and settings.iterations != 1
-                and settings.do_sig2noise_validation is True
-            ):
-                u, v, mask_s2n = validation.sig2noise_val(
-                    u, v, sig2noise_ratio,
-                    threshold=settings.sig2noise_threshold
-                )
-                mask = mask + mask_s2n
-
-            # replace also every loop
-            u, v = filters.replace_outliers(
-                u,
-                v,
-                method=settings.filter_method,
-                max_iter=settings.max_filter_iteration,
-                kernel_size=settings.filter_kernel_size,
-            )
+            plt.figure()
+            plt.imshow(image_mask,alpha=0.1)
+            plt.quiver(x,y,u,v)
+            # plt.gca().invert_yaxis()
+            plt.gca().set_aspect(1)
+            plt.title('after smoothing')
+            plt.show()
 
         # "pixel/frame->pixel/sec"
         u = u / settings.dt
@@ -459,7 +503,7 @@ def deform_windows(frame, x, y, u, v, interpolation_order=1, kx=3, ky=3):
                                  interpolation_order=interpolation_order,
                                  kx=kx, ky=ky)
     frame_def = scn.map_coordinates(
-        frame, ((y + vt, x + ut,)), order=interpolation_order, mode='nearest')
+        frame, ((y - vt, x + ut,)), order=interpolation_order, mode='nearest')
 
     return frame_def
 
@@ -553,7 +597,7 @@ def multipass_img_deform(
     frame_b,
     window_size,
     overlap,
-    iterations,
+    num_iterations,
     current_iteration,
     x_old,
     y_old,
@@ -660,7 +704,6 @@ def multipass_img_deform(
     y_int = y[:, 0]
     x_int = x[0, :]
 
-
     # interpolating the displacements from the old grid onto the new grid
     # y befor x because of numpy works row major
     ip = RectBivariateSpline(y_old, x_old, u_old, kx=2, ky=2)
@@ -674,12 +717,13 @@ def multipass_img_deform(
         v_pre = np.ma.masked_array(v_pre, mask=mask)
 
     # if settings.show_plot:
-    #     plt.figure()
-    #     plt.quiver(x_old, y_old, u_old, v_old,color='b')
-    #     plt.quiver(x_int, y_int, u_pre, v_pre,color='r',lw=2)
-    #     plt.gca().invert_yaxis()
-    #     plt.title('inside deform')
-    #     plt.gca().set_aspect(1.)
+    plt.figure()
+    plt.quiver(x_old, y_old, u_old, v_old,color='b')
+    plt.quiver(x_int, y_int, u_pre, v_pre,color='r',lw=2)
+    plt.gca().invert_yaxis()
+    plt.gca().set_aspect(1.)
+    plt.title('inside multipass')
+    
 
     # @TKauefer added another method to the windowdeformation, 'symmetric'
     # splits the onto both frames, takes more effort due to additional
@@ -699,6 +743,7 @@ def multipass_img_deform(
             frame_b, ((y_new + vt / 2, x_new + ut / 2)),
             order=interpolation_order, mode='nearest')
     elif deformation_method == "second image":
+        print("deforming second image")
         frame_b = deform_windows(
             frame_b, x, y, u_pre, v_pre,
             interpolation_order=interpolation_order)
@@ -713,12 +758,13 @@ def multipass_img_deform(
 
     if (
         do_sig2noise is True and  # and also the last one is optional?
-        current_iteration == iterations and  # so only the last one is applied?
-        iterations != 1  # we should not call multipass at all with 1 iteration
+        current_iteration == num_iterations-1  # so only the last one is applied?
     ):
         sig2noise_method = sig2noise_method
     else:
         sig2noise_method = None
+
+    print(f"sig2noise method is {sig2noise_method}")
 
     # so we use here default circular not normalized correlation:
     u, v, s2n = extended_search_area_piv(
@@ -732,6 +778,18 @@ def multipass_img_deform(
         correlation_method=correlation_method,
         normalized_correlation=normalized_correlation,
     )
+    
+    plt.figure()
+    plt.plot(s2n.flatten())
+
+
+    plt.figure()
+    plt.quiver(x_int, y_int, u, v,color='r')
+    # plt.quiver(x_int, y_int, u_pre, v_pre,color='b')
+    plt.gca().invert_yaxis()
+    plt.gca().set_aspect(1)
+    plt.title("after extended search inside multipass")
+
 
     shapes = np.array(get_field_shape(frame_a.shape,
                                       window_size,
@@ -740,26 +798,29 @@ def multipass_img_deform(
     v = v.reshape(shapes)
     s2n = s2n.reshape(shapes)
 
-    #     plt.figure()
-    #     plt.quiver(x_int, y_int, u, v,color='r')
-    #     plt.quiver(x_int, y_int, u_pre, v_pre,color='b')
-    #     plt.gca().invert_yaxis()
+    # plt.figure()
+    # plt.quiver(x_int, y_int, u, v,color='r')
+    # plt.quiver(x_int, y_int, u_pre, v_pre,color='b')
+    # plt.gca().invert_yaxis()
+    # plt.gca().set_aspect(1)
+    # plt.title("after deformed window")
 
-    # adding the recent displacment on to the displacment of the previous pass
-    u += u_pre
-    v -= v_pre
+    # adding the recent displacment on to the displacement of the previous pass
+    u = u_pre + u
+    v = v_pre + v
 
-    # reapply image mask just to be sure
-    if len(mask_coords) > 1:
-        u = np.ma.masked_array(u, mask=mask)
-        v = np.ma.masked_array(v, mask=mask)
+    # # reapply image mask just to be sure
+    # if len(mask_coords) > 1:
+    #     u = np.ma.masked_array(u, mask=mask)
+    #     v = np.ma.masked_array(v, mask=mask)
 
     # if settings.show_plot:
-    #     plt.figure()
-    #     plt.quiver(x_int, y_int, u, v,color='r')
-    #     plt.quiver(x_int, y_int, u_pre, v_pre,color='b')
-    #     plt.gca().invert_yaxis()
-    #     plt.gca().set_aspect(1)
+    plt.figure()
+    plt.quiver(x_int, y_int, u, v,color='r')
+    plt.quiver(x_int, y_int, u_pre, v_pre,color='b')
+    plt.gca().invert_yaxis()
+    plt.gca().set_aspect(1)
+    plt.title("after multipass")
 
     return x, y, u, v, s2n
 
