@@ -88,7 +88,7 @@ def piv_example():
         im = ax.imshow(images[i % 2], animated=True, cmap=plt.cm.gray)
         ims.append([im])
 
-    _ = animation.ArtistAnimation(fig, ims, interval=200, blit=False,
+    _ = animation.ArtistAnimation(fig, ims, interval=500, blit=False,
                                   repeat_delay=0)
     plt.show()
 
@@ -103,11 +103,11 @@ def piv_example():
                                      search_area_size=64, overlap=8)
 
     fig, ax = plt.subplots(1, 2, figsize=(11, 8))
-    ax[0].imshow(frame_a, cmap=plt.get_cmap("gray"), alpha=0.8, origin="upper")
-    ax[0].quiver(x, y, vel[0], vel[1], scale=50, color="r")
-    ax[1].quiver(x, y, vel[0], vel[1], scale=50, color="b")
-    ax[1].set_aspect(1.1)
-    ax[1].invert_yaxis()
+    ax[0].imshow(frame_a, cmap=plt.get_cmap("gray"), alpha=0.8)
+    ax[0].quiver(x, y, vel[0], -vel[1], scale=50, color="r")
+    ax[1].quiver(x, y[::-1,:], vel[0], -vel[1], scale=50, color="b")
+    ax[1].set_aspect(1)
+    # ax[1].invert_yaxis()
     plt.show()
 
     return x, y, vel[0], vel[1]

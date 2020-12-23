@@ -47,6 +47,9 @@ Things OpenPIV currently needs, (in order of importance)
 How to test all the notebooks::
 -----------------------------
 
+    conda create -n openpiv
+    conda activate openpiv
+    conda install -c conda-forge openpiv
     conda install ipykernel  
     python -m ipykernel install --user --name openpiv --display-name="openpiv"  
     jupyter nbconvert --to html --ExecutePreprocessor.kernel_name=openpiv --execute *.ipynb  

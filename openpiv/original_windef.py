@@ -198,7 +198,7 @@ def piv(settings):
         x, y, u, v = scaling.uniform(x, y, u, v, scaling_factor = settings.scaling_factor )     
         'save to a file'
         # note the negative sign of the vertical component
-        tools.save(x, y, u, -v, sig2noise_ratio, mask ,os.path.join(save_path,'field_A%03d.txt' % counter), delimiter='\t')
+        tools.save(x, y, u, -v, mask ,os.path.join(save_path,'field_A%03d.txt' % counter), delimiter='\t')
         # tools.save(x, y, u, v,sig2noise_ratio, mask ,os.path.join(save_path,'field_A%03d.txt' % counter), delimiter='\t')
         'some messages to check if it is still alive'
         
