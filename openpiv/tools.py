@@ -101,7 +101,7 @@ def display_vector_field(
 
     a = np.loadtxt(filename)
     # parse
-    x, y, u, v, _, mask = a[:, 0], a[:, 1], a[:, 2], a[:, 3], a[:, 4], a[:, 5]
+    x, y, u, v, mask = a[:, 0], a[:, 1], a[:, 2], a[:, 3], a[:, 4]
 
 
     if ax is None:
