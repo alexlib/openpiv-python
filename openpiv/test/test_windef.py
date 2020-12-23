@@ -1,4 +1,4 @@
-# -*- coding: utf-8 -*-
+ # -*- coding: utf-8 -*-
 """
 Created on Fri Oct  4 14:33:21 2019
 
@@ -7,7 +7,7 @@ Created on Fri Oct  4 14:33:21 2019
 
 
 import numpy as np
-import openpiv.windef as windef
+from openpiv import windef
 from openpiv.test import test_process 
 from openpiv import preprocess
 import pathlib
@@ -131,9 +131,9 @@ def test_invert_and_piv():
     settings.frame_pattern_b = 'exp1_001_b.bmp'
 
     settings.num_iterations = 1
-    settings.show_plot = True
+    settings.show_plot = False
     settings.scale_plot = 100
-    settings.show_all_plots = False
+    settings.show_all_plots = True
     settings.invert = True
 
     windef.piv(settings)
@@ -143,10 +143,11 @@ def test_multi_pass_lin():
     """ test fot the multipass """
     settings.windowsizes = (64, 32, 16)
     settings.overlap = (32, 16, 8)
-    settings.num_iterations = 2
+    settings.num_iterations = 1
     settings.sig2noise_validate = True
     settings.correlation_method = 'linear'
     settings.normalized_correlation = True
+    settings.sig2noise_threshold = 1.0 # note the value for linear/normalized
 
     x, y, u, v, s2n = windef.first_pass(
         frame_a,
@@ -158,19 +159,10 @@ def test_multi_pass_lin():
     assert np.mean(np.abs(u - shift_u)) < threshold
     assert np.mean(np.abs(v - shift_v)) < threshold
 
-    if settings.image_mask:
-        image_mask = np.logical_and(mask_a, mask_b)
-        mask_coords = preprocess.mask_coordinates(image_mask)
-        # mark those points on the grid of PIV inside the mask
-        grid_mask = preprocess.prepare_mask_on_grid(x,y,mask_coords)
 
-        # mask the velocity
-        u = np.ma.masked_array(u, mask=grid_mask)
-        v = np.ma.masked_array(v, mask=grid_mask)
-    else:
-        mask_coords = []
-        u = np.ma.masked_array(u, mask=np.ma.nomask)
-        v = np.ma.masked_array(v, mask=np.ma.nomask)
+    mask_coords = []
+    u = np.ma.masked_array(u, mask=np.ma.nomask)
+    v = np.ma.masked_array(v, mask=np.ma.nomask)
 
     for i in range(1, settings.num_iterations):
         x, y, u, v, s2n, _ = windef.multipass_img_deform(

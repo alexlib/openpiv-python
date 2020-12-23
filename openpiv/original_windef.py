@@ -641,7 +641,7 @@ def display_vector_field( filename, on_img=False, image_name='None', window_size
         ymax=np.amax(a[:,1])+window_size/(2*scaling_factor)
         plt.imshow(im, origin='lower', cmap="Greys_r",extent=[0.,xmax,0.,ymax])
 
-    invalid = a[:,5].astype('bool')
+    invalid = a[:,4].astype('bool')
     fig.canvas.set_window_title('Vector field, '+str(np.count_nonzero(invalid))+' wrong vectors')
     valid = ~invalid
     plt.quiver(a[invalid,0],a[invalid,1],a[invalid,2],-a[invalid,3],color='r',width=0.001,headwidth=3,**kw)

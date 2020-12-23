@@ -180,7 +180,6 @@ def sig2noise_val(u, v, s2n, w=None, threshold=1.05):
         1, 1202-1215.
 
     """
-
     ind = s2n < threshold
 
     u[ind] = np.nan
@@ -342,7 +341,7 @@ def typical_validation(u, v, s2n, settings, no_std=False):
 
         if settings.show_all_plots and sum(mask_s2n.flatten()): # if not all NaN
             plt.figure()
-            plt.hist(s2n.flatten(),31)
+            plt.hist(s2n[s2n>0].flatten(),31)
             plt.show()
 
         mask += mask_s2n

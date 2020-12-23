@@ -217,7 +217,7 @@ def piv(settings):
                 u = np.ma.masked_array(u, np.ma.nomask)
                 v = np.ma.masked_array(v, np.ma.nomask)
 
-            if hasattr(settings, 'show_all_plots') and settings.show_all_plots:
+            if settings.show_all_plots:
                 plt.figure()
                 plt.quiver(x, y, u, -v, color='r')
                 plt.gca().set_aspect(1.)
@@ -233,7 +233,9 @@ def piv(settings):
             plt.title('after multi pass, before saving, inverted')
             plt.show()
 
-        # "pixel/frame->pixel/sec"
+        # we now use only 0s instead of the image
+        # masked regions. 
+        # we could do Nan, not sure what is best
         u = u.filled(0.)
         v = v.filled(0.)
         
@@ -756,6 +758,7 @@ def multipass_img_deform(
     if not isinstance(u, np.ma.MaskedArray):
         raise ValueError ('not a masked array anymore')
 
+    if settings.show_all_plots:
         plt.figure()
         nans = mask == True
 
@@ -905,16 +908,16 @@ class Settings(FrozenClass):
         # Enable the signal to noise ratio validation. Options: True or False
         # self.sig2noise_validate = False  # This is time consuming
         # minmum signal to noise ratio that is need for a valid vector
-        self.sig2noise_threshold = 1.05
+        self.sig2noise_threshold = 1.0
         self.sig2noise_validate = True
 
         # "Outlier replacement or Smoothing options"
         # Replacment options for vectors which are masked as invalid by the
         # validation
         # Choose: True or False
-        self.replace_vectors = False  # Enable the replacement.
-        self.smoothn = False  # Enables smoothing of the displacement field
-        self.smoothn_p = 0.5  # This is a smoothing parameter
+        self.replace_vectors = True  # Enable the replacement.
+        self.smoothn = True  # Enables smoothing of the displacement field
+        self.smoothn_p = 0.05  # This is a smoothing parameter
         # select a method to replace the outliers:
         # 'localmean', 'disk', 'distance'
         self.filter_method = "localmean"

@@ -16,3 +16,6 @@ OpenPIV.egg-info
 *.so
 
 tmp.png
+openpiv/examples/notebooks/*.html
+openpiv/examples/notebooks/test_3d/
+Open_PIV_results_*
