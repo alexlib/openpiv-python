@@ -15,3 +15,4 @@ OpenPIV.egg-info
 .vscode/settings.json
 *.so
 
+tmp.png
