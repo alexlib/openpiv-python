@@ -1,7 +1,7 @@
 import numpy.lib.stride_tricks
 import numpy as np
-# from scipy.fft import rfft2, irfft2, fftshift
-from mkl_fft._numpy_fft import rfft2, irfft2
+from scipy.fft import rfft2, irfft2, fftshift
+# from mkl_fft._numpy_fft import rfft2, irfft2
 from scipy.fft import fftshift
 from numpy import ma
 from scipy.signal import convolve2d
