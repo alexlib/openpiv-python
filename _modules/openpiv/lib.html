@@ -1,0 +1,297 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>openpiv.lib &mdash; OpenPIV  documentation</title>
+      <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="../../_static/css/theme.css" type="text/css" />
+  <!--[if lt IE 9]>
+    <script src="../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script data-url_root="../../" id="documentation_options" src="../../_static/documentation_options.js"></script>
+        <script src="../../_static/jquery.js"></script>
+        <script src="../../_static/underscore.js"></script>
+        <script src="../../_static/_sphinx_javascript_frameworks_compat.js"></script>
+        <script src="../../_static/doctools.js"></script>
+        <script src="../../_static/sphinx_highlight.js"></script>
+        <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+    <script src="../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+            <a href="../../index.html" class="icon icon-home"> OpenPIV
+          </a>
+              <div class="version">
+                0.24.0
+              </div>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul>
+<li class="toctree-l1"><a class="reference internal" href="../../src/piv_basics.html">Basics of the PIV algorithms</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../src/installation_instruction.html">Installation instruction</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../src/tutorial1.html">OpenPIV tutorial</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../src/windef.html">Multi-grid window deformation algorithm tutorial</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../src/masking.html">OpenPIV masking tutorial</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../src/developers.html">Information for developers and contributors</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../src/api_reference.html">API reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../src/faq.html">Frequently Asked Questions about PIV parameters</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../index.html">OpenPIV</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../index.html" class="icon icon-home"></a> &raquo;</li>
+          <li><a href="../index.html">Module code</a> &raquo;</li>
+          <li><a href="../openpiv.html">openpiv</a> &raquo;</li>
+      <li>openpiv.lib</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for openpiv.lib</h1><div class="highlight"><pre>
+<span></span><span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+
+
+<div class="viewcode-block" id="replace_nans"><a class="viewcode-back" href="../../src/openpiv.html#openpiv.lib.replace_nans">[docs]</a><span class="k">def</span> <span class="nf">replace_nans</span><span class="p">(</span><span class="n">array</span><span class="p">,</span> <span class="n">max_iter</span><span class="p">,</span> <span class="n">tol</span><span class="p">,</span> <span class="n">kernel_size</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span> <span class="n">method</span><span class="o">=</span><span class="s2">&quot;disk&quot;</span><span class="p">):</span>
+
+    <span class="sd">&quot;&quot;&quot;Replace NaN elements in an array using an iterative image inpainting</span>
+<span class="sd">        algorithm.</span>
+
+<span class="sd">      The algorithm is the following:</span>
+
+<span class="sd">      1) For each element in the input array, replace it by a weighted average</span>
+<span class="sd">         of the neighbouring elements which are not NaN themselves. The weights</span>
+<span class="sd">         depend on the method type. See Methods below.</span>
+
+<span class="sd">      2) Several iterations are needed if there are adjacent NaN elements.</span>
+<span class="sd">         If this is the case, information is &quot;spread&quot; from the edges of the</span>
+<span class="sd">         missing regions iteratively, until the variation is below a certain</span>
+<span class="sd">         threshold.</span>
+
+<span class="sd">      Methods:</span>
+
+<span class="sd">      localmean - A square kernel where all elements have the same value,</span>
+<span class="sd">                  weights are equal to n/( (2*kernel_size+1)**2 -1 ),</span>
+<span class="sd">                  where n is the number of non-NaN elements.</span>
+<span class="sd">      disk - A circular kernel where all elements have the same value,</span>
+<span class="sd">             kernel is calculated by::</span>
+<span class="sd">                 if ((S-i)**2 + (S-j)**2)**0.5 &lt;= S:</span>
+<span class="sd">                     kernel[i,j] = 1.0</span>
+<span class="sd">                 else:</span>
+<span class="sd">                     kernel[i,j] = 0.0</span>
+<span class="sd">             where S is the kernel radius.</span>
+<span class="sd">      distance - A circular inverse distance kernel where elements are</span>
+<span class="sd">                 weighted proportional to their distance away from the</span>
+<span class="sd">                 center of the kernel, elements farther away have less</span>
+<span class="sd">                 weight. Elements outside the specified radius are set</span>
+<span class="sd">                 to 0.0 as in &#39;disk&#39;, the remaining of the weights are</span>
+<span class="sd">                 calculated as::</span>
+<span class="sd">                     maxDist = ((S)**2 + (S)**2)**0.5</span>
+<span class="sd">                     kernel[i,j] = -1*(((S-i)**2 + (S-j)**2)**0.5 - maxDist)</span>
+<span class="sd">                 where S is the kernel radius.</span>
+
+<span class="sd">      Parameters</span>
+<span class="sd">      ----------</span>
+
+<span class="sd">      array : 2d or 3d np.ndarray</span>
+<span class="sd">          an array containing NaN elements that have to be replaced</span>
+<span class="sd">          if array is a masked array (numpy.ma.MaskedArray), then</span>
+<span class="sd">          the mask is reapplied after the replacement</span>
+
+<span class="sd">      max_iter : int</span>
+<span class="sd">          the number of iterations</span>
+
+<span class="sd">      tol : float</span>
+<span class="sd">          On each iteration check if the mean square difference between</span>
+<span class="sd">          values of replaced elements is below a certain tolerance `tol`</span>
+
+<span class="sd">      kernel_size : int</span>
+<span class="sd">          the size of the kernel, default is 1</span>
+
+<span class="sd">      method : str</span>
+<span class="sd">          the method used to replace invalid values. Valid options are</span>
+<span class="sd">          `localmean`, `disk`, and `distance`.</span>
+
+<span class="sd">      Returns</span>
+<span class="sd">      -------</span>
+
+<span class="sd">      filled : 2d or 3d np.ndarray</span>
+<span class="sd">          a copy of the input array, where NaN elements have been replaced.</span>
+
+<span class="sd">      &quot;&quot;&quot;</span>
+
+    <span class="n">kernel_size</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">kernel_size</span><span class="p">)</span>
+    <span class="n">filled</span> <span class="o">=</span> <span class="n">array</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+    <span class="n">n_dim</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">array</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span>
+
+    <span class="c1"># generating the kernel</span>
+    <span class="n">kernel</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">([</span><span class="mi">2</span> <span class="o">*</span> <span class="n">kernel_size</span> <span class="o">+</span> <span class="mi">1</span><span class="p">]</span> <span class="o">*</span> <span class="nb">len</span><span class="p">(</span><span class="n">array</span><span class="o">.</span><span class="n">shape</span><span class="p">),</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">int</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">method</span> <span class="o">==</span> <span class="s2">&quot;localmean&quot;</span><span class="p">:</span>
+        <span class="n">kernel</span> <span class="o">+=</span> <span class="mi">1</span>
+    <span class="k">elif</span> <span class="n">method</span> <span class="o">==</span> <span class="s2">&quot;disk&quot;</span><span class="p">:</span>
+        <span class="n">dist</span><span class="p">,</span> <span class="n">dist_inv</span> <span class="o">=</span> <span class="n">get_dist</span><span class="p">(</span><span class="n">kernel</span><span class="p">,</span> <span class="n">kernel_size</span><span class="p">)</span>
+        <span class="n">kernel</span><span class="p">[</span><span class="n">dist</span> <span class="o">&lt;=</span> <span class="n">kernel_size</span><span class="p">]</span> <span class="o">=</span> <span class="mi">1</span>
+    <span class="k">elif</span> <span class="n">method</span> <span class="o">==</span> <span class="s2">&quot;distance&quot;</span><span class="p">:</span>
+        <span class="n">dist</span><span class="p">,</span> <span class="n">dist_inv</span> <span class="o">=</span> <span class="n">get_dist</span><span class="p">(</span><span class="n">kernel</span><span class="p">,</span> <span class="n">kernel_size</span><span class="p">)</span>
+        <span class="n">kernel</span><span class="p">[</span><span class="n">dist</span> <span class="o">&lt;=</span> <span class="n">kernel_size</span><span class="p">]</span> <span class="o">=</span> <span class="n">dist_inv</span><span class="p">[</span><span class="n">dist</span> <span class="o">&lt;=</span> <span class="n">kernel_size</span><span class="p">]</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+            <span class="s2">&quot;Known methods are: `localmean`, `disk` or `distance`.&quot;</span>
+        <span class="p">)</span>
+
+    <span class="c1"># list of kernel array indices</span>
+    <span class="c1"># kernel_indices = np.indices(kernel.shape)</span>
+    <span class="c1"># kernel_indices = np.reshape(kernel_indices,</span>
+    <span class="c1">#   (n_dim, (2 * kernel_size + 1) ** n_dim),</span>
+    <span class="c1">#   order=&quot;C&quot;).T</span>
+
+    <span class="c1"># indices where array is NaN</span>
+    <span class="n">nan_indices</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">nonzero</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">isnan</span><span class="p">(</span><span class="n">array</span><span class="p">)))</span><span class="o">.</span><span class="n">T</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="nb">int</span><span class="p">)</span>
+
+    <span class="c1"># number of NaN elements</span>
+    <span class="n">n_nans</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">nan_indices</span><span class="p">)</span>
+
+    <span class="c1"># arrays which contain replaced values to check for convergence</span>
+    <span class="n">replaced_new</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">n_nans</span><span class="p">)</span>
+    <span class="n">replaced_old</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">n_nans</span><span class="p">)</span>
+
+    <span class="c1"># make several passes</span>
+    <span class="c1"># until we reach convergence</span>
+    <span class="k">for</span> <span class="n">_</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">max_iter</span><span class="p">):</span>
+        <span class="c1"># note: identifying new nan indices and looping other the new indices</span>
+        <span class="c1"># would give slightly different result</span>
+
+        <span class="c1"># for each NaN element</span>
+        <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">n_nans</span><span class="p">):</span>
+            <span class="n">ind</span> <span class="o">=</span> <span class="n">nan_indices</span><span class="p">[</span>
+                <span class="n">k</span>
+            <span class="p">]</span>  <span class="c1"># 2 or 3 indices indicating the position of a nan element</span>
+            <span class="c1"># init to 0.0</span>
+            <span class="n">replaced_new</span><span class="p">[</span><span class="n">k</span><span class="p">]</span> <span class="o">=</span> <span class="mf">0.0</span>
+
+            <span class="c1"># generating a list of indices of the convolution window in the</span>
+            <span class="c1"># array</span>
+            <span class="n">slice_indices</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">meshgrid</span><span class="p">(</span><span class="o">*</span><span class="p">[</span><span class="nb">range</span><span class="p">(</span><span class="n">i</span> <span class="o">-</span> <span class="n">kernel_size</span><span class="p">,</span>
+                                     <span class="n">i</span> <span class="o">+</span> <span class="n">kernel_size</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">ind</span><span class="p">]))</span>
+
+            <span class="c1"># identifying all indices strictly inside the image edges:</span>
+            <span class="n">in_mask</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span>
+                <span class="p">[</span>
+                    <span class="n">np</span><span class="o">.</span><span class="n">logical_and</span><span class="p">(</span>
+                        <span class="n">slice_indices</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">&lt;</span> <span class="n">array</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="n">i</span><span class="p">],</span>
+                        <span class="n">slice_indices</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">&gt;=</span> <span class="mi">0</span>
+                    <span class="p">)</span>
+                    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">n_dim</span><span class="p">)</span>
+                <span class="p">]</span>
+            <span class="p">)</span>
+            <span class="c1"># logical and over x,y (and z) indices</span>
+            <span class="n">in_mask</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">prod</span><span class="p">(</span><span class="n">in_mask</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="nb">bool</span><span class="p">)</span>
+
+            <span class="c1"># extract window from array</span>
+            <span class="n">win</span> <span class="o">=</span> <span class="n">filled</span><span class="p">[</span><span class="nb">tuple</span><span class="p">(</span><span class="n">slice_indices</span><span class="p">[:,</span> <span class="n">in_mask</span><span class="p">])]</span>
+
+            <span class="c1"># selecting the same points from the kernel</span>
+            <span class="n">kernel_in</span> <span class="o">=</span> <span class="n">kernel</span><span class="p">[</span><span class="n">in_mask</span><span class="p">]</span>
+
+            <span class="c1"># sum of elements of the kernel that are not nan in the window</span>
+            <span class="n">non_nan</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">kernel_in</span><span class="p">[</span><span class="o">~</span><span class="n">np</span><span class="o">.</span><span class="n">isnan</span><span class="p">(</span><span class="n">win</span><span class="p">)])</span>
+
+            <span class="k">if</span> <span class="n">non_nan</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+                <span class="c1"># convolution with the kernel</span>
+                <span class="n">replaced_new</span><span class="p">[</span><span class="n">k</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">nansum</span><span class="p">(</span><span class="n">win</span> <span class="o">*</span> <span class="n">kernel_in</span><span class="p">)</span> <span class="o">/</span> <span class="n">non_nan</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="c1"># don&#39;t do anything if there is only nans around</span>
+                <span class="n">replaced_new</span><span class="p">[</span><span class="n">k</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">nan</span>
+
+        <span class="c1"># bulk replace all new values in array</span>
+        <span class="n">filled</span><span class="p">[</span><span class="nb">tuple</span><span class="p">(</span><span class="n">nan_indices</span><span class="o">.</span><span class="n">T</span><span class="p">)]</span> <span class="o">=</span> <span class="n">replaced_new</span>
+
+        <span class="c1"># check if replaced elements are below a certain tolerance</span>
+        <span class="k">if</span> <span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">((</span><span class="n">replaced_new</span> <span class="o">-</span> <span class="n">replaced_old</span><span class="p">)</span> <span class="o">**</span> <span class="mi">2</span><span class="p">)</span> <span class="o">&lt;</span> <span class="n">tol</span><span class="p">:</span>
+            <span class="k">break</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">replaced_old</span> <span class="o">=</span> <span class="n">replaced_new</span>
+
+    <span class="k">return</span> <span class="n">filled</span></div>
+
+
+<div class="viewcode-block" id="get_dist"><a class="viewcode-back" href="../../src/openpiv.html#openpiv.lib.get_dist">[docs]</a><span class="k">def</span> <span class="nf">get_dist</span><span class="p">(</span><span class="n">kernel</span><span class="p">,</span> <span class="n">kernel_size</span><span class="p">):</span>
+    <span class="c1"># generates a map of distances to the center of the kernel. This is later</span>
+    <span class="c1"># used to generate disk-shaped kernels and</span>
+    <span class="c1"># to fill in distance based weights</span>
+
+    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">kernel</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span> <span class="o">==</span> <span class="mi">2</span><span class="p">:</span>
+        <span class="c1"># x and y coordinates for each points</span>
+        <span class="n">xs</span><span class="p">,</span> <span class="n">ys</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">indices</span><span class="p">(</span><span class="n">kernel</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span>
+        <span class="c1"># maximal distance form center - distance to center (of each point)</span>
+        <span class="n">dist</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">((</span><span class="n">ys</span> <span class="o">-</span> <span class="n">kernel_size</span><span class="p">)</span> <span class="o">**</span> <span class="mi">2</span> <span class="o">+</span> <span class="p">(</span><span class="n">xs</span> <span class="o">-</span> <span class="n">kernel_size</span><span class="p">)</span> <span class="o">**</span> <span class="mi">2</span><span class="p">)</span>
+        <span class="n">dist_inv</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span> <span class="o">*</span> <span class="n">kernel_size</span> <span class="o">-</span> <span class="n">dist</span>
+
+    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">kernel</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span> <span class="o">==</span> <span class="mi">3</span><span class="p">:</span>
+        <span class="n">xs</span><span class="p">,</span> <span class="n">ys</span><span class="p">,</span> <span class="n">zs</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">indices</span><span class="p">(</span><span class="n">kernel</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span>
+        <span class="n">dist</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span>
+            <span class="p">(</span><span class="n">ys</span> <span class="o">-</span> <span class="n">kernel_size</span><span class="p">)</span> <span class="o">**</span> <span class="mi">2</span> <span class="o">+</span>
+            <span class="p">(</span><span class="n">xs</span> <span class="o">-</span> <span class="n">kernel_size</span><span class="p">)</span> <span class="o">**</span> <span class="mi">2</span> <span class="o">+</span>
+            <span class="p">(</span><span class="n">zs</span> <span class="o">-</span> <span class="n">kernel_size</span><span class="p">)</span> <span class="o">**</span> <span class="mi">2</span>
+        <span class="p">)</span>
+        <span class="n">dist_inv</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="mi">3</span><span class="p">)</span> <span class="o">*</span> <span class="n">kernel_size</span> <span class="o">-</span> <span class="n">dist</span>
+
+    <span class="k">return</span> <span class="n">dist</span><span class="p">,</span> <span class="n">dist_inv</span></div>
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2014, OpenPIV group.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

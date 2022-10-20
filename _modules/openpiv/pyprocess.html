@@ -1,0 +1,1354 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>openpiv.pyprocess &mdash; OpenPIV  documentation</title>
+      <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="../../_static/css/theme.css" type="text/css" />
+  <!--[if lt IE 9]>
+    <script src="../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script data-url_root="../../" id="documentation_options" src="../../_static/documentation_options.js"></script>
+        <script src="../../_static/jquery.js"></script>
+        <script src="../../_static/underscore.js"></script>
+        <script src="../../_static/_sphinx_javascript_frameworks_compat.js"></script>
+        <script src="../../_static/doctools.js"></script>
+        <script src="../../_static/sphinx_highlight.js"></script>
+        <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+    <script src="../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+            <a href="../../index.html" class="icon icon-home"> OpenPIV
+          </a>
+              <div class="version">
+                0.24.0
+              </div>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul>
+<li class="toctree-l1"><a class="reference internal" href="../../src/piv_basics.html">Basics of the PIV algorithms</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../src/installation_instruction.html">Installation instruction</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../src/tutorial1.html">OpenPIV tutorial</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../src/windef.html">Multi-grid window deformation algorithm tutorial</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../src/masking.html">OpenPIV masking tutorial</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../src/developers.html">Information for developers and contributors</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../src/api_reference.html">API reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../src/faq.html">Frequently Asked Questions about PIV parameters</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../index.html">OpenPIV</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../index.html" class="icon icon-home"></a> &raquo;</li>
+          <li><a href="../index.html">Module code</a> &raquo;</li>
+          <li><a href="../openpiv.html">openpiv</a> &raquo;</li>
+      <li>openpiv.pyprocess</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for openpiv.pyprocess</h1><div class="highlight"><pre>
+<span></span><span class="sd">&quot;&quot;&quot;This module contains a pure python implementation of the basic</span>
+<span class="sd">cross-correlation algorithm for PIV image processing.&quot;&quot;&quot;</span>
+
+<span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Optional</span><span class="p">,</span> <span class="n">Tuple</span><span class="p">,</span> <span class="n">Callable</span><span class="p">,</span> <span class="n">Union</span>
+<span class="kn">import</span> <span class="nn">numpy.lib.stride_tricks</span>
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">from</span> <span class="nn">numpy</span> <span class="kn">import</span> <span class="n">log</span>
+<span class="kn">from</span> <span class="nn">numpy</span> <span class="kn">import</span> <span class="n">ma</span>
+<span class="kn">from</span> <span class="nn">numpy.fft</span> <span class="kn">import</span> <span class="n">rfft2</span> <span class="k">as</span> <span class="n">rfft2_</span><span class="p">,</span> <span class="n">irfft2</span> <span class="k">as</span> <span class="n">irfft2_</span><span class="p">,</span> <span class="n">fftshift</span> <span class="k">as</span> <span class="n">fftshift_</span>
+<span class="kn">from</span> <span class="nn">scipy.signal</span> <span class="kn">import</span> <span class="n">convolve2d</span> <span class="k">as</span> <span class="n">conv_</span>
+
+
+<span class="n">__licence_</span> <span class="o">=</span> <span class="s2">&quot;&quot;&quot;</span>
+<span class="s2">Copyright (C) 2011  www.openpiv.net</span>
+
+<span class="s2">This program is free software: you can redistribute it and/or modify</span>
+<span class="s2">it under the terms of the GNU General Public License as published by</span>
+<span class="s2">the Free Software Foundation, either version 3 of the License, or</span>
+<span class="s2">(at your option) any later version.</span>
+
+<span class="s2">This program is distributed in the hope that it will be useful,</span>
+<span class="s2">but WITHOUT ANY WARRANTY; without even the implied warranty of</span>
+<span class="s2">MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the</span>
+<span class="s2">GNU General Public License for more details.</span>
+
+<span class="s2">You should have received a copy of the GNU General Public License</span>
+<span class="s2">along with this program.  If not, see &lt;http://www.gnu.org/licenses/&gt;.</span>
+<span class="s2">&quot;&quot;&quot;</span>
+
+
+<div class="viewcode-block" id="get_field_shape"><a class="viewcode-back" href="../../src/openpiv.html#openpiv.pyprocess.get_field_shape">[docs]</a><span class="k">def</span> <span class="nf">get_field_shape</span><span class="p">(</span>
+    <span class="n">image_size</span><span class="p">:</span> <span class="n">Tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span><span class="nb">int</span><span class="p">],</span>
+    <span class="n">search_area_size</span><span class="p">:</span> <span class="n">Tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span><span class="nb">int</span><span class="p">],</span>
+    <span class="n">overlap</span><span class="p">:</span> <span class="n">Tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span><span class="nb">int</span><span class="p">],</span>
+    <span class="p">)</span><span class="o">-&gt;</span><span class="n">Tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span><span class="nb">int</span><span class="p">]:</span>
+    <span class="sd">&quot;&quot;&quot;Compute the shape of the resulting flow field.</span>
+
+<span class="sd">    Given the image size, the interrogation window size and</span>
+<span class="sd">    the overlap size, it is possible to calculate the number</span>
+<span class="sd">    of rows and columns of the resulting flow field.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    image_size: two elements tuple</span>
+<span class="sd">        a two dimensional tuple for the pixel size of the image</span>
+<span class="sd">        first element is number of rows, second element is</span>
+<span class="sd">        the number of columns, easy to obtain using .shape</span>
+
+<span class="sd">    search_area_size: tuple</span>
+<span class="sd">        the size of the interrogation windows (if equal in frames A,B)</span>
+<span class="sd">        or the search area (in frame B), the largest  of the two</span>
+
+<span class="sd">    overlap: tuple</span>
+<span class="sd">        the number of pixel by which two adjacent interrogation</span>
+<span class="sd">        windows overlap.</span>
+
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    field_shape : 2-element tuple</span>
+<span class="sd">        the shape of the resulting flow field</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">field_shape</span> <span class="o">=</span> <span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">image_size</span><span class="p">)</span> <span class="o">-</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">search_area_size</span><span class="p">))</span> <span class="o">//</span> <span class="p">(</span>  <span class="c1"># type: ignore</span>
+        <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">search_area_size</span><span class="p">)</span> <span class="o">-</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">overlap</span><span class="p">)</span>
+    <span class="p">)</span> <span class="o">+</span> <span class="mi">1</span>
+    
+    <span class="k">return</span> <span class="n">field_shape</span></div>
+
+
+<div class="viewcode-block" id="get_coordinates"><a class="viewcode-back" href="../../src/openpiv.html#openpiv.pyprocess.get_coordinates">[docs]</a><span class="k">def</span> <span class="nf">get_coordinates</span><span class="p">(</span>
+    <span class="n">image_size</span><span class="p">:</span> <span class="n">Tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span><span class="nb">int</span><span class="p">],</span>
+    <span class="n">search_area_size</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
+    <span class="n">overlap</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
+    <span class="n">center_on_field</span><span class="p">:</span> <span class="nb">bool</span><span class="o">=</span><span class="kc">True</span>
+    <span class="p">)</span><span class="o">-&gt;</span><span class="n">Tuple</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">]:</span>
+    <span class="sd">&quot;&quot;&quot;Compute the x, y coordinates of the centers of the interrogation windows.</span>
+<span class="sd">    for the SQUARE windows only, see also get_rect_coordinates</span>
+
+<span class="sd">    the origin (0,0) is like in the image, top left corner</span>
+<span class="sd">    positive x is an increasing column index from left to right</span>
+<span class="sd">    positive y is increasing row index, from top to bottom</span>
+
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    image_size: two elements tuple</span>
+<span class="sd">        a two dimensional tuple for the pixel size of the image</span>
+<span class="sd">        first element is number of rows, second element is</span>
+<span class="sd">        the number of columns.</span>
+
+<span class="sd">    search_area_size: int</span>
+<span class="sd">        the size of the search area windows, sometimes it&#39;s equal to</span>
+<span class="sd">        the interrogation window size in both frames A and B</span>
+
+<span class="sd">    overlap: int = 0 (default is no overlap)</span>
+<span class="sd">        the number of pixel by which two adjacent interrogation</span>
+<span class="sd">        windows overlap.</span>
+
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    x : 2d np.ndarray</span>
+<span class="sd">        a two dimensional array containing the x coordinates of the</span>
+<span class="sd">        interrogation window centers, in pixels.</span>
+
+<span class="sd">    y : 2d np.ndarray</span>
+<span class="sd">        a two dimensional array containing the y coordinates of the</span>
+<span class="sd">        interrogation window centers, in pixels.</span>
+
+<span class="sd">        Coordinate system 0,0 is at the top left corner, positive</span>
+<span class="sd">        x to the right, positive y from top downwards, i.e.</span>
+<span class="sd">        image coordinate system</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="c1"># get shape of the resulting flow field as a 2 component array </span>
+    <span class="n">field_shape</span> <span class="o">=</span> <span class="n">get_field_shape</span><span class="p">(</span><span class="n">image_size</span><span class="p">,</span>
+                                  <span class="p">(</span><span class="n">search_area_size</span><span class="p">,</span> <span class="n">search_area_size</span><span class="p">),</span>
+                                  <span class="p">(</span><span class="n">overlap</span><span class="p">,</span> <span class="n">overlap</span><span class="p">)</span>
+                                  <span class="p">)</span>
+
+    <span class="c1"># compute grid coordinates of the search area window centers</span>
+    <span class="c1"># note the field_shape[1] (columns) for x</span>
+    <span class="n">x</span> <span class="o">=</span> <span class="p">(</span>
+        <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="n">field_shape</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span> <span class="o">*</span> <span class="p">(</span><span class="n">search_area_size</span> <span class="o">-</span> <span class="n">overlap</span><span class="p">)</span>
+        <span class="o">+</span> <span class="p">(</span><span class="n">search_area_size</span><span class="p">)</span> <span class="o">/</span> <span class="mf">2.0</span>
+    <span class="p">)</span>
+    <span class="c1"># note the rows in field_shape[0]</span>
+    <span class="n">y</span> <span class="o">=</span> <span class="p">(</span>
+        <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="n">field_shape</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span> <span class="o">*</span> <span class="p">(</span><span class="n">search_area_size</span> <span class="o">-</span> <span class="n">overlap</span><span class="p">)</span>
+        <span class="o">+</span> <span class="p">(</span><span class="n">search_area_size</span><span class="p">)</span> <span class="o">/</span> <span class="mf">2.0</span>
+    <span class="p">)</span>
+
+    <span class="c1"># moving coordinates further to the center, so that the points at the</span>
+    <span class="c1"># extreme left/right or top/bottom</span>
+    <span class="c1"># have the same distance to the window edges. For simplicity only integer</span>
+    <span class="c1"># movements are allowed.</span>
+    <span class="k">if</span> <span class="n">center_on_field</span> <span class="ow">is</span> <span class="kc">True</span><span class="p">:</span>
+        <span class="n">x</span> <span class="o">+=</span> <span class="p">(</span>
+            <span class="n">image_size</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+            <span class="o">-</span> <span class="mi">1</span>
+            <span class="o">-</span> <span class="p">((</span><span class="n">field_shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)</span> <span class="o">*</span> <span class="p">(</span><span class="n">search_area_size</span> <span class="o">-</span> <span class="n">overlap</span><span class="p">)</span> <span class="o">+</span>
+                <span class="p">(</span><span class="n">search_area_size</span> <span class="o">-</span> <span class="mi">1</span><span class="p">))</span>
+        <span class="p">)</span> <span class="o">//</span> <span class="mi">2</span>
+        <span class="n">y</span> <span class="o">+=</span> <span class="p">(</span>
+            <span class="n">image_size</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">-</span> <span class="mi">1</span>
+            <span class="o">-</span> <span class="p">((</span><span class="n">field_shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)</span> <span class="o">*</span> <span class="p">(</span><span class="n">search_area_size</span> <span class="o">-</span> <span class="n">overlap</span><span class="p">)</span> <span class="o">+</span>
+               <span class="p">(</span><span class="n">search_area_size</span> <span class="o">-</span> <span class="mi">1</span><span class="p">))</span>
+        <span class="p">)</span> <span class="o">//</span> <span class="mi">2</span>
+
+        <span class="c1"># the origin 0,0 is at top left</span>
+        <span class="c1"># the units are pixels</span>
+
+    <span class="n">X</span><span class="p">,</span> <span class="n">Y</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">meshgrid</span><span class="p">(</span><span class="n">x</span><span class="p">,</span><span class="n">y</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="p">(</span><span class="n">X</span><span class="p">,</span> <span class="n">Y</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="get_rect_coordinates"><a class="viewcode-back" href="../../src/openpiv.html#openpiv.pyprocess.get_rect_coordinates">[docs]</a><span class="k">def</span> <span class="nf">get_rect_coordinates</span><span class="p">(</span>
+    <span class="n">image_size</span><span class="p">:</span> <span class="n">Tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span><span class="nb">int</span><span class="p">],</span>
+    <span class="n">window_size</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="n">Tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span><span class="nb">int</span><span class="p">]],</span>
+    <span class="n">overlap</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="n">Tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span><span class="nb">int</span><span class="p">]],</span>
+    <span class="n">center_on_field</span><span class="p">:</span> <span class="nb">bool</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+    <span class="p">):</span>
+    <span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">    Rectangular grid version of get_coordinates.</span>
+<span class="sd">    &#39;&#39;&#39;</span>
+    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">window_size</span><span class="p">,</span> <span class="nb">int</span><span class="p">):</span>
+        <span class="n">window_size</span> <span class="o">=</span> <span class="p">(</span><span class="n">window_size</span><span class="p">,</span> <span class="n">window_size</span><span class="p">)</span>
+    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">overlap</span><span class="p">,</span> <span class="nb">int</span><span class="p">):</span>
+        <span class="n">overlap</span> <span class="o">=</span> <span class="p">(</span><span class="n">overlap</span><span class="p">,</span> <span class="n">overlap</span><span class="p">)</span>
+
+    <span class="c1"># @alexlib why the center_on_field is False? </span>
+    <span class="c1"># todo: test True as well </span>
+    <span class="n">_</span><span class="p">,</span> <span class="n">y</span> <span class="o">=</span> <span class="n">get_coordinates</span><span class="p">(</span><span class="n">image_size</span><span class="p">,</span> <span class="n">window_size</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">overlap</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">center_on_field</span><span class="o">=</span><span class="n">center_on_field</span><span class="p">)</span>
+    <span class="n">x</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">get_coordinates</span><span class="p">(</span><span class="n">image_size</span><span class="p">,</span> <span class="n">window_size</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="n">overlap</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="n">center_on_field</span><span class="o">=</span><span class="n">center_on_field</span><span class="p">)</span>
+
+    <span class="n">X</span><span class="p">,</span><span class="n">Y</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">meshgrid</span><span class="p">(</span><span class="n">x</span><span class="p">[</span><span class="mi">0</span><span class="p">,:],</span> <span class="n">y</span><span class="p">[:,</span><span class="mi">0</span><span class="p">])</span>
+    
+    <span class="k">return</span> <span class="p">(</span><span class="n">X</span><span class="p">,</span> <span class="n">Y</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="sliding_window_array"><a class="viewcode-back" href="../../src/openpiv.html#openpiv.pyprocess.sliding_window_array">[docs]</a><span class="k">def</span> <span class="nf">sliding_window_array</span><span class="p">(</span>
+    <span class="n">image</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> 
+    <span class="n">window_size</span><span class="p">:</span> <span class="n">Tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span><span class="nb">int</span><span class="p">]</span><span class="o">=</span><span class="p">(</span><span class="mi">64</span><span class="p">,</span><span class="mi">64</span><span class="p">),</span>
+    <span class="n">overlap</span><span class="p">:</span> <span class="n">Tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span><span class="nb">int</span><span class="p">]</span><span class="o">=</span><span class="p">(</span><span class="mi">32</span><span class="p">,</span><span class="mi">32</span><span class="p">),</span>
+    <span class="p">)</span><span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
+    <span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">    This version does not use numpy as_strided and is much more memory efficient.</span>
+<span class="sd">    Basically, we have a 2d array and we want to perform cross-correlation</span>
+<span class="sd">    over the interrogation windows. An approach could be to loop over the array</span>
+<span class="sd">    but loops are expensive in python. So we create from the array a new array</span>
+<span class="sd">    with three dimension, of size (n_windows, window_size, window_size), in</span>
+<span class="sd">    which each slice, (along the first axis) is an interrogation window. </span>
+<span class="sd">    &#39;&#39;&#39;</span>
+    <span class="c1"># if isinstance(window_size, tuple) is False and isinstance(window_size, list) is False:</span>
+    <span class="c1">#     window_size = [window_size, window_size]</span>
+    <span class="c1"># if isinstance(overlap, tuple) is False and isinstance(overlap, list) is False:</span>
+    <span class="c1">#     overlap = [overlap, overlap]</span>
+
+    <span class="n">x</span><span class="p">,</span> <span class="n">y</span> <span class="o">=</span> <span class="n">get_rect_coordinates</span><span class="p">(</span><span class="n">image</span><span class="o">.</span><span class="n">shape</span><span class="p">,</span> <span class="n">window_size</span><span class="p">,</span> <span class="n">overlap</span><span class="p">,</span> <span class="n">center_on_field</span> <span class="o">=</span> <span class="kc">False</span><span class="p">)</span>
+    <span class="n">x</span> <span class="o">=</span> <span class="p">(</span><span class="n">x</span> <span class="o">-</span> <span class="n">window_size</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">//</span><span class="mi">2</span><span class="p">)</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="nb">int</span><span class="p">);</span> <span class="n">y</span> <span class="o">=</span> <span class="p">(</span><span class="n">y</span> <span class="o">-</span> <span class="n">window_size</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">//</span><span class="mi">2</span><span class="p">)</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="nb">int</span><span class="p">)</span>
+    <span class="n">x</span><span class="p">,</span> <span class="n">y</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span><span class="mi">1</span><span class="p">,</span><span class="mi">1</span><span class="p">)),</span> <span class="n">np</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="n">y</span><span class="p">,</span> <span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span><span class="mi">1</span><span class="p">,</span><span class="mi">1</span><span class="p">))</span>
+
+    <span class="n">win_x</span><span class="p">,</span> <span class="n">win_y</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">meshgrid</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">window_size</span><span class="p">[</span><span class="mi">1</span><span class="p">]),</span> <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">window_size</span><span class="p">[</span><span class="mi">0</span><span class="p">]))</span>
+    <span class="n">win_x</span> <span class="o">=</span> <span class="n">win_x</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">newaxis</span><span class="p">,:,:]</span> <span class="o">+</span> <span class="n">x</span>
+    <span class="n">win_y</span> <span class="o">=</span> <span class="n">win_y</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">newaxis</span><span class="p">,:,:]</span> <span class="o">+</span> <span class="n">y</span>
+    <span class="n">windows</span> <span class="o">=</span> <span class="n">image</span><span class="p">[</span><span class="n">win_y</span><span class="p">,</span> <span class="n">win_x</span><span class="p">]</span>
+    
+    <span class="k">return</span> <span class="n">windows</span></div>
+
+
+<div class="viewcode-block" id="moving_window_array"><a class="viewcode-back" href="../../src/openpiv.html#openpiv.pyprocess.moving_window_array">[docs]</a><span class="k">def</span> <span class="nf">moving_window_array</span><span class="p">(</span><span class="n">array</span><span class="p">,</span> <span class="n">window_size</span><span class="p">,</span> <span class="n">overlap</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    This is a nice numpy trick. The concept of numpy strides should be</span>
+<span class="sd">    clear to understand this code.</span>
+
+<span class="sd">    Basically, we have a 2d array and we want to perform cross-correlation</span>
+<span class="sd">    over the interrogation windows. An approach could be to loop over the array</span>
+<span class="sd">    but loops are expensive in python. So we create from the array a new array</span>
+<span class="sd">    with three dimension, of size (n_windows, window_size, window_size), in</span>
+<span class="sd">    which each slice, (along the first axis) is an interrogation window.</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">sz</span> <span class="o">=</span> <span class="n">array</span><span class="o">.</span><span class="n">itemsize</span>
+    <span class="n">shape</span> <span class="o">=</span> <span class="n">array</span><span class="o">.</span><span class="n">shape</span>
+    <span class="n">array</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">ascontiguousarray</span><span class="p">(</span><span class="n">array</span><span class="p">)</span>
+
+    <span class="n">strides</span> <span class="o">=</span> <span class="p">(</span>
+        <span class="n">sz</span> <span class="o">*</span> <span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">*</span> <span class="p">(</span><span class="n">window_size</span> <span class="o">-</span> <span class="n">overlap</span><span class="p">),</span>
+        <span class="n">sz</span> <span class="o">*</span> <span class="p">(</span><span class="n">window_size</span> <span class="o">-</span> <span class="n">overlap</span><span class="p">),</span>
+        <span class="n">sz</span> <span class="o">*</span> <span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span>
+        <span class="n">sz</span><span class="p">,</span>
+    <span class="p">)</span>
+    <span class="n">shape</span> <span class="o">=</span> <span class="p">(</span>
+        <span class="nb">int</span><span class="p">((</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">-</span> <span class="n">window_size</span><span class="p">)</span> <span class="o">/</span> <span class="p">(</span><span class="n">window_size</span> <span class="o">-</span> <span class="n">overlap</span><span class="p">))</span> <span class="o">+</span> <span class="mi">1</span><span class="p">,</span>
+        <span class="nb">int</span><span class="p">((</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">-</span> <span class="n">window_size</span><span class="p">)</span> <span class="o">/</span> <span class="p">(</span><span class="n">window_size</span> <span class="o">-</span> <span class="n">overlap</span><span class="p">))</span> <span class="o">+</span> <span class="mi">1</span><span class="p">,</span>
+        <span class="n">window_size</span><span class="p">,</span>
+        <span class="n">window_size</span><span class="p">,</span>
+    <span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">numpy</span><span class="o">.</span><span class="n">lib</span><span class="o">.</span><span class="n">stride_tricks</span><span class="o">.</span><span class="n">as_strided</span><span class="p">(</span>
+        <span class="n">array</span><span class="p">,</span> <span class="n">strides</span><span class="o">=</span><span class="n">strides</span><span class="p">,</span> <span class="n">shape</span><span class="o">=</span><span class="n">shape</span>
+    <span class="p">)</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="n">window_size</span><span class="p">,</span> <span class="n">window_size</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="find_first_peak"><a class="viewcode-back" href="../../src/openpiv.html#openpiv.pyprocess.find_first_peak">[docs]</a><span class="k">def</span> <span class="nf">find_first_peak</span><span class="p">(</span><span class="n">corr</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Find row and column indices of the first correlation peak.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    corr : np.ndarray</span>
+<span class="sd">        the correlation map fof the strided images (N,K,M) where</span>
+<span class="sd">        N is the number of windows, KxM is the interrogation window size</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">        (i,j) : integers, index of the peak position</span>
+<span class="sd">        peak  : amplitude of the peak</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">unravel_index</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">argmax</span><span class="p">(</span><span class="n">corr</span><span class="p">),</span> <span class="n">corr</span><span class="o">.</span><span class="n">shape</span><span class="p">),</span> <span class="n">corr</span><span class="o">.</span><span class="n">max</span><span class="p">()</span></div>
+
+
+<div class="viewcode-block" id="find_second_peak"><a class="viewcode-back" href="../../src/openpiv.html#openpiv.pyprocess.find_second_peak">[docs]</a><span class="k">def</span> <span class="nf">find_second_peak</span><span class="p">(</span><span class="n">corr</span><span class="p">,</span> <span class="n">i</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">j</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">width</span><span class="o">=</span><span class="mi">2</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Find the value of the second largest peak.</span>
+
+<span class="sd">    The second largest peak is the height of the peak in</span>
+<span class="sd">    the region outside a 3x3 submatrxi around the first</span>
+<span class="sd">    correlation peak.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    corr: np.ndarray</span>
+<span class="sd">          the correlation map.</span>
+
+<span class="sd">    i,j : ints</span>
+<span class="sd">          row and column location of the first peak.</span>
+
+<span class="sd">    width : int</span>
+<span class="sd">        the half size of the region around the first correlation</span>
+<span class="sd">        peak to ignore for finding the second peak.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    i : int</span>
+<span class="sd">        the row index of the second correlation peak.</span>
+
+<span class="sd">    j : int</span>
+<span class="sd">        the column index of the second correlation peak.</span>
+
+<span class="sd">    corr_max2 : int</span>
+<span class="sd">        the value of the second correlation peak.</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">if</span> <span class="n">i</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">or</span> <span class="n">j</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="p">(</span><span class="n">i</span><span class="p">,</span> <span class="n">j</span><span class="p">),</span> <span class="n">tmp</span> <span class="o">=</span> <span class="n">find_first_peak</span><span class="p">(</span><span class="n">corr</span><span class="p">)</span>
+
+    <span class="c1"># create a masked view of the corr</span>
+    <span class="n">tmp</span> <span class="o">=</span> <span class="n">corr</span><span class="o">.</span><span class="n">view</span><span class="p">(</span><span class="n">ma</span><span class="o">.</span><span class="n">MaskedArray</span><span class="p">)</span>
+
+    <span class="c1"># set width x width square submatrix around the first correlation peak as</span>
+    <span class="c1"># masked.</span>
+    <span class="c1"># Before check if we are not too close to the boundaries, otherwise we</span>
+    <span class="c1"># have negative indices</span>
+    <span class="n">iini</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">i</span> <span class="o">-</span> <span class="n">width</span><span class="p">)</span>
+    <span class="n">ifin</span> <span class="o">=</span> <span class="nb">min</span><span class="p">(</span><span class="n">i</span> <span class="o">+</span> <span class="n">width</span> <span class="o">+</span> <span class="mi">1</span><span class="p">,</span> <span class="n">corr</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+    <span class="n">jini</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">j</span> <span class="o">-</span> <span class="n">width</span><span class="p">)</span>
+    <span class="n">jfin</span> <span class="o">=</span> <span class="nb">min</span><span class="p">(</span><span class="n">j</span> <span class="o">+</span> <span class="n">width</span> <span class="o">+</span> <span class="mi">1</span><span class="p">,</span> <span class="n">corr</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span>
+    <span class="n">tmp</span><span class="p">[</span><span class="n">iini</span><span class="p">:</span><span class="n">ifin</span><span class="p">,</span> <span class="n">jini</span><span class="p">:</span><span class="n">jfin</span><span class="p">]</span> <span class="o">=</span> <span class="n">ma</span><span class="o">.</span><span class="n">masked</span>
+    <span class="p">(</span><span class="n">i</span><span class="p">,</span> <span class="n">j</span><span class="p">),</span> <span class="n">corr_max2</span> <span class="o">=</span> <span class="n">find_first_peak</span><span class="p">(</span><span class="n">tmp</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="p">(</span><span class="n">i</span><span class="p">,</span> <span class="n">j</span><span class="p">),</span> <span class="n">corr_max2</span></div>
+
+
+<div class="viewcode-block" id="find_all_first_peaks"><a class="viewcode-back" href="../../src/openpiv.html#openpiv.pyprocess.find_all_first_peaks">[docs]</a><span class="k">def</span> <span class="nf">find_all_first_peaks</span><span class="p">(</span><span class="n">corr</span><span class="p">):</span>
+    <span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">    Find row and column indices of the first correlation peak.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    corr : np.ndarray</span>
+<span class="sd">        the correlation map fof the strided images (N,K,M) where</span>
+<span class="sd">        N is the number of windows, KxM is the interrogation window size</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">        index_list : integers, index of the peak position in (N,i,j)</span>
+<span class="sd">        peaks_max  : amplitude of the peak</span>
+<span class="sd">    &#39;&#39;&#39;</span>
+    <span class="n">ind</span> <span class="o">=</span> <span class="n">corr</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="n">corr</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="o">-</span><span class="mi">1</span><span class="p">)</span><span class="o">.</span><span class="n">argmax</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">)</span>
+    <span class="n">peaks</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">unravel_index</span><span class="p">(</span><span class="n">ind</span><span class="p">,</span> <span class="n">corr</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="o">-</span><span class="mi">2</span><span class="p">:]))</span>
+    <span class="n">peaks</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">vstack</span><span class="p">((</span><span class="n">peaks</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">peaks</span><span class="p">[</span><span class="mi">1</span><span class="p">]))</span><span class="o">.</span><span class="n">T</span>
+    <span class="n">index_list</span> <span class="o">=</span> <span class="p">[(</span><span class="n">i</span><span class="p">,</span> <span class="n">v</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">v</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span> <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">peaks</span><span class="p">)]</span>
+    <span class="n">peaks_max</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">nanmax</span><span class="p">(</span><span class="n">corr</span><span class="p">,</span> <span class="n">axis</span> <span class="o">=</span> <span class="p">(</span><span class="o">-</span><span class="mi">2</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">))</span>
+    <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">index_list</span><span class="p">),</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">peaks_max</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="find_all_second_peaks"><a class="viewcode-back" href="../../src/openpiv.html#openpiv.pyprocess.find_all_second_peaks">[docs]</a><span class="k">def</span> <span class="nf">find_all_second_peaks</span><span class="p">(</span><span class="n">corr</span><span class="p">,</span> <span class="n">width</span> <span class="o">=</span> <span class="mi">2</span><span class="p">):</span>
+    <span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">    Find row and column indices of the first correlation peak.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    corr : np.ndarray</span>
+<span class="sd">        the correlation map fof the strided images (N,K,M) where</span>
+<span class="sd">        N is the number of windows, KxM is the interrogation window size</span>
+<span class="sd">        </span>
+<span class="sd">    width : int</span>
+<span class="sd">        the half size of the region around the first correlation</span>
+<span class="sd">        peak to ignore for finding the second peak</span>
+<span class="sd">        </span>
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">        index_list : integers, index of the peak position in (N,i,j)</span>
+<span class="sd">        peaks_max  : amplitude of the peak</span>
+<span class="sd">    &#39;&#39;&#39;</span>
+    <span class="n">indexes</span> <span class="o">=</span> <span class="n">find_all_first_peaks</span><span class="p">(</span><span class="n">corr</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="nb">int</span><span class="p">)</span>
+    <span class="n">ind</span> <span class="o">=</span> <span class="n">indexes</span><span class="p">[:,</span> <span class="mi">0</span><span class="p">]</span>
+    <span class="n">x</span> <span class="o">=</span> <span class="n">indexes</span><span class="p">[:,</span> <span class="mi">1</span><span class="p">]</span>
+    <span class="n">y</span> <span class="o">=</span> <span class="n">indexes</span><span class="p">[:,</span> <span class="mi">2</span><span class="p">]</span>
+    <span class="n">iini</span> <span class="o">=</span> <span class="n">x</span> <span class="o">-</span> <span class="n">width</span>
+    <span class="n">ifin</span> <span class="o">=</span> <span class="n">x</span> <span class="o">+</span> <span class="n">width</span> <span class="o">+</span> <span class="mi">1</span>
+    <span class="n">jini</span> <span class="o">=</span> <span class="n">y</span> <span class="o">-</span> <span class="n">width</span>
+    <span class="n">jfin</span> <span class="o">=</span> <span class="n">y</span> <span class="o">+</span> <span class="n">width</span> <span class="o">+</span> <span class="mi">1</span>
+    <span class="n">iini</span><span class="p">[</span><span class="n">iini</span> <span class="o">&lt;</span> <span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="mi">0</span> <span class="c1"># border checking</span>
+    <span class="n">ifin</span><span class="p">[</span><span class="n">ifin</span> <span class="o">&gt;</span> <span class="n">corr</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]]</span> <span class="o">=</span> <span class="n">corr</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+    <span class="n">jini</span><span class="p">[</span><span class="n">jini</span> <span class="o">&lt;</span> <span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="n">jfin</span><span class="p">[</span><span class="n">jfin</span> <span class="o">&gt;</span> <span class="n">corr</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">2</span><span class="p">]]</span> <span class="o">=</span> <span class="n">corr</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span>
+    <span class="c1"># create a masked view of the corr</span>
+    <span class="n">tmp</span> <span class="o">=</span> <span class="n">corr</span><span class="o">.</span><span class="n">view</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">ma</span><span class="o">.</span><span class="n">MaskedArray</span><span class="p">)</span>
+    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">ind</span><span class="p">:</span>
+        <span class="n">tmp</span><span class="p">[</span><span class="n">i</span><span class="p">,</span> <span class="n">iini</span><span class="p">[</span><span class="n">i</span><span class="p">]:</span><span class="n">ifin</span><span class="p">[</span><span class="n">i</span><span class="p">],</span> <span class="n">jini</span><span class="p">[</span><span class="n">i</span><span class="p">]:</span><span class="n">jfin</span><span class="p">[</span><span class="n">i</span><span class="p">]]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">ma</span><span class="o">.</span><span class="n">masked</span>
+    <span class="n">indexes</span><span class="p">,</span> <span class="n">peaks</span> <span class="o">=</span> <span class="n">find_all_first_peaks</span><span class="p">(</span><span class="n">tmp</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">indexes</span><span class="p">,</span> <span class="n">peaks</span></div>
+
+
+<div class="viewcode-block" id="find_subpixel_peak_position"><a class="viewcode-back" href="../../src/openpiv.html#openpiv.pyprocess.find_subpixel_peak_position">[docs]</a><span class="k">def</span> <span class="nf">find_subpixel_peak_position</span><span class="p">(</span><span class="n">corr</span><span class="p">,</span> <span class="n">subpixel_method</span><span class="o">=</span><span class="s2">&quot;gaussian&quot;</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Find subpixel approximation of the correlation peak.</span>
+
+<span class="sd">    This function returns a subpixels approximation of the correlation</span>
+<span class="sd">    peak by using one of the several methods available. If requested,</span>
+<span class="sd">    the function also returns the signal to noise ratio level evaluated</span>
+<span class="sd">    from the correlation map.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    corr : np.ndarray</span>
+<span class="sd">        the correlation map.</span>
+
+<span class="sd">    subpixel_method : string</span>
+<span class="sd">         one of the following methods to estimate subpixel location of the</span>
+<span class="sd">         peak:</span>
+<span class="sd">         &#39;centroid&#39; [replaces default if correlation map is negative],</span>
+<span class="sd">         &#39;gaussian&#39; [default if correlation map is positive],</span>
+<span class="sd">         &#39;parabolic&#39;.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    subp_peak_position : two elements tuple</span>
+<span class="sd">        the fractional row and column indices for the sub-pixel</span>
+<span class="sd">        approximation of the correlation peak.</span>
+<span class="sd">        If the first peak is on the border of the correlation map</span>
+<span class="sd">        or any other problem, the returned result is a tuple of NaNs.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="c1"># initialization</span>
+    <span class="c1"># default_peak_position = (np.floor(corr.shape[0] / 2.),</span>
+    <span class="c1"># np.floor(corr.shape[1] / 2.))</span>
+    <span class="c1"># default_peak_position = np.array([0,0])</span>
+    <span class="n">eps</span> <span class="o">=</span> <span class="mf">1e-7</span>
+    <span class="c1"># subp_peak_position = tuple(np.floor(np.array(corr.shape)/2))</span>
+    <span class="n">subp_peak_position</span> <span class="o">=</span> <span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">nan</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">nan</span><span class="p">)</span>  <span class="c1"># any wrong position will mark nan</span>
+
+    <span class="c1"># check inputs</span>
+    <span class="k">if</span> <span class="n">subpixel_method</span> <span class="ow">not</span> <span class="ow">in</span> <span class="p">(</span><span class="s2">&quot;gaussian&quot;</span><span class="p">,</span> <span class="s2">&quot;centroid&quot;</span><span class="p">,</span> <span class="s2">&quot;parabolic&quot;</span><span class="p">):</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Method not implemented </span><span class="si">{</span><span class="n">subpixel_method</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+
+    <span class="c1"># the peak locations</span>
+    <span class="p">(</span><span class="n">peak1_i</span><span class="p">,</span> <span class="n">peak1_j</span><span class="p">),</span> <span class="n">_</span> <span class="o">=</span> <span class="n">find_first_peak</span><span class="p">(</span><span class="n">corr</span><span class="p">)</span>
+
+    <span class="c1"># import pdb; pdb.set_trace()</span>
+
+    <span class="c1"># the peak and its neighbours: left, right, down, up</span>
+    <span class="c1"># but we have to make sure that peak is not at the border</span>
+    <span class="c1"># @ErichZimmer noticed this bug for the small windows</span>
+
+    <span class="k">if</span> <span class="p">((</span><span class="n">peak1_i</span> <span class="o">==</span> <span class="mi">0</span><span class="p">)</span> <span class="o">|</span> <span class="p">(</span><span class="n">peak1_i</span> <span class="o">==</span> <span class="n">corr</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">-</span><span class="mi">1</span><span class="p">)</span> <span class="o">|</span>
+       <span class="p">(</span><span class="n">peak1_j</span> <span class="o">==</span> <span class="mi">0</span><span class="p">)</span> <span class="o">|</span> <span class="p">(</span><span class="n">peak1_j</span> <span class="o">==</span> <span class="n">corr</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">-</span><span class="mi">1</span><span class="p">)):</span>
+        <span class="k">return</span> <span class="n">subp_peak_position</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">corr</span> <span class="o">+=</span> <span class="n">eps</span>  <span class="c1"># prevents log(0) = nan if &quot;gaussian&quot; is used (notebook)</span>
+        <span class="n">c</span> <span class="o">=</span> <span class="n">corr</span><span class="p">[</span><span class="n">peak1_i</span><span class="p">,</span> <span class="n">peak1_j</span><span class="p">]</span>
+        <span class="n">cl</span> <span class="o">=</span> <span class="n">corr</span><span class="p">[</span><span class="n">peak1_i</span> <span class="o">-</span> <span class="mi">1</span><span class="p">,</span> <span class="n">peak1_j</span><span class="p">]</span>
+        <span class="n">cr</span> <span class="o">=</span> <span class="n">corr</span><span class="p">[</span><span class="n">peak1_i</span> <span class="o">+</span> <span class="mi">1</span><span class="p">,</span> <span class="n">peak1_j</span><span class="p">]</span>
+        <span class="n">cd</span> <span class="o">=</span> <span class="n">corr</span><span class="p">[</span><span class="n">peak1_i</span><span class="p">,</span> <span class="n">peak1_j</span> <span class="o">-</span> <span class="mi">1</span><span class="p">]</span>
+        <span class="n">cu</span> <span class="o">=</span> <span class="n">corr</span><span class="p">[</span><span class="n">peak1_i</span><span class="p">,</span> <span class="n">peak1_j</span> <span class="o">+</span> <span class="mi">1</span><span class="p">]</span>
+
+        <span class="c1"># gaussian fit</span>
+        <span class="k">if</span> <span class="n">np</span><span class="o">.</span><span class="n">logical_and</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">any</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="n">c</span><span class="p">,</span> <span class="n">cl</span><span class="p">,</span> <span class="n">cr</span><span class="p">,</span> <span class="n">cd</span><span class="p">,</span> <span class="n">cu</span><span class="p">])</span> <span class="o">&lt;</span> <span class="mi">0</span><span class="p">),</span>
+                          <span class="n">subpixel_method</span> <span class="o">==</span> <span class="s2">&quot;gaussian&quot;</span><span class="p">):</span>
+            <span class="n">subpixel_method</span> <span class="o">=</span> <span class="s2">&quot;parabolic&quot;</span>
+
+        <span class="c1"># try:</span>
+        <span class="k">if</span> <span class="n">subpixel_method</span> <span class="o">==</span> <span class="s2">&quot;centroid&quot;</span><span class="p">:</span>
+            <span class="n">subp_peak_position</span> <span class="o">=</span> <span class="p">(</span>
+                <span class="p">((</span><span class="n">peak1_i</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)</span> <span class="o">*</span> <span class="n">cl</span> <span class="o">+</span> <span class="n">peak1_i</span> <span class="o">*</span> <span class="n">c</span> <span class="o">+</span> <span class="p">(</span><span class="n">peak1_i</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span> <span class="o">*</span> <span class="n">cr</span><span class="p">)</span> <span class="o">/</span>
+                <span class="p">(</span><span class="n">cl</span> <span class="o">+</span> <span class="n">c</span> <span class="o">+</span> <span class="n">cr</span><span class="p">),</span>
+                <span class="p">((</span><span class="n">peak1_j</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)</span> <span class="o">*</span> <span class="n">cd</span> <span class="o">+</span> <span class="n">peak1_j</span> <span class="o">*</span> <span class="n">c</span> <span class="o">+</span> <span class="p">(</span><span class="n">peak1_j</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span> <span class="o">*</span> <span class="n">cu</span><span class="p">)</span> <span class="o">/</span>
+                <span class="p">(</span><span class="n">cd</span> <span class="o">+</span> <span class="n">c</span> <span class="o">+</span> <span class="n">cu</span><span class="p">),</span>
+            <span class="p">)</span>
+
+        <span class="k">elif</span> <span class="n">subpixel_method</span> <span class="o">==</span> <span class="s2">&quot;gaussian&quot;</span><span class="p">:</span>
+            <span class="n">nom1</span> <span class="o">=</span> <span class="n">log</span><span class="p">(</span><span class="n">cl</span><span class="p">)</span> <span class="o">-</span> <span class="n">log</span><span class="p">(</span><span class="n">cr</span><span class="p">)</span>
+            <span class="n">den1</span> <span class="o">=</span> <span class="mi">2</span> <span class="o">*</span> <span class="n">log</span><span class="p">(</span><span class="n">cl</span><span class="p">)</span> <span class="o">-</span> <span class="mi">4</span> <span class="o">*</span> <span class="n">log</span><span class="p">(</span><span class="n">c</span><span class="p">)</span> <span class="o">+</span> <span class="mi">2</span> <span class="o">*</span> <span class="n">log</span><span class="p">(</span><span class="n">cr</span><span class="p">)</span>
+            <span class="n">nom2</span> <span class="o">=</span> <span class="n">log</span><span class="p">(</span><span class="n">cd</span><span class="p">)</span> <span class="o">-</span> <span class="n">log</span><span class="p">(</span><span class="n">cu</span><span class="p">)</span>
+            <span class="n">den2</span> <span class="o">=</span> <span class="mi">2</span> <span class="o">*</span> <span class="n">log</span><span class="p">(</span><span class="n">cd</span><span class="p">)</span> <span class="o">-</span> <span class="mi">4</span> <span class="o">*</span> <span class="n">log</span><span class="p">(</span><span class="n">c</span><span class="p">)</span> <span class="o">+</span> <span class="mi">2</span> <span class="o">*</span> <span class="n">log</span><span class="p">(</span><span class="n">cu</span><span class="p">)</span>
+
+            <span class="n">subp_peak_position</span> <span class="o">=</span> <span class="p">(</span>
+                <span class="n">peak1_i</span> <span class="o">+</span> <span class="n">np</span><span class="o">.</span><span class="n">divide</span><span class="p">(</span><span class="n">nom1</span><span class="p">,</span> <span class="n">den1</span><span class="p">,</span> <span class="n">out</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="mi">1</span><span class="p">),</span>
+                                    <span class="n">where</span><span class="o">=</span><span class="p">(</span><span class="n">den1</span> <span class="o">!=</span> <span class="mf">0.0</span><span class="p">))[</span><span class="mi">0</span><span class="p">],</span>
+                <span class="n">peak1_j</span> <span class="o">+</span> <span class="n">np</span><span class="o">.</span><span class="n">divide</span><span class="p">(</span><span class="n">nom2</span><span class="p">,</span> <span class="n">den2</span><span class="p">,</span> <span class="n">out</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="mi">1</span><span class="p">),</span>
+                                    <span class="n">where</span><span class="o">=</span><span class="p">(</span><span class="n">den2</span> <span class="o">!=</span> <span class="mf">0.0</span><span class="p">))[</span><span class="mi">0</span><span class="p">],</span>
+            <span class="p">)</span>
+
+        <span class="k">elif</span> <span class="n">subpixel_method</span> <span class="o">==</span> <span class="s2">&quot;parabolic&quot;</span><span class="p">:</span>
+            <span class="n">subp_peak_position</span> <span class="o">=</span> <span class="p">(</span>
+                <span class="n">peak1_i</span> <span class="o">+</span> <span class="p">(</span><span class="n">cl</span> <span class="o">-</span> <span class="n">cr</span><span class="p">)</span> <span class="o">/</span> <span class="p">(</span><span class="mi">2</span> <span class="o">*</span> <span class="n">cl</span> <span class="o">-</span> <span class="mi">4</span> <span class="o">*</span> <span class="n">c</span> <span class="o">+</span> <span class="mi">2</span> <span class="o">*</span> <span class="n">cr</span><span class="p">),</span>
+                <span class="n">peak1_j</span> <span class="o">+</span> <span class="p">(</span><span class="n">cd</span> <span class="o">-</span> <span class="n">cu</span><span class="p">)</span> <span class="o">/</span> <span class="p">(</span><span class="mi">2</span> <span class="o">*</span> <span class="n">cd</span> <span class="o">-</span> <span class="mi">4</span> <span class="o">*</span> <span class="n">c</span> <span class="o">+</span> <span class="mi">2</span> <span class="o">*</span> <span class="n">cu</span><span class="p">),</span>
+            <span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">subp_peak_position</span></div>
+
+
+<div class="viewcode-block" id="sig2noise_ratio"><a class="viewcode-back" href="../../src/openpiv.html#openpiv.pyprocess.sig2noise_ratio">[docs]</a><span class="k">def</span> <span class="nf">sig2noise_ratio</span><span class="p">(</span>
+    <span class="n">correlation</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span>
+    <span class="n">sig2noise_method</span><span class="p">:</span> <span class="nb">str</span><span class="o">=</span><span class="s2">&quot;peak2peak&quot;</span><span class="p">,</span>
+    <span class="n">width</span><span class="p">:</span> <span class="nb">int</span><span class="o">=</span><span class="mi">2</span>
+    <span class="p">)</span><span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Computes the signal to noise ratio from the correlation map.</span>
+
+<span class="sd">    The signal to noise ratio is computed from the correlation map with</span>
+<span class="sd">    one of two available method. It is a measure of the quality of the</span>
+<span class="sd">    matching between to interrogation windows.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    corr : 3d np.ndarray</span>
+<span class="sd">        the correlation maps of the image pair, concatenated along 0th axis</span>
+
+<span class="sd">    sig2noise_method: string</span>
+<span class="sd">        the method for evaluating the signal to noise ratio value from</span>
+<span class="sd">        the correlation map. Can be `peak2peak`, `peak2mean` or None</span>
+<span class="sd">        if no evaluation should be made.</span>
+
+<span class="sd">    width : int, optional</span>
+<span class="sd">        the half size of the region around the first</span>
+<span class="sd">        correlation peak to ignore for finding the second</span>
+<span class="sd">        peak. [default: 2]. Only used if ``sig2noise_method==peak2peak``.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    sig2noise : np.array</span>
+<span class="sd">        the signal to noise ratios from the correlation maps.</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">sig2noise</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">correlation</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+    <span class="n">corr_max1</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">correlation</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+    <span class="n">corr_max2</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">correlation</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+    <span class="k">if</span> <span class="n">sig2noise_method</span> <span class="o">==</span> <span class="s2">&quot;peak2peak&quot;</span><span class="p">:</span>
+        <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">corr</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">correlation</span><span class="p">):</span>
+            <span class="c1"># compute first peak position</span>
+            <span class="p">(</span><span class="n">peak1_i</span><span class="p">,</span> <span class="n">peak1_j</span><span class="p">),</span> <span class="n">corr_max1</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="n">find_first_peak</span><span class="p">(</span><span class="n">corr</span><span class="p">)</span>
+
+            <span class="n">condition</span> <span class="o">=</span> <span class="p">(</span>
+                <span class="n">corr_max1</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">&lt;</span> <span class="mf">1e-3</span>
+                <span class="ow">or</span> <span class="n">peak1_i</span> <span class="o">==</span> <span class="mi">0</span>
+                <span class="ow">or</span> <span class="n">peak1_i</span> <span class="o">==</span> <span class="n">corr</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">-</span> <span class="mi">1</span>
+                <span class="ow">or</span> <span class="n">peak1_j</span> <span class="o">==</span> <span class="mi">0</span>
+                <span class="ow">or</span> <span class="n">peak1_j</span> <span class="o">==</span> <span class="n">corr</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">-</span> <span class="mi">1</span>
+            <span class="p">)</span>
+
+            <span class="k">if</span> <span class="n">condition</span><span class="p">:</span>
+                <span class="c1"># return zero, since we have no signal.</span>
+                <span class="c1"># no point to get the second peak, save time</span>
+                <span class="n">sig2noise</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="mf">0.0</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="c1"># find second peak height</span>
+                <span class="p">(</span><span class="n">peak2_i</span><span class="p">,</span> <span class="n">peak2_j</span><span class="p">),</span> <span class="n">corr_max2</span> <span class="o">=</span> <span class="n">find_second_peak</span><span class="p">(</span>
+                    <span class="n">corr</span><span class="p">,</span> <span class="n">peak1_i</span><span class="p">,</span> <span class="n">peak1_j</span><span class="p">,</span> <span class="n">width</span><span class="o">=</span><span class="n">width</span>
+                <span class="p">)</span>
+
+                <span class="n">border_condition</span> <span class="o">=</span> <span class="p">(</span>
+                    <span class="n">peak2_i</span> <span class="o">==</span> <span class="mi">0</span>
+                    <span class="ow">or</span> <span class="n">peak2_i</span> <span class="o">==</span> <span class="n">corr</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">-</span> <span class="mi">1</span>
+                    <span class="ow">or</span> <span class="n">peak2_j</span> <span class="o">==</span> <span class="mi">0</span>
+                    <span class="ow">or</span> <span class="n">peak2_j</span> <span class="o">==</span> <span class="n">corr</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">-</span> <span class="mi">1</span>
+                <span class="p">)</span>
+
+                <span class="n">condition</span> <span class="o">=</span> <span class="p">(</span>
+                    <span class="c1"># non-valid second peak</span>
+                    <span class="n">corr_max2</span> <span class="o">==</span> <span class="mi">0</span>
+                    <span class="ow">or</span> <span class="p">(</span>
+                    <span class="c1"># maybe a valid peak at the border, bad sign</span>
+                    <span class="n">border_condition</span> <span class="ow">and</span> <span class="n">corr_max2</span> <span class="o">&gt;</span> <span class="mf">0.5</span><span class="o">*</span><span class="n">corr_max1</span><span class="p">[</span><span class="n">i</span><span class="p">]</span>
+                    <span class="p">)</span>
+                <span class="p">)</span>
+                <span class="k">if</span> <span class="n">condition</span><span class="p">:</span>  <span class="c1"># mark failed peak2</span>
+                    <span class="n">corr_max2</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">nan</span>
+
+                <span class="n">sig2noise</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="n">corr_max1</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">/</span> <span class="n">corr_max2</span>
+
+    <span class="k">elif</span> <span class="n">sig2noise_method</span> <span class="o">==</span> <span class="s2">&quot;peak2mean&quot;</span><span class="p">:</span>  <span class="c1"># only one loop</span>
+        <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">corr</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">correlation</span><span class="p">):</span>
+            <span class="c1"># compute first peak position</span>
+            <span class="p">(</span><span class="n">peak1_i</span><span class="p">,</span> <span class="n">peak1_j</span><span class="p">),</span> <span class="n">corr_max1</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="n">find_first_peak</span><span class="p">(</span><span class="n">corr</span><span class="p">)</span>
+
+            <span class="n">condition</span> <span class="o">=</span> <span class="p">(</span>
+                <span class="n">corr_max1</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">&lt;</span> <span class="mf">1e-3</span>
+                <span class="ow">or</span> <span class="n">peak1_i</span> <span class="o">==</span> <span class="mi">0</span>
+                <span class="ow">or</span> <span class="n">peak1_i</span> <span class="o">==</span> <span class="n">corr</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">-</span> <span class="mi">1</span>
+                <span class="ow">or</span> <span class="n">peak1_j</span> <span class="o">==</span> <span class="mi">0</span>
+                <span class="ow">or</span> <span class="n">peak1_j</span> <span class="o">==</span> <span class="n">corr</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">-</span> <span class="mi">1</span>
+            <span class="p">)</span>
+
+            <span class="k">if</span> <span class="n">condition</span><span class="p">:</span>
+                <span class="c1"># return zero, since we have no signal.</span>
+                <span class="c1"># no point to get the second peak, save time</span>
+                <span class="n">corr_max1</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="mf">0.0</span>
+
+        <span class="c1"># find means of all the correlation maps</span>
+        <span class="n">corr_max2</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">correlation</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">axis</span><span class="o">=</span><span class="p">(</span><span class="o">-</span><span class="mi">2</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">)))</span>
+        <span class="n">corr_max2</span><span class="p">[</span><span class="n">corr_max2</span> <span class="o">==</span> <span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">nan</span>  <span class="c1"># mark failed ones</span>
+
+        <span class="n">sig2noise</span> <span class="o">=</span> <span class="n">corr_max1</span> <span class="o">/</span> <span class="n">corr_max2</span>
+
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;wrong sig2noise_method&quot;</span><span class="p">)</span>
+
+    <span class="c1"># sig2noise is zero for all failed ones</span>
+    <span class="n">sig2noise</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">isnan</span><span class="p">(</span><span class="n">sig2noise</span><span class="p">)]</span> <span class="o">=</span> <span class="mf">0.0</span>
+
+    <span class="k">return</span> <span class="n">sig2noise</span></div>
+
+
+<div class="viewcode-block" id="vectorized_sig2noise_ratio"><a class="viewcode-back" href="../../src/openpiv.html#openpiv.pyprocess.vectorized_sig2noise_ratio">[docs]</a><span class="k">def</span> <span class="nf">vectorized_sig2noise_ratio</span><span class="p">(</span><span class="n">correlation</span><span class="p">,</span> 
+                               <span class="n">sig2noise_method</span> <span class="o">=</span> <span class="s1">&#39;peak2peak&#39;</span><span class="p">,</span>
+                               <span class="n">width</span> <span class="o">=</span> <span class="mi">2</span><span class="p">):</span>
+    <span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">    Computes the signal to noise ratio from the correlation map in a</span>
+<span class="sd">    mostly vectorized approach, thus much faster.</span>
+
+<span class="sd">    The signal to noise ratio is computed from the correlation map with</span>
+<span class="sd">    one of two available method. It is a measure of the quality of the</span>
+<span class="sd">    matching between to interrogation windows.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    corr : 3d np.ndarray</span>
+<span class="sd">        the correlation maps of the image pair, concatenated along 0th axis</span>
+
+<span class="sd">    sig2noise_method: string</span>
+<span class="sd">        the method for evaluating the signal to noise ratio value from</span>
+<span class="sd">        the correlation map. Can be `peak2peak`, `peak2mean` or None</span>
+<span class="sd">        if no evaluation should be made.</span>
+
+<span class="sd">    width : int, optional</span>
+<span class="sd">        the half size of the region around the first</span>
+<span class="sd">        correlation peak to ignore for finding the second</span>
+<span class="sd">        peak. [default: 2]. Only used if sig2noise_method==peak2peak.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    sig2noise : np.array</span>
+<span class="sd">        the signal to noise ratios from the correlation maps.</span>
+<span class="sd">    &#39;&#39;&#39;</span>
+    <span class="k">if</span> <span class="n">sig2noise_method</span> <span class="o">==</span> <span class="s2">&quot;peak2peak&quot;</span><span class="p">:</span>
+        <span class="n">ind1</span><span class="p">,</span> <span class="n">peaks1</span> <span class="o">=</span> <span class="n">find_all_first_peaks</span><span class="p">(</span><span class="n">correlation</span><span class="p">)</span>
+        <span class="n">ind2</span><span class="p">,</span> <span class="n">peaks2</span> <span class="o">=</span> <span class="n">find_all_second_peaks</span><span class="p">(</span><span class="n">correlation</span><span class="p">,</span> <span class="n">width</span> <span class="o">=</span> <span class="n">width</span><span class="p">)</span>
+        <span class="n">peaks1_i</span><span class="p">,</span> <span class="n">peaks1_j</span> <span class="o">=</span> <span class="n">ind1</span><span class="p">[:,</span> <span class="mi">1</span><span class="p">],</span> <span class="n">ind1</span><span class="p">[:,</span> <span class="mi">2</span><span class="p">]</span>
+        <span class="n">peaks2_i</span><span class="p">,</span> <span class="n">peaks2_j</span> <span class="o">=</span> <span class="n">ind2</span><span class="p">[:,</span> <span class="mi">1</span><span class="p">],</span> <span class="n">ind2</span><span class="p">[:,</span> <span class="mi">2</span><span class="p">]</span>
+        <span class="c1"># peak checking</span>
+        <span class="n">flag</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">peaks1</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="nb">bool</span><span class="p">)</span>
+        <span class="n">flag</span><span class="p">[</span><span class="n">peaks1</span> <span class="o">&lt;</span> <span class="mf">1e-3</span><span class="p">]</span> <span class="o">=</span> <span class="kc">True</span>
+        <span class="n">flag</span><span class="p">[</span><span class="n">peaks1_i</span> <span class="o">==</span> <span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="kc">True</span>
+        <span class="n">flag</span><span class="p">[</span><span class="n">peaks1_i</span> <span class="o">==</span> <span class="n">correlation</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">=</span> <span class="kc">True</span>
+        <span class="n">flag</span><span class="p">[</span><span class="n">peaks1_j</span> <span class="o">==</span> <span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="kc">True</span>
+        <span class="n">flag</span><span class="p">[</span><span class="n">peaks1_j</span> <span class="o">==</span> <span class="n">correlation</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">=</span> <span class="kc">True</span>
+        <span class="n">flag</span><span class="p">[</span><span class="n">peaks2</span> <span class="o">&lt;</span> <span class="mf">1e-3</span><span class="p">]</span> <span class="o">=</span> <span class="kc">True</span>
+        <span class="n">flag</span><span class="p">[</span><span class="n">peaks2_i</span> <span class="o">==</span> <span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="kc">True</span>
+        <span class="n">flag</span><span class="p">[</span><span class="n">peaks2_i</span> <span class="o">==</span> <span class="n">correlation</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">=</span> <span class="kc">True</span>
+        <span class="n">flag</span><span class="p">[</span><span class="n">peaks2_j</span> <span class="o">==</span> <span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="kc">True</span>
+        <span class="n">flag</span><span class="p">[</span><span class="n">peaks2_j</span> <span class="o">==</span> <span class="n">correlation</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">=</span> <span class="kc">True</span>
+        <span class="c1"># peak-to-peak calculation</span>
+        <span class="n">peak2peak</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">divide</span><span class="p">(</span>
+            <span class="n">peaks1</span><span class="p">,</span> <span class="n">peaks2</span><span class="p">,</span>
+            <span class="n">out</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">zeros_like</span><span class="p">(</span><span class="n">peaks1</span><span class="p">),</span>
+            <span class="n">where</span><span class="o">=</span><span class="p">(</span><span class="n">peaks2</span> <span class="o">&gt;</span> <span class="mf">0.0</span><span class="p">)</span>
+        <span class="p">)</span>
+        <span class="n">peak2peak</span><span class="p">[</span><span class="n">flag</span> <span class="ow">is</span> <span class="kc">True</span><span class="p">]</span> <span class="o">=</span> <span class="mi">0</span> <span class="c1"># replace invalid values</span>
+        <span class="k">return</span> <span class="n">peak2peak</span>
+    
+    <span class="k">elif</span> <span class="n">sig2noise_method</span> <span class="o">==</span> <span class="s2">&quot;peak2mean&quot;</span><span class="p">:</span>
+        <span class="n">peaks</span><span class="p">,</span> <span class="n">peaks1max</span> <span class="o">=</span> <span class="n">find_all_first_peaks</span><span class="p">(</span><span class="n">correlation</span><span class="p">)</span>
+        <span class="n">peaks</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">peaks</span><span class="p">)</span>
+        <span class="n">peaks1_i</span><span class="p">,</span> <span class="n">peaks1_j</span> <span class="o">=</span> <span class="n">peaks</span><span class="p">[:,</span><span class="mi">1</span><span class="p">],</span> <span class="n">peaks</span><span class="p">[:,</span> <span class="mi">2</span><span class="p">]</span>
+        <span class="n">peaks2mean</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">nanmean</span><span class="p">(</span><span class="n">correlation</span><span class="p">,</span> <span class="n">axis</span> <span class="o">=</span> <span class="p">(</span><span class="o">-</span><span class="mi">2</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">)))</span>
+        <span class="c1"># peak checking        </span>
+        <span class="n">flag</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">peaks1max</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="nb">bool</span><span class="p">)</span>
+        <span class="n">flag</span><span class="p">[</span><span class="n">peaks1max</span> <span class="o">&lt;</span> <span class="mf">1e-3</span><span class="p">]</span> <span class="o">=</span> <span class="kc">True</span>
+        <span class="n">flag</span><span class="p">[</span><span class="n">peaks1_i</span> <span class="o">==</span> <span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="kc">True</span>
+        <span class="n">flag</span><span class="p">[</span><span class="n">peaks1_i</span> <span class="o">==</span> <span class="n">correlation</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">=</span> <span class="kc">True</span>
+        <span class="n">flag</span><span class="p">[</span><span class="n">peaks1_j</span> <span class="o">==</span> <span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="kc">True</span>
+        <span class="n">flag</span><span class="p">[</span><span class="n">peaks1_j</span> <span class="o">==</span> <span class="n">correlation</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">=</span> <span class="kc">True</span>
+        <span class="c1"># peak-to-mean calculation</span>
+        <span class="n">peak2mean</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">divide</span><span class="p">(</span>
+            <span class="n">peaks1max</span><span class="p">,</span> <span class="n">peaks2mean</span><span class="p">,</span>
+            <span class="n">out</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">zeros_like</span><span class="p">(</span><span class="n">peaks1max</span><span class="p">),</span>
+            <span class="n">where</span><span class="o">=</span><span class="p">(</span><span class="n">peaks2mean</span> <span class="o">&gt;</span> <span class="mf">0.0</span><span class="p">)</span>
+        <span class="p">)</span>
+        <span class="n">peak2mean</span><span class="p">[</span><span class="n">flag</span> <span class="ow">is</span> <span class="kc">True</span><span class="p">]</span> <span class="o">=</span> <span class="mi">0</span> <span class="c1"># replace invalid values</span>
+        <span class="k">return</span> <span class="n">peak2mean</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;sig2noise_method not supported: </span><span class="si">{</span><span class="n">sig2noise_method</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span></div>
+        
+        
+<div class="viewcode-block" id="fft_correlate_images"><a class="viewcode-back" href="../../src/openpiv.html#openpiv.pyprocess.fft_correlate_images">[docs]</a><span class="k">def</span> <span class="nf">fft_correlate_images</span><span class="p">(</span>
+    <span class="n">image_a</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span>
+    <span class="n">image_b</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span>
+    <span class="n">correlation_method</span><span class="p">:</span> <span class="nb">str</span><span class="o">=</span><span class="s2">&quot;circular&quot;</span><span class="p">,</span>
+    <span class="n">normalized_correlation</span><span class="p">:</span> <span class="nb">bool</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+    <span class="n">conj</span><span class="p">:</span> <span class="n">Callable</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">conj</span><span class="p">,</span>
+    <span class="n">rfft2</span> <span class="o">=</span> <span class="n">rfft2_</span><span class="p">,</span>
+    <span class="n">irfft2</span> <span class="o">=</span> <span class="n">irfft2_</span><span class="p">,</span>
+    <span class="n">fftshift</span> <span class="o">=</span> <span class="n">fftshift_</span><span class="p">,</span>
+    <span class="p">)</span><span class="o">-&gt;</span><span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
+    <span class="sd">&quot;&quot;&quot; FFT based cross correlation</span>
+<span class="sd">    of two images with multiple views of np.stride_tricks()</span>
+<span class="sd">    The 2D FFT should be applied to the last two axes (-2,-1) and the</span>
+<span class="sd">    zero axis is the number of the interrogation window</span>
+<span class="sd">    This should also work out of the box for rectangular windows.</span>
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    image_a : 3d np.ndarray, first dimension is the number of windows,</span>
+<span class="sd">        and two last dimensions are interrogation windows of the first image</span>
+
+<span class="sd">    image_b : similar</span>
+
+<span class="sd">    correlation_method : string</span>
+<span class="sd">        one of the three methods implemented: &#39;circular&#39; or &#39;linear&#39;</span>
+<span class="sd">        [default: &#39;circular].</span>
+
+<span class="sd">    normalized_correlation : string</span>
+<span class="sd">        decides wetehr normalized correlation is done or not: True or False</span>
+<span class="sd">        [default: True].</span>
+<span class="sd">    </span>
+<span class="sd">    conj : function</span>
+<span class="sd">        function used for complex conjugate</span>
+<span class="sd">    </span>
+<span class="sd">    rfft2 : function</span>
+<span class="sd">        function used for rfft2</span>
+<span class="sd">    </span>
+<span class="sd">    irfft2 : function</span>
+<span class="sd">        function used for irfft2</span>
+<span class="sd">    </span>
+<span class="sd">    fftshift : function</span>
+<span class="sd">        function used for fftshift</span>
+<span class="sd">        </span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">if</span> <span class="n">normalized_correlation</span><span class="p">:</span>
+        <span class="c1"># remove the effect of stronger laser or</span>
+        <span class="c1"># longer exposure for frame B</span>
+        <span class="c1"># image_a = match_histograms(image_a, image_b)</span>
+
+        <span class="c1"># remove mean background, normalize to 0..1 range</span>
+        <span class="n">image_a</span> <span class="o">=</span> <span class="n">normalize_intensity</span><span class="p">(</span><span class="n">image_a</span><span class="p">)</span>
+        <span class="n">image_b</span> <span class="o">=</span> <span class="n">normalize_intensity</span><span class="p">(</span><span class="n">image_b</span><span class="p">)</span>
+
+    <span class="n">s1</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">image_a</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="o">-</span><span class="mi">2</span><span class="p">:])</span>
+    <span class="n">s2</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">image_b</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="o">-</span><span class="mi">2</span><span class="p">:])</span>
+
+    <span class="k">if</span> <span class="n">correlation_method</span> <span class="o">==</span> <span class="s2">&quot;linear&quot;</span><span class="p">:</span>
+        <span class="c1"># have to be normalized, mainly because of zero padding</span>
+        <span class="n">size</span> <span class="o">=</span> <span class="n">s1</span> <span class="o">+</span> <span class="n">s2</span> <span class="o">-</span> <span class="mi">1</span>
+        <span class="n">fsize</span> <span class="o">=</span> <span class="mi">2</span> <span class="o">**</span> <span class="n">np</span><span class="o">.</span><span class="n">ceil</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">log2</span><span class="p">(</span><span class="n">size</span><span class="p">))</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="nb">int</span><span class="p">)</span>
+        <span class="n">fslice</span> <span class="o">=</span> <span class="p">(</span><span class="nb">slice</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">image_a</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]),</span>
+                  <span class="nb">slice</span><span class="p">((</span><span class="n">fsize</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">-</span><span class="n">s1</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span><span class="o">//</span><span class="mi">2</span><span class="p">,</span> <span class="p">(</span><span class="n">fsize</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">+</span><span class="n">s1</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span><span class="o">//</span><span class="mi">2</span><span class="p">),</span>
+                  <span class="nb">slice</span><span class="p">((</span><span class="n">fsize</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">-</span><span class="n">s1</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span><span class="o">//</span><span class="mi">2</span><span class="p">,</span> <span class="p">(</span><span class="n">fsize</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">+</span><span class="n">s1</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span><span class="o">//</span><span class="mi">2</span><span class="p">))</span>
+        <span class="n">f2a</span> <span class="o">=</span> <span class="n">conj</span><span class="p">(</span><span class="n">rfft2</span><span class="p">(</span><span class="n">image_a</span><span class="p">,</span> <span class="n">fsize</span><span class="p">,</span> <span class="n">axes</span><span class="o">=</span><span class="p">(</span><span class="o">-</span><span class="mi">2</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">)))</span>  <span class="c1"># type: ignore</span>
+        <span class="n">f2b</span> <span class="o">=</span> <span class="n">rfft2</span><span class="p">(</span><span class="n">image_b</span><span class="p">,</span> <span class="n">fsize</span><span class="p">,</span> <span class="n">axes</span><span class="o">=</span><span class="p">(</span><span class="o">-</span><span class="mi">2</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">))</span>  <span class="c1"># type: ignore</span>
+        <span class="n">corr</span> <span class="o">=</span> <span class="n">fftshift</span><span class="p">(</span><span class="n">irfft2</span><span class="p">(</span><span class="n">f2a</span> <span class="o">*</span> <span class="n">f2b</span><span class="p">)</span><span class="o">.</span><span class="n">real</span><span class="p">,</span> <span class="n">axes</span><span class="o">=</span><span class="p">(</span><span class="o">-</span><span class="mi">2</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">))[</span><span class="n">fslice</span><span class="p">]</span>
+    <span class="k">elif</span> <span class="n">correlation_method</span> <span class="o">==</span> <span class="s2">&quot;circular&quot;</span><span class="p">:</span>
+        <span class="n">f2a</span> <span class="o">=</span> <span class="n">conj</span><span class="p">(</span><span class="n">rfft2</span><span class="p">(</span><span class="n">image_a</span><span class="p">))</span>
+        <span class="n">f2b</span> <span class="o">=</span> <span class="n">rfft2</span><span class="p">(</span><span class="n">image_b</span><span class="p">)</span>
+        <span class="n">corr</span> <span class="o">=</span> <span class="n">fftshift</span><span class="p">(</span><span class="n">irfft2</span><span class="p">(</span><span class="n">f2a</span> <span class="o">*</span> <span class="n">f2b</span><span class="p">)</span><span class="o">.</span><span class="n">real</span><span class="p">,</span> <span class="n">axes</span><span class="o">=</span><span class="p">(</span><span class="o">-</span><span class="mi">2</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">))</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;method is not implemented!&quot;</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">normalized_correlation</span><span class="p">:</span>
+        <span class="n">corr</span> <span class="o">=</span> <span class="n">corr</span><span class="o">/</span><span class="p">(</span><span class="n">s2</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">*</span><span class="n">s2</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span>  <span class="c1"># for extended search area</span>
+        <span class="n">corr</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">clip</span><span class="p">(</span><span class="n">corr</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">corr</span></div>
+
+
+<div class="viewcode-block" id="normalize_intensity"><a class="viewcode-back" href="../../src/openpiv.html#openpiv.pyprocess.normalize_intensity">[docs]</a><span class="k">def</span> <span class="nf">normalize_intensity</span><span class="p">(</span><span class="n">window</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Normalize interrogation window or strided image of many windows,</span>
+<span class="sd">       by removing the mean intensity value per window and clipping the</span>
+<span class="sd">       negative values to zero</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    window :  2d np.ndarray</span>
+<span class="sd">        the interrogation window array</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    window :  2d np.ndarray</span>
+<span class="sd">        the interrogation window array, with mean value equal to zero and</span>
+<span class="sd">        intensity normalized to -1 +1 and clipped if some pixels are</span>
+<span class="sd">        extra low/high</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">window</span> <span class="o">=</span> <span class="n">window</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">float32</span><span class="p">)</span>
+    <span class="n">window</span> <span class="o">-=</span> <span class="n">window</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">axis</span><span class="o">=</span><span class="p">(</span><span class="o">-</span><span class="mi">2</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">),</span>
+                          <span class="n">keepdims</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">float32</span><span class="p">)</span>
+    <span class="n">tmp</span> <span class="o">=</span> <span class="n">window</span><span class="o">.</span><span class="n">std</span><span class="p">(</span><span class="n">axis</span><span class="o">=</span><span class="p">(</span><span class="o">-</span><span class="mi">2</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">),</span> <span class="n">keepdims</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+    <span class="n">window</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">divide</span><span class="p">(</span><span class="n">window</span><span class="p">,</span> <span class="n">tmp</span><span class="p">,</span> <span class="n">out</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">zeros_like</span><span class="p">(</span><span class="n">window</span><span class="p">),</span>
+                       <span class="n">where</span><span class="o">=</span><span class="p">(</span><span class="n">tmp</span> <span class="o">!=</span> <span class="mi">0</span><span class="p">))</span>
+    <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">clip</span><span class="p">(</span><span class="n">window</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="n">window</span><span class="o">.</span><span class="n">max</span><span class="p">())</span></div>
+
+
+<div class="viewcode-block" id="correlate_windows"><a class="viewcode-back" href="../../src/openpiv.html#openpiv.pyprocess.correlate_windows">[docs]</a><span class="k">def</span> <span class="nf">correlate_windows</span><span class="p">(</span><span class="n">window_a</span><span class="p">,</span> <span class="n">window_b</span><span class="p">,</span> <span class="n">correlation_method</span><span class="o">=</span><span class="s2">&quot;fft&quot;</span><span class="p">,</span>
+                      <span class="n">convolve2d</span> <span class="o">=</span> <span class="n">conv_</span><span class="p">,</span> <span class="n">rfft2</span> <span class="o">=</span> <span class="n">rfft2_</span><span class="p">,</span> <span class="n">irfft2</span> <span class="o">=</span> <span class="n">irfft2_</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Compute correlation function between two interrogation windows.</span>
+<span class="sd">    The correlation function can be computed by using the correlation</span>
+<span class="sd">    theorem to speed up the computation.</span>
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    window_a : 2d np.ndarray</span>
+<span class="sd">        a two dimensions array for the first interrogation window</span>
+<span class="sd">        </span>
+<span class="sd">    window_b : 2d np.ndarray</span>
+<span class="sd">        a two dimensions array for the second interrogation window</span>
+<span class="sd">        </span>
+<span class="sd">    correlation_method : string, methods currently implemented:</span>
+<span class="sd">            &#39;circular&#39; - FFT based without zero-padding</span>
+<span class="sd">            &#39;linear&#39; -  FFT based with zero-padding</span>
+<span class="sd">            &#39;direct&#39; -  linear convolution based</span>
+<span class="sd">            Default is &#39;fft&#39;, which is much faster.</span>
+
+<span class="sd">    convolve2d : function</span>
+<span class="sd">        function used for 2d convolutions</span>
+<span class="sd">    </span>
+<span class="sd">    rfft2 : function</span>
+<span class="sd">        function used for rfft2</span>
+<span class="sd">    </span>
+<span class="sd">    irfft2 : function</span>
+<span class="sd">        function used for irfft2</span>
+<span class="sd">        </span>
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    corr : 2d np.ndarray</span>
+<span class="sd">        a two dimensions array for the correlation function.</span>
+<span class="sd">        </span>
+<span class="sd">    Note that due to the wish to use 2^N windows for faster FFT</span>
+<span class="sd">    we use a slightly different convention for the size of the</span>
+<span class="sd">    correlation map. The theory says it is M+N-1, and the</span>
+<span class="sd">    &#39;direct&#39; method gets this size out</span>
+<span class="sd">    the FFT-based method returns M+N size out, where M is the window_size</span>
+<span class="sd">    and N is the search_area_size</span>
+<span class="sd">    It leads to inconsistency of the output</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="c1"># first we remove the mean to normalize contrast and intensity</span>
+    <span class="c1"># the background level which is take as a mean of the image</span>
+    <span class="c1"># is subtracted</span>
+    <span class="c1"># import pdb; pdb.set_trace()</span>
+    <span class="n">window_a</span> <span class="o">=</span> <span class="n">normalize_intensity</span><span class="p">(</span><span class="n">window_a</span><span class="p">)</span>
+    <span class="n">window_b</span> <span class="o">=</span> <span class="n">normalize_intensity</span><span class="p">(</span><span class="n">window_b</span><span class="p">)</span>
+
+    <span class="c1"># this is not really circular one, as we pad a bit to get fast 2D FFT,</span>
+    <span class="c1"># see fft_correlate for implementation</span>
+    <span class="k">if</span> <span class="n">correlation_method</span> <span class="ow">in</span> <span class="p">(</span><span class="s2">&quot;circular&quot;</span><span class="p">,</span> <span class="s2">&quot;fft&quot;</span><span class="p">):</span>
+        <span class="n">corr</span> <span class="o">=</span> <span class="n">fft_correlate_windows</span><span class="p">(</span><span class="n">window_a</span><span class="p">,</span> <span class="n">window_b</span><span class="p">,</span> <span class="n">rfft2</span> <span class="o">=</span> <span class="n">rfft2</span><span class="p">,</span> <span class="n">irfft2</span> <span class="o">=</span> <span class="n">irfft2</span><span class="p">)</span>
+    <span class="k">elif</span> <span class="n">correlation_method</span> <span class="o">==</span> <span class="s2">&quot;linear&quot;</span><span class="p">:</span>
+        <span class="c1"># save the original size:</span>
+        <span class="n">s1</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">window_a</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span>
+        <span class="n">s2</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">window_b</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span>
+        <span class="n">size</span> <span class="o">=</span> <span class="n">s1</span> <span class="o">+</span> <span class="n">s2</span> <span class="o">-</span> <span class="mi">1</span>
+        <span class="n">fslice</span> <span class="o">=</span> <span class="nb">tuple</span><span class="p">([</span><span class="nb">slice</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="nb">int</span><span class="p">(</span><span class="n">sz</span><span class="p">))</span> <span class="k">for</span> <span class="n">sz</span> <span class="ow">in</span> <span class="n">size</span><span class="p">])</span>
+        <span class="c1"># and slice only the relevant part</span>
+        <span class="n">corr</span> <span class="o">=</span> <span class="n">fft_correlate_windows</span><span class="p">(</span><span class="n">window_a</span><span class="p">,</span> <span class="n">window_b</span><span class="p">,</span> <span class="n">rfft2</span> <span class="o">=</span> <span class="n">rfft2</span><span class="p">,</span> <span class="n">irfft2</span> <span class="o">=</span> <span class="n">irfft2</span><span class="p">)[</span><span class="n">fslice</span><span class="p">]</span>
+    <span class="k">elif</span> <span class="n">correlation_method</span> <span class="o">==</span> <span class="s2">&quot;direct&quot;</span><span class="p">:</span>
+        <span class="n">corr</span> <span class="o">=</span> <span class="n">convolve2d</span><span class="p">(</span><span class="n">window_a</span><span class="p">,</span> <span class="n">window_b</span><span class="p">[::</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="p">::</span><span class="o">-</span><span class="mi">1</span><span class="p">],</span> <span class="s2">&quot;full&quot;</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;method is not implemented&quot;</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">corr</span></div>
+
+
+<div class="viewcode-block" id="fft_correlate_windows"><a class="viewcode-back" href="../../src/openpiv.html#openpiv.pyprocess.fft_correlate_windows">[docs]</a><span class="k">def</span> <span class="nf">fft_correlate_windows</span><span class="p">(</span><span class="n">window_a</span><span class="p">,</span> <span class="n">window_b</span><span class="p">,</span>
+                          <span class="n">rfft2</span> <span class="o">=</span> <span class="n">rfft2_</span><span class="p">,</span>
+                          <span class="n">irfft2</span> <span class="o">=</span> <span class="n">irfft2_</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot; FFT based cross correlation</span>
+<span class="sd">    it is a so-called linear convolution based,</span>
+<span class="sd">    since we increase the size of the FFT to</span>
+<span class="sd">    reduce the edge effects.</span>
+<span class="sd">    This should also work out of the box for rectangular windows.</span>
+<span class="sd">    </span>
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    window_a : 2d np.ndarray</span>
+<span class="sd">        a two dimensions array for the first interrogation window</span>
+<span class="sd">        </span>
+<span class="sd">    window_b : 2d np.ndarray</span>
+<span class="sd">        a two dimensions array for the second interrogation window</span>
+<span class="sd">        </span>
+<span class="sd">    rfft2 : function</span>
+<span class="sd">        function used for rfft2</span>
+<span class="sd">    </span>
+<span class="sd">    irfft2 : function</span>
+<span class="sd">        function used for irfft2</span>
+<span class="sd">        </span>
+<span class="sd">    # from Stackoverflow:</span>
+<span class="sd">    from scipy import linalg</span>
+<span class="sd">    import numpy as np</span>
+<span class="sd">    # works for rectangular windows as well</span>
+<span class="sd">    x = [[1 , 0 , 0 , 0] , [0 , -1 , 0 , 0] , [0 , 0 , 3 , 0] ,</span>
+<span class="sd">        [0 , 0 , 0 , 1], [0 , 0 , 0 , 1]]</span>
+<span class="sd">    x = np.array(x,dtype=np.float)</span>
+<span class="sd">    y = [[4 , 5] , [3 , 4]]</span>
+<span class="sd">    y = np.array(y)</span>
+<span class="sd">    print (&quot;conv:&quot; ,  signal.convolve2d(x , y , &#39;full&#39;))</span>
+<span class="sd">    s1 = np.array(x.shape)</span>
+<span class="sd">    s2 = np.array(y.shape)</span>
+<span class="sd">    size = s1 + s2 - 1</span>
+<span class="sd">    fsize = 2 ** np.ceil(np.log2(size)).astype(int)</span>
+<span class="sd">    fslice = tuple([slice(0, int(sz)) for sz in size])</span>
+<span class="sd">    new_x = np.fft.fft2(x , fsize)</span>
+<span class="sd">    new_y = np.fft.fft2(y , fsize)</span>
+<span class="sd">    result = np.fft.ifft2(new_x*new_y)[fslice].copy()</span>
+<span class="sd">    print(&quot;fft for my method:&quot; , np.array(result.real, np.int32))</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">s1</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">window_a</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span>
+    <span class="n">s2</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">window_b</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span>
+    <span class="n">size</span> <span class="o">=</span> <span class="n">s1</span> <span class="o">+</span> <span class="n">s2</span> <span class="o">-</span> <span class="mi">1</span>
+    <span class="n">fsize</span> <span class="o">=</span> <span class="mi">2</span> <span class="o">**</span> <span class="n">np</span><span class="o">.</span><span class="n">ceil</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">log2</span><span class="p">(</span><span class="n">size</span><span class="p">))</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="nb">int</span><span class="p">)</span>
+    <span class="n">fslice</span> <span class="o">=</span> <span class="nb">tuple</span><span class="p">([</span><span class="nb">slice</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="nb">int</span><span class="p">(</span><span class="n">sz</span><span class="p">))</span> <span class="k">for</span> <span class="n">sz</span> <span class="ow">in</span> <span class="n">size</span><span class="p">])</span>
+    <span class="n">f2a</span> <span class="o">=</span> <span class="n">rfft2</span><span class="p">(</span><span class="n">window_a</span><span class="p">,</span> <span class="n">fsize</span><span class="p">)</span>
+    <span class="n">f2b</span> <span class="o">=</span> <span class="n">rfft2</span><span class="p">(</span><span class="n">window_b</span><span class="p">[::</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="p">::</span><span class="o">-</span><span class="mi">1</span><span class="p">],</span> <span class="n">fsize</span><span class="p">)</span>
+    <span class="n">corr</span> <span class="o">=</span> <span class="n">irfft2</span><span class="p">(</span><span class="n">f2a</span> <span class="o">*</span> <span class="n">f2b</span><span class="p">)</span><span class="o">.</span><span class="n">real</span><span class="p">[</span><span class="n">fslice</span><span class="p">]</span>
+    <span class="k">return</span> <span class="n">corr</span></div>
+
+
+<div class="viewcode-block" id="extended_search_area_piv"><a class="viewcode-back" href="../../src/openpiv.html#openpiv.pyprocess.extended_search_area_piv">[docs]</a><span class="k">def</span> <span class="nf">extended_search_area_piv</span><span class="p">(</span>
+    <span class="n">frame_a</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span>
+    <span class="n">frame_b</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span>
+    <span class="n">window_size</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="n">Tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span><span class="nb">int</span><span class="p">]],</span>
+    <span class="n">overlap</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="n">Tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span><span class="nb">int</span><span class="p">]]</span><span class="o">=</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">),</span>
+    <span class="n">dt</span><span class="p">:</span> <span class="nb">float</span><span class="o">=</span><span class="mf">1.0</span><span class="p">,</span>
+    <span class="n">search_area_size</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Union</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="n">Tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span><span class="nb">int</span><span class="p">]]]</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+    <span class="n">correlation_method</span><span class="p">:</span> <span class="nb">str</span><span class="o">=</span><span class="s2">&quot;circular&quot;</span><span class="p">,</span>
+    <span class="n">subpixel_method</span><span class="p">:</span> <span class="nb">str</span><span class="o">=</span><span class="s2">&quot;gaussian&quot;</span><span class="p">,</span>
+    <span class="n">sig2noise_method</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="kc">None</span><span class="p">]</span><span class="o">=</span><span class="s1">&#39;peak2mean&#39;</span><span class="p">,</span>
+    <span class="n">width</span><span class="p">:</span> <span class="nb">int</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span>
+    <span class="n">normalized_correlation</span><span class="p">:</span> <span class="nb">bool</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+    <span class="n">use_vectorized</span><span class="p">:</span> <span class="nb">bool</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+<span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Standard PIV cross-correlation algorithm, with an option for</span>
+<span class="sd">    extended area search that increased dynamic range. The search region</span>
+<span class="sd">    in the second frame is larger than the interrogation window size in the</span>
+<span class="sd">    first frame. For Cython implementation see</span>
+<span class="sd">    openpiv.process.extended_search_area_piv</span>
+
+<span class="sd">    This is a pure python implementation of the standard PIV cross-correlation</span>
+<span class="sd">    algorithm. It is a zero order displacement predictor, and no iterative</span>
+<span class="sd">    process is performed.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    frame_a : 2d np.ndarray</span>
+<span class="sd">        an two dimensions array of integers containing grey levels of</span>
+<span class="sd">        the first frame.</span>
+
+<span class="sd">    frame_b : 2d np.ndarray</span>
+<span class="sd">        an two dimensions array of integers containing grey levels of</span>
+<span class="sd">        the second frame.</span>
+
+<span class="sd">    window_size : int</span>
+<span class="sd">        the size of the (square) interrogation window, [default: 32 pix].</span>
+
+<span class="sd">    overlap : int</span>
+<span class="sd">        the number of pixels by which two adjacent windows overlap</span>
+<span class="sd">        [default: 16 pix].</span>
+
+<span class="sd">    dt : float</span>
+<span class="sd">        the time delay separating the two frames [default: 1.0].</span>
+
+<span class="sd">    correlation_method : string</span>
+<span class="sd">        one of the two methods implemented: &#39;circular&#39; or &#39;linear&#39;,</span>
+<span class="sd">        default: &#39;circular&#39;, it&#39;s faster, without zero-padding</span>
+<span class="sd">        &#39;linear&#39; requires also normalized_correlation = True (see below)</span>
+
+<span class="sd">    subpixel_method : string</span>
+<span class="sd">         one of the following methods to estimate subpixel location of the</span>
+<span class="sd">         peak:</span>
+<span class="sd">         &#39;centroid&#39; [replaces default if correlation map is negative],</span>
+<span class="sd">         &#39;gaussian&#39; [default if correlation map is positive],</span>
+<span class="sd">         &#39;parabolic&#39;.</span>
+
+<span class="sd">    sig2noise_method : string</span>
+<span class="sd">        defines the method of signal-to-noise-ratio measure,</span>
+<span class="sd">        (&#39;peak2peak&#39; or &#39;peak2mean&#39;. If None, no measure is performed.)</span>
+
+<span class="sd">    width : int</span>
+<span class="sd">        the half size of the region around the first</span>
+<span class="sd">        correlation peak to ignore for finding the second</span>
+<span class="sd">        peak. [default: 2]. Only used if ``sig2noise_method==peak2peak``.</span>
+
+<span class="sd">    search_area_size : int</span>
+<span class="sd">       the size of the interrogation window in the second frame,</span>
+<span class="sd">       default is the same interrogation window size and it is a</span>
+<span class="sd">       fallback to the simplest FFT based PIV</span>
+
+<span class="sd">    normalized_correlation: bool</span>
+<span class="sd">        if True, then the image intensity will be modified by removing</span>
+<span class="sd">        the mean, dividing by the standard deviation and</span>
+<span class="sd">        the correlation map will be normalized. It&#39;s slower but could be</span>
+<span class="sd">        more robust</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    u : 2d np.ndarray</span>
+<span class="sd">        a two dimensional array containing the u velocity component,</span>
+<span class="sd">        in pixels/seconds.</span>
+
+<span class="sd">    v : 2d np.ndarray</span>
+<span class="sd">        a two dimensional array containing the v velocity component,</span>
+<span class="sd">        in pixels/seconds.</span>
+
+<span class="sd">    sig2noise : 2d np.ndarray, ( optional: only if sig2noise_method != None )</span>
+<span class="sd">        a two dimensional array the signal to noise ratio for each</span>
+<span class="sd">        window pair.</span>
+
+
+<span class="sd">    The implementation of the one-step direct correlation with different</span>
+<span class="sd">    size of the interrogation window and the search area. The increased</span>
+<span class="sd">    size of the search areas cope with the problem of loss of pairs due</span>
+<span class="sd">    to in-plane motion, allowing for a smaller interrogation window size,</span>
+<span class="sd">    without increasing the number of outlier vectors.</span>
+
+<span class="sd">    See:</span>
+
+<span class="sd">    Particle-Imaging Techniques for Experimental Fluid Mechanics</span>
+
+<span class="sd">    Annual Review of Fluid Mechanics</span>
+<span class="sd">    Vol. 23: 261-304 (Volume publication date January 1991)</span>
+<span class="sd">    DOI: 10.1146/annurev.fl.23.010191.001401</span>
+
+<span class="sd">    originally implemented in process.pyx in Cython and converted to</span>
+<span class="sd">    a NumPy vectorized solution in pyprocess.py</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="c1"># Reformat inputs so it works for both square and rectangular windows</span>
+    <span class="c1"># first if we get integer window size -&gt; make it tuple</span>
+    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">window_size</span><span class="p">,</span> <span class="nb">int</span><span class="p">):</span>
+        <span class="n">window_size</span> <span class="o">=</span> <span class="p">(</span><span class="n">window_size</span><span class="p">,</span> <span class="n">window_size</span><span class="p">)</span>
+    <span class="c1"># same for overlap</span>
+    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">overlap</span><span class="p">,</span> <span class="nb">int</span><span class="p">):</span>
+        <span class="n">overlap</span> <span class="o">=</span> <span class="p">(</span><span class="n">overlap</span><span class="p">,</span> <span class="n">overlap</span><span class="p">)</span>
+    
+    <span class="c1"># if no search_size, copy window_size</span>
+    <span class="k">if</span> <span class="n">search_area_size</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">search_area_size</span> <span class="o">=</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">window_size</span><span class="p">)</span>
+    <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">search_area_size</span><span class="p">,</span> <span class="nb">int</span><span class="p">):</span>
+        <span class="n">search_area_size</span> <span class="o">=</span> <span class="p">(</span><span class="n">search_area_size</span><span class="p">,</span> <span class="n">search_area_size</span><span class="p">)</span>
+
+    <span class="c1"># verify that things are logically possible: </span>
+    <span class="k">if</span> <span class="n">overlap</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">&gt;=</span> <span class="n">window_size</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="ow">or</span> <span class="n">overlap</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">&gt;=</span> <span class="n">window_size</span><span class="p">[</span><span class="mi">1</span><span class="p">]:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Overlap has to be smaller than the window_size&quot;</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">search_area_size</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">&lt;</span> <span class="n">window_size</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="ow">or</span> <span class="n">search_area_size</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">&lt;</span> <span class="n">window_size</span><span class="p">[</span><span class="mi">1</span><span class="p">]:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Search size cannot be smaller than the window_size&quot;</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="p">(</span><span class="n">window_size</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">&gt;</span> <span class="n">frame_a</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span> <span class="ow">or</span> <span class="p">(</span><span class="n">window_size</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">&gt;</span> <span class="n">frame_a</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]):</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;window size cannot be larger than the image&quot;</span><span class="p">)</span>
+
+    <span class="c1"># get field shape</span>
+    <span class="n">n_rows</span><span class="p">,</span> <span class="n">n_cols</span> <span class="o">=</span> <span class="n">get_field_shape</span><span class="p">(</span><span class="n">frame_a</span><span class="o">.</span><span class="n">shape</span><span class="p">,</span> <span class="n">search_area_size</span><span class="p">,</span> <span class="n">overlap</span><span class="p">)</span>
+
+    <span class="c1"># We implement the new vectorized code</span>
+    <span class="n">aa</span> <span class="o">=</span> <span class="n">sliding_window_array</span><span class="p">(</span><span class="n">frame_a</span><span class="p">,</span> <span class="n">search_area_size</span><span class="p">,</span> <span class="n">overlap</span><span class="p">)</span>
+    <span class="n">bb</span> <span class="o">=</span> <span class="n">sliding_window_array</span><span class="p">(</span><span class="n">frame_b</span><span class="p">,</span> <span class="n">search_area_size</span><span class="p">,</span> <span class="n">overlap</span><span class="p">)</span>
+
+    <span class="c1"># for the case of extended seearch, the window size is smaller than</span>
+    <span class="c1"># the search_area_size. In order to keep it all vectorized the</span>
+    <span class="c1"># approach is to use the interrogation window in both</span>
+    <span class="c1"># frames of the same size of search_area_asize,</span>
+    <span class="c1"># but mask out the region around</span>
+    <span class="c1"># the interrogation window in the frame A</span>
+
+    <span class="k">if</span> <span class="n">search_area_size</span> <span class="o">&gt;</span> <span class="n">window_size</span><span class="p">:</span>
+        <span class="c1"># before masking with zeros we need to remove</span>
+        <span class="c1"># edges</span>
+
+        <span class="n">aa</span> <span class="o">=</span> <span class="n">normalize_intensity</span><span class="p">(</span><span class="n">aa</span><span class="p">)</span>
+        <span class="n">bb</span> <span class="o">=</span> <span class="n">normalize_intensity</span><span class="p">(</span><span class="n">bb</span><span class="p">)</span>
+
+        <span class="n">mask</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="n">search_area_size</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">search_area_size</span><span class="p">[</span><span class="mi">1</span><span class="p">]))</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="n">aa</span><span class="o">.</span><span class="n">dtype</span><span class="p">)</span>
+        <span class="n">pady</span> <span class="o">=</span> <span class="nb">int</span><span class="p">((</span><span class="n">search_area_size</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">-</span> <span class="n">window_size</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span> <span class="o">/</span> <span class="mi">2</span><span class="p">)</span>
+        <span class="n">padx</span> <span class="o">=</span> <span class="nb">int</span><span class="p">((</span><span class="n">search_area_size</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">-</span> <span class="n">window_size</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span> <span class="o">/</span> <span class="mi">2</span><span class="p">)</span>
+        <span class="n">mask</span><span class="p">[</span><span class="nb">slice</span><span class="p">(</span><span class="n">pady</span><span class="p">,</span> <span class="n">search_area_size</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">-</span> <span class="n">pady</span><span class="p">),</span>
+             <span class="nb">slice</span><span class="p">(</span><span class="n">padx</span><span class="p">,</span> <span class="n">search_area_size</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">-</span> <span class="n">padx</span><span class="p">)]</span> <span class="o">=</span> <span class="mi">1</span>
+        <span class="n">mask</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">broadcast_to</span><span class="p">(</span><span class="n">mask</span><span class="p">,</span> <span class="n">aa</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span>
+        <span class="n">aa</span> <span class="o">*=</span> <span class="n">mask</span>
+
+    <span class="n">corr</span> <span class="o">=</span> <span class="n">fft_correlate_images</span><span class="p">(</span><span class="n">aa</span><span class="p">,</span> <span class="n">bb</span><span class="p">,</span>
+                                <span class="n">correlation_method</span><span class="o">=</span><span class="n">correlation_method</span><span class="p">,</span>
+                                <span class="n">normalized_correlation</span><span class="o">=</span><span class="n">normalized_correlation</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">use_vectorized</span> <span class="ow">is</span> <span class="kc">True</span><span class="p">:</span>
+        <span class="n">u</span><span class="p">,</span> <span class="n">v</span> <span class="o">=</span> <span class="n">vectorized_correlation_to_displacements</span><span class="p">(</span><span class="n">corr</span><span class="p">,</span> <span class="n">n_rows</span><span class="p">,</span> <span class="n">n_cols</span><span class="p">,</span>
+                                           <span class="n">subpixel_method</span><span class="o">=</span><span class="n">subpixel_method</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">u</span><span class="p">,</span> <span class="n">v</span> <span class="o">=</span> <span class="n">correlation_to_displacement</span><span class="p">(</span><span class="n">corr</span><span class="p">,</span> <span class="n">n_rows</span><span class="p">,</span> <span class="n">n_cols</span><span class="p">,</span>
+                                           <span class="n">subpixel_method</span><span class="o">=</span><span class="n">subpixel_method</span><span class="p">)</span>
+
+    <span class="c1"># return output depending if user wanted sig2noise information</span>
+    <span class="k">if</span> <span class="n">sig2noise_method</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">use_vectorized</span> <span class="ow">is</span> <span class="kc">True</span><span class="p">:</span>
+            <span class="n">sig2noise</span> <span class="o">=</span> <span class="n">vectorized_sig2noise_ratio</span><span class="p">(</span>
+                <span class="n">corr</span><span class="p">,</span> <span class="n">sig2noise_method</span><span class="o">=</span><span class="n">sig2noise_method</span><span class="p">,</span> <span class="n">width</span><span class="o">=</span><span class="n">width</span>
+            <span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">sig2noise</span> <span class="o">=</span> <span class="n">sig2noise_ratio</span><span class="p">(</span>
+                <span class="n">corr</span><span class="p">,</span> <span class="n">sig2noise_method</span><span class="o">=</span><span class="n">sig2noise_method</span><span class="p">,</span> <span class="n">width</span><span class="o">=</span><span class="n">width</span>
+            <span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">sig2noise</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros_like</span><span class="p">(</span><span class="n">u</span><span class="p">)</span><span class="o">*</span><span class="n">np</span><span class="o">.</span><span class="n">nan</span>
+
+    <span class="n">sig2noise</span> <span class="o">=</span> <span class="n">sig2noise</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="n">n_rows</span><span class="p">,</span> <span class="n">n_cols</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">u</span><span class="o">/</span><span class="n">dt</span><span class="p">,</span> <span class="n">v</span><span class="o">/</span><span class="n">dt</span><span class="p">,</span> <span class="n">sig2noise</span></div>
+
+
+<div class="viewcode-block" id="correlation_to_displacement"><a class="viewcode-back" href="../../src/openpiv.html#openpiv.pyprocess.correlation_to_displacement">[docs]</a><span class="k">def</span> <span class="nf">correlation_to_displacement</span><span class="p">(</span><span class="n">corr</span><span class="p">,</span> <span class="n">n_rows</span><span class="p">,</span> <span class="n">n_cols</span><span class="p">,</span>
+                                <span class="n">subpixel_method</span><span class="o">=</span><span class="s2">&quot;gaussian&quot;</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Correlation maps are converted to displacement for each interrogation</span>
+<span class="sd">    window using the convention that the size of the correlation map</span>
+<span class="sd">    is 2N -1 where N is the size of the largest interrogation window</span>
+<span class="sd">    (in frame B) that is called search_area_size</span>
+<span class="sd">    Inputs:</span>
+<span class="sd">        corr : 3D nd.array</span>
+<span class="sd">            contains output of the fft_correlate_images</span>
+<span class="sd">        n_rows, n_cols : number of interrogation windows, output of the</span>
+<span class="sd">            get_field_shape</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="c1"># iterate through interrogation widows and search areas</span>
+    <span class="n">u</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="n">n_rows</span><span class="p">,</span> <span class="n">n_cols</span><span class="p">))</span>
+    <span class="n">v</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="n">n_rows</span><span class="p">,</span> <span class="n">n_cols</span><span class="p">))</span>
+
+    <span class="c1"># center point of the correlation map</span>
+    <span class="n">default_peak_position</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">floor</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">corr</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="p">:,</span> <span class="p">:]</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span><span class="o">/</span><span class="mi">2</span><span class="p">)</span>
+    <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">n_rows</span><span class="p">):</span>
+        <span class="k">for</span> <span class="n">m</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">n_cols</span><span class="p">):</span>
+            <span class="c1"># look at studying_correlations.ipynb</span>
+            <span class="c1"># the find_subpixel_peak_position returns</span>
+            <span class="n">peak</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">find_subpixel_peak_position</span><span class="p">(</span><span class="n">corr</span><span class="p">[</span><span class="n">k</span><span class="o">*</span><span class="n">n_cols</span><span class="o">+</span><span class="n">m</span><span class="p">,</span> <span class="p">:,</span> <span class="p">:],</span>
+                            <span class="n">subpixel_method</span><span class="o">=</span><span class="n">subpixel_method</span><span class="p">))</span> <span class="o">-</span>\
+                            <span class="n">default_peak_position</span>  <span class="c1"># type: ignore</span>
+
+        <span class="c1"># the horizontal shift from left to right is the u</span>
+        <span class="c1"># the vertical displacement from top to bottom (increasing row) is v</span>
+        <span class="c1"># x the vertical shift from top to bottom is row-wise shift is now</span>
+        <span class="c1"># a negative vertical</span>
+            <span class="n">u</span><span class="p">[</span><span class="n">k</span><span class="p">,</span> <span class="n">m</span><span class="p">],</span> <span class="n">v</span><span class="p">[</span><span class="n">k</span><span class="p">,</span> <span class="n">m</span><span class="p">]</span> <span class="o">=</span> <span class="n">peak</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="n">peak</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+
+    <span class="k">return</span> <span class="p">(</span><span class="n">u</span><span class="p">,</span> <span class="n">v</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="vectorized_correlation_to_displacements"><a class="viewcode-back" href="../../src/openpiv.html#openpiv.pyprocess.vectorized_correlation_to_displacements">[docs]</a><span class="k">def</span> <span class="nf">vectorized_correlation_to_displacements</span><span class="p">(</span><span class="n">corr</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> 
+                                            <span class="n">n_rows</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+                                            <span class="n">n_cols</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+                                            <span class="n">subpixel_method</span><span class="p">:</span> <span class="nb">str</span><span class="o">=</span><span class="s1">&#39;gaussian&#39;</span><span class="p">,</span>
+                                            <span class="n">eps</span><span class="p">:</span> <span class="nb">float</span><span class="o">=</span><span class="mf">1e-7</span>
+<span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Correlation maps are converted to displacement for each interrogation</span>
+<span class="sd">    window using the convention that the size of the correlation map</span>
+<span class="sd">    is 2N -1 where N is the size of the largest interrogation window</span>
+<span class="sd">    (in frame B) that is called search_area_size</span>
+<span class="sd">    </span>
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    corr : 3D nd.array</span>
+<span class="sd">        contains output of the fft_correlate_images</span>
+<span class="sd">        </span>
+<span class="sd">    n_rows, n_cols : </span>
+<span class="sd">        number of interrogation windows, output of the get_field_shape</span>
+<span class="sd">        </span>
+<span class="sd">    mask_width: int</span>
+<span class="sd">        distance, in pixels, from the interrogation window in which </span>
+<span class="sd">        correlation peaks would be flagged as invalid</span>
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    u, v: 2D nd.array</span>
+<span class="sd">        2d array of displacements in pixels/dt</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">subpixel_method</span> <span class="ow">not</span> <span class="ow">in</span> <span class="p">(</span><span class="s2">&quot;gaussian&quot;</span><span class="p">,</span> <span class="s2">&quot;centroid&quot;</span><span class="p">,</span> <span class="s2">&quot;parabolic&quot;</span><span class="p">):</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Method not implemented </span><span class="si">{</span><span class="n">subpixel_method</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+        
+    <span class="n">corr</span> <span class="o">=</span> <span class="n">corr</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">float32</span><span class="p">)</span> <span class="o">+</span> <span class="n">eps</span> <span class="c1"># avoids division by zero</span>
+    <span class="n">peaks</span> <span class="o">=</span> <span class="n">find_all_first_peaks</span><span class="p">(</span><span class="n">corr</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+    <span class="n">ind</span><span class="p">,</span> <span class="n">peaks_x</span><span class="p">,</span> <span class="n">peaks_y</span> <span class="o">=</span> <span class="n">peaks</span><span class="p">[:,</span><span class="mi">0</span><span class="p">],</span> <span class="n">peaks</span><span class="p">[:,</span><span class="mi">1</span><span class="p">],</span> <span class="n">peaks</span><span class="p">[:,</span><span class="mi">2</span><span class="p">]</span>
+    <span class="n">peaks1_i</span><span class="p">,</span> <span class="n">peaks1_j</span> <span class="o">=</span> <span class="n">peaks_x</span><span class="p">,</span> <span class="n">peaks_y</span>
+    
+    <span class="c1"># peak checking</span>
+    <span class="k">if</span> <span class="n">subpixel_method</span> <span class="ow">in</span> <span class="p">(</span><span class="s2">&quot;gaussian&quot;</span><span class="p">,</span> <span class="s2">&quot;centroid&quot;</span><span class="p">,</span> <span class="s2">&quot;parabolic&quot;</span><span class="p">):</span>
+        <span class="n">mask_width</span> <span class="o">=</span> <span class="mi">1</span>
+    <span class="n">invalid</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">peaks1_i</span> <span class="o">&lt;</span> <span class="n">mask_width</span><span class="p">)[</span><span class="mi">0</span><span class="p">])</span>
+    <span class="n">invalid</span> <span class="o">+=</span> <span class="nb">list</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">peaks1_i</span> <span class="o">&gt;</span> <span class="n">corr</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">-</span> <span class="n">mask_width</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)[</span><span class="mi">0</span><span class="p">])</span>
+    <span class="n">invalid</span> <span class="o">+=</span> <span class="nb">list</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">peaks1_j</span> <span class="o">&lt;</span> <span class="n">mask_width</span> <span class="o">-</span> <span class="mi">0</span><span class="p">)[</span><span class="mi">0</span><span class="p">])</span>
+    <span class="n">invalid</span> <span class="o">+=</span> <span class="nb">list</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">peaks1_j</span> <span class="o">&gt;</span> <span class="n">corr</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span> <span class="o">-</span> <span class="n">mask_width</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)[</span><span class="mi">0</span><span class="p">])</span>
+    <span class="n">peaks1_i</span><span class="p">[</span><span class="n">invalid</span><span class="p">]</span> <span class="o">=</span> <span class="n">corr</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">//</span> <span class="mi">2</span> <span class="c1"># temp. so no errors would be produced</span>
+    <span class="n">peaks1_j</span><span class="p">[</span><span class="n">invalid</span><span class="p">]</span> <span class="o">=</span> <span class="n">corr</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span> <span class="o">//</span> <span class="mi">2</span>
+    
+    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Found </span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">invalid</span><span class="p">)</span><span class="si">}</span><span class="s2"> bad peak(s)&quot;</span><span class="p">)</span>
+    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">invalid</span><span class="p">)</span> <span class="o">==</span> <span class="n">corr</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]:</span> <span class="c1"># in case something goes horribly wrong </span>
+        <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="n">np</span><span class="o">.</span><span class="n">size</span><span class="p">(</span><span class="n">corr</span><span class="p">,</span> <span class="mi">0</span><span class="p">),</span> <span class="mi">2</span><span class="p">))</span><span class="o">*</span><span class="n">np</span><span class="o">.</span><span class="n">nan</span>
+    
+    <span class="c1">#points</span>
+    <span class="n">c</span> <span class="o">=</span> <span class="n">corr</span><span class="p">[</span><span class="n">ind</span><span class="p">,</span> <span class="n">peaks1_i</span><span class="p">,</span> <span class="n">peaks1_j</span><span class="p">]</span>
+    <span class="n">cl</span> <span class="o">=</span> <span class="n">corr</span><span class="p">[</span><span class="n">ind</span><span class="p">,</span> <span class="n">peaks1_i</span> <span class="o">-</span> <span class="mi">1</span><span class="p">,</span> <span class="n">peaks1_j</span><span class="p">]</span>
+    <span class="n">cr</span> <span class="o">=</span> <span class="n">corr</span><span class="p">[</span><span class="n">ind</span><span class="p">,</span> <span class="n">peaks1_i</span> <span class="o">+</span> <span class="mi">1</span><span class="p">,</span> <span class="n">peaks1_j</span><span class="p">]</span>
+    <span class="n">cd</span> <span class="o">=</span> <span class="n">corr</span><span class="p">[</span><span class="n">ind</span><span class="p">,</span> <span class="n">peaks1_i</span><span class="p">,</span> <span class="n">peaks1_j</span> <span class="o">-</span> <span class="mi">1</span><span class="p">]</span>
+    <span class="n">cu</span> <span class="o">=</span> <span class="n">corr</span><span class="p">[</span><span class="n">ind</span><span class="p">,</span> <span class="n">peaks1_i</span><span class="p">,</span> <span class="n">peaks1_j</span> <span class="o">+</span> <span class="mi">1</span><span class="p">]</span>
+    
+    <span class="k">if</span> <span class="n">subpixel_method</span> <span class="o">==</span> <span class="s2">&quot;centroid&quot;</span><span class="p">:</span>
+        <span class="n">shift_i</span> <span class="o">=</span> <span class="p">((</span><span class="n">peaks1_i</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)</span> <span class="o">*</span> <span class="n">cl</span> <span class="o">+</span> <span class="n">peaks1_i</span> <span class="o">*</span> <span class="n">c</span> <span class="o">+</span> <span class="p">(</span><span class="n">peaks1_i</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span> <span class="o">*</span> <span class="n">cr</span><span class="p">)</span> <span class="o">/</span> <span class="p">(</span><span class="n">cl</span> <span class="o">+</span> <span class="n">c</span> <span class="o">+</span> <span class="n">cr</span><span class="p">)</span>
+        <span class="n">shift_j</span> <span class="o">=</span> <span class="p">((</span><span class="n">peaks1_j</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)</span> <span class="o">*</span> <span class="n">cd</span> <span class="o">+</span> <span class="n">peaks1_j</span> <span class="o">*</span> <span class="n">c</span> <span class="o">+</span> <span class="p">(</span><span class="n">peaks1_j</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span> <span class="o">*</span> <span class="n">cu</span><span class="p">)</span> <span class="o">/</span> <span class="p">(</span><span class="n">cd</span> <span class="o">+</span> <span class="n">c</span> <span class="o">+</span> <span class="n">cu</span><span class="p">)</span>
+        
+    <span class="k">elif</span> <span class="n">subpixel_method</span> <span class="o">==</span> <span class="s2">&quot;gaussian&quot;</span><span class="p">:</span>
+        <span class="n">inv</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">c</span> <span class="o">&lt;=</span> <span class="mi">0</span><span class="p">)[</span><span class="mi">0</span><span class="p">])</span> <span class="c1"># get rid of any pesky NaNs</span>
+        <span class="n">inv</span> <span class="o">+=</span> <span class="nb">list</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">cl</span> <span class="o">&lt;=</span> <span class="mi">0</span><span class="p">)[</span><span class="mi">0</span><span class="p">])</span>
+        <span class="n">inv</span> <span class="o">+=</span> <span class="nb">list</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">cr</span> <span class="o">&lt;=</span> <span class="mi">0</span><span class="p">)[</span><span class="mi">0</span><span class="p">])</span>
+        <span class="n">inv</span> <span class="o">+=</span> <span class="nb">list</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">cu</span> <span class="o">&lt;=</span> <span class="mi">0</span><span class="p">)[</span><span class="mi">0</span><span class="p">])</span>
+        <span class="n">inv</span> <span class="o">+=</span> <span class="nb">list</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">cd</span> <span class="o">&lt;=</span> <span class="mi">0</span><span class="p">)[</span><span class="mi">0</span><span class="p">])</span>
+        
+        <span class="c1">#cl_, cr_ = np.delete(cl, inv), np.delete(cr, inv)</span>
+        <span class="c1">#c_ = np.delete(c, inv)</span>
+        <span class="c1">#cu_, cd_ = np.delete(cu, inv), np.delete(cd, inv)</span>
+        
+        <span class="n">nom1</span> <span class="o">=</span> <span class="n">log</span><span class="p">(</span><span class="n">cl</span><span class="p">)</span> <span class="o">-</span> <span class="n">log</span><span class="p">(</span><span class="n">cr</span><span class="p">)</span>
+        <span class="n">den1</span> <span class="o">=</span> <span class="mi">2</span> <span class="o">*</span> <span class="n">log</span><span class="p">(</span><span class="n">cl</span><span class="p">)</span> <span class="o">-</span> <span class="mi">4</span> <span class="o">*</span> <span class="n">log</span><span class="p">(</span><span class="n">c</span><span class="p">)</span> <span class="o">+</span> <span class="mi">2</span> <span class="o">*</span> <span class="n">log</span><span class="p">(</span><span class="n">cr</span><span class="p">)</span>
+        <span class="n">nom2</span> <span class="o">=</span> <span class="n">log</span><span class="p">(</span><span class="n">cd</span><span class="p">)</span> <span class="o">-</span> <span class="n">log</span><span class="p">(</span><span class="n">cu</span><span class="p">)</span>
+        <span class="n">den2</span> <span class="o">=</span> <span class="mi">2</span> <span class="o">*</span> <span class="n">log</span><span class="p">(</span><span class="n">cd</span><span class="p">)</span> <span class="o">-</span> <span class="mi">4</span> <span class="o">*</span> <span class="n">log</span><span class="p">(</span><span class="n">c</span><span class="p">)</span> <span class="o">+</span> <span class="mi">2</span> <span class="o">*</span> <span class="n">log</span><span class="p">(</span><span class="n">cu</span><span class="p">)</span>
+        <span class="n">shift_i</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">divide</span><span class="p">(</span>
+            <span class="n">nom1</span><span class="p">,</span> <span class="n">den1</span><span class="p">,</span>
+            <span class="n">out</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">zeros_like</span><span class="p">(</span><span class="n">nom1</span><span class="p">),</span>
+            <span class="n">where</span><span class="o">=</span><span class="p">(</span><span class="n">den1</span> <span class="o">!=</span> <span class="mf">0.0</span><span class="p">)</span>
+        <span class="p">)</span>
+        <span class="n">shift_j</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">divide</span><span class="p">(</span>
+            <span class="n">nom2</span><span class="p">,</span> <span class="n">den2</span><span class="p">,</span>
+            <span class="n">out</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">zeros_like</span><span class="p">(</span><span class="n">nom2</span><span class="p">),</span>
+            <span class="n">where</span><span class="o">=</span><span class="p">(</span><span class="n">den2</span> <span class="o">!=</span> <span class="mf">0.0</span><span class="p">)</span>
+        <span class="p">)</span>
+        
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">inv</span><span class="p">)</span> <span class="o">&gt;=</span> <span class="mi">1</span><span class="p">:</span> 
+            <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;Found </span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">inv</span><span class="p">)</span><span class="si">}</span><span class="s1"> negative correlation indices resulting in NaNs</span><span class="se">\n</span><span class="s1">&#39;</span><span class="o">+</span>
+                   <span class="s1">&#39;Fallback for negative indices is a 3 point parabolic curve method&#39;</span><span class="p">)</span>
+            <span class="n">shift_i</span><span class="p">[</span><span class="n">inv</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span><span class="n">cl</span><span class="p">[</span><span class="n">inv</span><span class="p">]</span> <span class="o">-</span> <span class="n">cr</span><span class="p">[</span><span class="n">inv</span><span class="p">])</span> <span class="o">/</span> <span class="p">(</span><span class="mi">2</span> <span class="o">*</span> <span class="n">cl</span><span class="p">[</span><span class="n">inv</span><span class="p">]</span> <span class="o">-</span> <span class="mi">4</span> <span class="o">*</span> <span class="n">c</span><span class="p">[</span><span class="n">inv</span><span class="p">]</span> <span class="o">+</span> <span class="mi">2</span> <span class="o">*</span> <span class="n">cr</span><span class="p">[</span><span class="n">inv</span><span class="p">])</span>
+            <span class="n">shift_j</span><span class="p">[</span><span class="n">inv</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span><span class="n">cd</span><span class="p">[</span><span class="n">inv</span><span class="p">]</span> <span class="o">-</span> <span class="n">cu</span><span class="p">[</span><span class="n">inv</span><span class="p">])</span> <span class="o">/</span> <span class="p">(</span><span class="mi">2</span> <span class="o">*</span> <span class="n">cd</span><span class="p">[</span><span class="n">inv</span><span class="p">]</span> <span class="o">-</span> <span class="mi">4</span> <span class="o">*</span> <span class="n">c</span><span class="p">[</span><span class="n">inv</span><span class="p">]</span> <span class="o">+</span> <span class="mi">2</span> <span class="o">*</span> <span class="n">cu</span><span class="p">[</span><span class="n">inv</span><span class="p">])</span>
+            
+    <span class="k">elif</span> <span class="n">subpixel_method</span> <span class="o">==</span> <span class="s2">&quot;parabolic&quot;</span><span class="p">:</span>
+        <span class="n">shift_i</span> <span class="o">=</span> <span class="p">(</span><span class="n">cl</span> <span class="o">-</span> <span class="n">cr</span><span class="p">)</span> <span class="o">/</span> <span class="p">(</span><span class="mi">2</span> <span class="o">*</span> <span class="n">cl</span> <span class="o">-</span> <span class="mi">4</span> <span class="o">*</span> <span class="n">c</span> <span class="o">+</span> <span class="mi">2</span> <span class="o">*</span> <span class="n">cr</span><span class="p">)</span>
+        <span class="n">shift_j</span> <span class="o">=</span> <span class="p">(</span><span class="n">cd</span> <span class="o">-</span> <span class="n">cu</span><span class="p">)</span> <span class="o">/</span> <span class="p">(</span><span class="mi">2</span> <span class="o">*</span> <span class="n">cd</span> <span class="o">-</span> <span class="mi">4</span> <span class="o">*</span> <span class="n">c</span> <span class="o">+</span> <span class="mi">2</span> <span class="o">*</span> <span class="n">cu</span><span class="p">)</span>
+        
+    <span class="k">if</span> <span class="n">subpixel_method</span> <span class="o">!=</span> <span class="s2">&quot;centroid&quot;</span><span class="p">:</span>
+        <span class="n">disp_vy</span> <span class="o">=</span> <span class="p">(</span><span class="n">peaks1_i</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">)</span> <span class="o">+</span> <span class="n">shift_i</span><span class="p">)</span> <span class="o">-</span> <span class="n">np</span><span class="o">.</span><span class="n">floor</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">corr</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span><span class="o">/</span><span class="mi">2</span><span class="p">)</span>
+        <span class="n">disp_vx</span> <span class="o">=</span> <span class="p">(</span><span class="n">peaks1_j</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">)</span> <span class="o">+</span> <span class="n">shift_j</span><span class="p">)</span> <span class="o">-</span> <span class="n">np</span><span class="o">.</span><span class="n">floor</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">corr</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">2</span><span class="p">])</span><span class="o">/</span><span class="mi">2</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">disp_vy</span> <span class="o">=</span> <span class="n">shift_i</span> <span class="o">-</span> <span class="n">np</span><span class="o">.</span><span class="n">floor</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">corr</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span><span class="o">/</span><span class="mi">2</span><span class="p">)</span>
+        <span class="n">disp_vx</span> <span class="o">=</span> <span class="n">shift_j</span> <span class="o">-</span> <span class="n">np</span><span class="o">.</span><span class="n">floor</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">corr</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">2</span><span class="p">])</span><span class="o">/</span><span class="mi">2</span><span class="p">)</span>
+        
+    <span class="n">disp_vx</span><span class="p">[</span><span class="n">invalid</span><span class="p">]</span> <span class="o">=</span> <span class="n">peaks_x</span><span class="p">[</span><span class="n">invalid</span><span class="p">]</span><span class="o">*</span><span class="n">np</span><span class="o">.</span><span class="n">nan</span>
+    <span class="n">disp_vy</span><span class="p">[</span><span class="n">invalid</span><span class="p">]</span> <span class="o">=</span> <span class="n">peaks_y</span><span class="p">[</span><span class="n">invalid</span><span class="p">]</span><span class="o">*</span><span class="n">np</span><span class="o">.</span><span class="n">nan</span>
+    <span class="c1">#disp[ind, :] = np.vstack((disp_vx, disp_vy)).T</span>
+    <span class="c1">#return disp[:,0].reshape((n_rows, n_cols)), disp[:,1].reshape((n_rows, n_cols))</span>
+    <span class="k">if</span> <span class="n">n_rows</span> <span class="o">==</span> <span class="kc">None</span> <span class="ow">or</span> <span class="n">n_cols</span> <span class="o">==</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">disp_vx</span><span class="p">,</span> <span class="n">disp_vy</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">disp_vx</span><span class="o">.</span><span class="n">reshape</span><span class="p">((</span><span class="n">n_rows</span><span class="p">,</span> <span class="n">n_cols</span><span class="p">)),</span> <span class="n">disp_vy</span><span class="o">.</span><span class="n">reshape</span><span class="p">((</span><span class="n">n_rows</span><span class="p">,</span> <span class="n">n_cols</span><span class="p">))</span></div>
+    
+    
+<div class="viewcode-block" id="nextpower2"><a class="viewcode-back" href="../../src/openpiv.html#openpiv.pyprocess.nextpower2">[docs]</a><span class="k">def</span> <span class="nf">nextpower2</span><span class="p">(</span><span class="n">i</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot; Find 2^n that is equal to or greater than. &quot;&quot;&quot;</span>
+    <span class="n">n</span> <span class="o">=</span> <span class="mi">1</span>
+    <span class="k">while</span> <span class="n">n</span> <span class="o">&lt;</span> <span class="n">i</span><span class="p">:</span>
+        <span class="n">n</span> <span class="o">*=</span> <span class="mi">2</span>
+    <span class="k">return</span> <span class="n">n</span></div>
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2014, OpenPIV group.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

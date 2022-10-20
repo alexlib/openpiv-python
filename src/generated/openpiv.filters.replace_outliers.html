@@ -1,136 +1,181 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
 
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>openpiv.filters.replace_outliers &mdash; OpenPIV  documentation</title>
+      <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="../../_static/css/theme.css" type="text/css" />
+  <!--[if lt IE 9]>
+    <script src="../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script data-url_root="../../" id="documentation_options" src="../../_static/documentation_options.js"></script>
+        <script src="../../_static/jquery.js"></script>
+        <script src="../../_static/underscore.js"></script>
+        <script src="../../_static/_sphinx_javascript_frameworks_compat.js"></script>
+        <script src="../../_static/doctools.js"></script>
+        <script src="../../_static/sphinx_highlight.js"></script>
+        <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+    <script src="../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" /> 
+</head>
 
-<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
-  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+            <a href="../../index.html" class="icon icon-home"> OpenPIV
+          </a>
+              <div class="version">
+                0.24.4a
+              </div>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul>
+<li class="toctree-l1"><a class="reference internal" href="../piv_basics.html">Basics of the PIV algorithms</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../installation_instruction.html">Installation instruction</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../tutorial1.html">OpenPIV tutorial</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../windef.html">Multi-grid window deformation algorithm tutorial</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../masking.html">OpenPIV masking tutorial</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../developers.html">Information for developers and contributors</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../api_reference.html">API reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../faq.html">Frequently Asked Questions about PIV parameters</a></li>
+</ul>
 
+        </div>
+      </div>
+    </nav>
 
-<html xmlns="http://www.w3.org/1999/xhtml">
-  <head>
-    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
-    
-    <title>openpiv.filters.replace_outliers &mdash; OpenPIV 0.0.1 documentation</title>
-    
-    <link rel="stylesheet" href="../../_static/default.css" type="text/css" />
-    <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
-    
-    <script type="text/javascript">
-      var DOCUMENTATION_OPTIONS = {
-        URL_ROOT:    '../../',
-        VERSION:     '0.0.1',
-        COLLAPSE_INDEX: false,
-        FILE_SUFFIX: '.html',
-        HAS_SOURCE:  true
-      };
-    </script>
-    <script type="text/javascript" src="../../_static/jquery.js"></script>
-    <script type="text/javascript" src="../../_static/underscore.js"></script>
-    <script type="text/javascript" src="../../_static/doctools.js"></script>
-    <script type="text/javascript" src="http://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
-    <link rel="top" title="OpenPIV 0.0.1 documentation" href="../../index.html" /> 
-  </head>
-  <body>
-    <div class="related">
-      <h3>Navigation</h3>
-      <ul>
-        <li class="right" style="margin-right: 10px">
-          <a href="../../genindex.html" title="General Index"
-             accesskey="I">index</a></li>
-        <li class="right" >
-          <a href="../../py-modindex.html" title="Python Module Index"
-             >modules</a> |</li>
-        <li><a href="../../index.html">OpenPIV 0.0.1 documentation</a> &raquo;</li> 
-      </ul>
-    </div>  
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../index.html">OpenPIV</a>
+      </nav>
 
-    <div class="document">
-      <div class="documentwrapper">
-        <div class="bodywrapper">
-          <div class="body">
-            
-  <div class="section" id="openpiv-filters-replace-outliers">
-<h1>openpiv.filters.replace_outliers<a class="headerlink" href="#openpiv-filters-replace-outliers" title="Permalink to this headline">¶</a></h1>
-<dl class="function">
-<dt id="openpiv.filters.replace_outliers">
-<tt class="descclassname">openpiv.filters.</tt><tt class="descname">replace_outliers</tt><big>(</big><em>u</em>, <em>v</em>, <em>method='localmean'</em>, <em>max_iter=5</em>, <em>tol=0.001</em>, <em>kernel_size=1</em><big>)</big><a class="headerlink" href="#openpiv.filters.replace_outliers" title="Permalink to this definition">¶</a></dt>
-<dd><p>Replace invalid vectors in an velocity field using an iterative image inpainting algorithm.</p>
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../index.html" class="icon icon-home"></a> &raquo;</li>
+      <li>openpiv.filters.replace_outliers</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="../../_sources/src/generated/openpiv.filters.replace_outliers.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  
+<style>
+/* CSS overrides for sphinx_rtd_theme */
+
+/* 24px margin */
+.nbinput.nblast.container,
+.nboutput.nblast.container {
+    margin-bottom: 19px;  /* padding has already 5px */
+}
+
+/* ... except between code cells! */
+.nblast.container + .nbinput.container {
+    margin-top: -19px;
+}
+
+.admonition > p:before {
+    margin-right: 4px;  /* make room for the exclamation icon */
+}
+
+/* Fix math alignment, see https://github.com/rtfd/sphinx_rtd_theme/pull/686 */
+.math {
+    text-align: unset;
+}
+</style>
+<section id="openpiv-filters-replace-outliers">
+<h1>openpiv.filters.replace_outliers<a class="headerlink" href="#openpiv-filters-replace-outliers" title="Permalink to this heading"></a></h1>
+<dl class="py function">
+<dt class="sig sig-object py" id="openpiv.filters.replace_outliers">
+<span class="sig-prename descclassname"><span class="pre">openpiv.filters.</span></span><span class="sig-name descname"><span class="pre">replace_outliers</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">u</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">ndarray</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">v</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">ndarray</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">invalid_mask</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">ndarray</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">w</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">ndarray</span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">method</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'localmean'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_iter</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">5</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tol</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">0.001</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">kernel_size</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">1</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">Tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">ndarray</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="p"><span class="pre">...</span></span><span class="p"><span class="pre">]</span></span></span></span><a class="reference internal" href="../../_modules/openpiv/filters.html#replace_outliers"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#openpiv.filters.replace_outliers" title="Permalink to this definition"></a></dt>
+<dd><dl class="simple">
+<dt>Replace invalid vectors in an velocity field using an iterative image</dt><dd><p>inpainting algorithm.</p>
+</dd>
+</dl>
 <p>The algorithm is the following:</p>
 <ol class="arabic simple">
-<li>For each element in the arrays of the <tt class="docutils literal"><span class="pre">u</span></tt> and <tt class="docutils literal"><span class="pre">v</span></tt> components, replace it by a weighted average
-of the neighbouring elements which are not invalid themselves. The weights depends
-of the method type. If <tt class="docutils literal"><span class="pre">method=localmean</span></tt> weight are equal to 1/( (2*kernel_size+1)**2 -1 )</li>
-<li>Several iterations are needed if there are adjacent invalid elements.
-If this is the case, inforation is &#8220;spread&#8221; from the edges of the missing
-regions iteratively, until the variation is below a certain threshold.</li>
+<li><p>For each element in the arrays of the <code class="docutils literal notranslate"><span class="pre">u</span></code> and <code class="docutils literal notranslate"><span class="pre">v</span></code> components,
+replace it by a weighted average
+of the neighbouring elements which are not invalid themselves. The
+weights depends of the method type. If <code class="docutils literal notranslate"><span class="pre">method=localmean</span></code> weight
+are equal to 1/( (2*kernel_size+1)**2 -1 )</p></li>
+<li><p>Several iterations are needed if there are adjacent invalid elements.
+If this is the case, inforation is “spread” from the edges of the
+missing regions iteratively, until the variation is below a certain
+threshold.</p></li>
 </ol>
-<dl class="docutils">
-<dt>u <span class="classifier-delimiter">:</span> <span class="classifier">2d np.ndarray</span></dt>
-<dd>the u velocity component field</dd>
-<dt>v <span class="classifier-delimiter">:</span> <span class="classifier">2d np.ndarray</span></dt>
-<dd>the v velocity component field</dd>
-<dt>max_iter <span class="classifier-delimiter">:</span> <span class="classifier">int</span></dt>
-<dd>the number of iterations</dd>
-</dl>
-<p>fil
-kernel_size : int</p>
-<blockquote>
-<div>the size of the kernel, default is 1</div></blockquote>
-<dl class="docutils">
-<dt>method <span class="classifier-delimiter">:</span> <span class="classifier">str</span></dt>
-<dd>the type of kernel used for repairing missing vectors</dd>
-</dl>
-<dl class="docutils">
-<dt>uf <span class="classifier-delimiter">:</span> <span class="classifier">2d np.ndarray</span></dt>
-<dd>the smoothed u velocity component field, where invalid vectors have been replaced</dd>
-<dt>vf <span class="classifier-delimiter">:</span> <span class="classifier">2d np.ndarray</span></dt>
-<dd>the smoothed v velocity component field, where invalid vectors have been replaced</dd>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>u</strong> (<em>2d</em><em> or </em><em>3d np.ndarray</em>) – the u velocity component field</p></li>
+<li><p><strong>v</strong> (<em>2d</em><em> or </em><em>3d  np.ndarray</em>) – the v velocity component field</p></li>
+<li><p><strong>w</strong> (<em>2d</em><em> or </em><em>3d  np.ndarray</em>) – the w velocity component field</p></li>
+<li><p><strong>invalid_mask</strong> (<em>2d array</em><em> of </em><em>positions with invalid vectors</em>) – </p></li>
+<li><p><strong>grid_mask</strong> (<em>2d array</em><em> of </em><em>positions masked by the user</em>) – </p></li>
+<li><p><strong>max_iter</strong> (<em>int</em>) – the number of iterations</p></li>
+<li><p><strong>kernel_size</strong> (<em>int</em>) – the size of the kernel, default is 1</p></li>
+<li><p><strong>method</strong> (<em>str</em>) – the type of kernel used for repairing missing vectors</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><ul class="simple">
+<li><p><strong>uf</strong> (<em>2d or 3d np.ndarray</em>) – the smoothed u velocity component field, where invalid vectors have
+been replaced</p></li>
+<li><p><strong>vf</strong> (<em>2d or 3d np.ndarray</em>) – the smoothed v velocity component field, where invalid vectors have
+been replaced</p></li>
+<li><p><strong>wf</strong> (<em>2d or 3d np.ndarray</em>) – the smoothed w velocity component field, where invalid vectors have
+been replaced</p></li>
+</ul>
+</p>
+</dd>
 </dl>
 </dd></dl>
 
-</div>
+</section>
 
 
+           </div>
           </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2014, OpenPIV team.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
         </div>
       </div>
-      <div class="sphinxsidebar">
-        <div class="sphinxsidebarwrapper">
-  <h3>This Page</h3>
-  <ul class="this-page-menu">
-    <li><a href="../../_sources/src/generated/openpiv.filters.replace_outliers.txt"
-           rel="nofollow">Show Source</a></li>
-  </ul>
-<div id="searchbox" style="display: none">
-  <h3>Quick search</h3>
-    <form class="search" action="../../search.html" method="get">
-      <input type="text" name="q" />
-      <input type="submit" value="Go" />
-      <input type="hidden" name="check_keywords" value="yes" />
-      <input type="hidden" name="area" value="default" />
-    </form>
-    <p class="searchtip" style="font-size: 90%">
-    Enter search terms or a module, class or function name.
-    </p>
-</div>
-<script type="text/javascript">$('#searchbox').show(0);</script>
-        </div>
-      </div>
-      <div class="clearer"></div>
-    </div>
-    <div class="related">
-      <h3>Navigation</h3>
-      <ul>
-        <li class="right" style="margin-right: 10px">
-          <a href="../../genindex.html" title="General Index"
-             >index</a></li>
-        <li class="right" >
-          <a href="../../py-modindex.html" title="Python Module Index"
-             >modules</a> |</li>
-        <li><a href="../../index.html">OpenPIV 0.0.1 documentation</a> &raquo;</li> 
-      </ul>
-    </div>
-    <div class="footer">
-        &copy; Copyright 2014, OpenPIV group.
-      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.1.3.
-    </div>
-  </body>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
 </html>

@@ -1,0 +1,661 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>openpiv.preprocess &mdash; OpenPIV  documentation</title>
+      <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="../../_static/css/theme.css" type="text/css" />
+  <!--[if lt IE 9]>
+    <script src="../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script data-url_root="../../" id="documentation_options" src="../../_static/documentation_options.js"></script>
+        <script src="../../_static/jquery.js"></script>
+        <script src="../../_static/underscore.js"></script>
+        <script src="../../_static/_sphinx_javascript_frameworks_compat.js"></script>
+        <script src="../../_static/doctools.js"></script>
+        <script src="../../_static/sphinx_highlight.js"></script>
+        <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+    <script src="../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+            <a href="../../index.html" class="icon icon-home"> OpenPIV
+          </a>
+              <div class="version">
+                0.24.0
+              </div>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul>
+<li class="toctree-l1"><a class="reference internal" href="../../src/piv_basics.html">Basics of the PIV algorithms</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../src/installation_instruction.html">Installation instruction</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../src/tutorial1.html">OpenPIV tutorial</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../src/windef.html">Multi-grid window deformation algorithm tutorial</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../src/masking.html">OpenPIV masking tutorial</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../src/developers.html">Information for developers and contributors</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../src/api_reference.html">API reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../src/faq.html">Frequently Asked Questions about PIV parameters</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../index.html">OpenPIV</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../index.html" class="icon icon-home"></a> &raquo;</li>
+          <li><a href="../index.html">Module code</a> &raquo;</li>
+          <li><a href="../openpiv.html">openpiv</a> &raquo;</li>
+      <li>openpiv.preprocess</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for openpiv.preprocess</h1><div class="highlight"><pre>
+<span></span><span class="sd">&quot;&quot;&quot;This module contains image processing routines that improve</span>
+<span class="sd">images prior to PIV processing.&quot;&quot;&quot;</span>
+
+<span class="kn">import</span> <span class="nn">pathlib</span>
+<span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Tuple</span>
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">from</span> <span class="nn">scipy.ndimage</span> <span class="kn">import</span> <span class="n">median_filter</span><span class="p">,</span> <span class="n">gaussian_filter</span><span class="p">,</span> <span class="n">binary_fill_holes</span>
+<span class="kn">from</span> <span class="nn">skimage</span> <span class="kn">import</span> <span class="n">img_as_float</span><span class="p">,</span> <span class="n">exposure</span><span class="p">,</span> <span class="n">img_as_ubyte</span>
+<span class="kn">from</span> <span class="nn">skimage</span> <span class="kn">import</span> <span class="n">filters</span>
+<span class="kn">from</span> <span class="nn">skimage.util</span> <span class="kn">import</span> <span class="n">invert</span>
+<span class="kn">from</span> <span class="nn">skimage.measure</span> <span class="kn">import</span> <span class="n">find_contours</span><span class="p">,</span> <span class="n">approximate_polygon</span><span class="p">,</span> <span class="n">points_in_poly</span>
+<span class="kn">from</span> <span class="nn">skimage.transform</span> <span class="kn">import</span> <span class="n">rescale</span>
+<span class="kn">import</span> <span class="nn">matplotlib.pyplot</span> <span class="k">as</span> <span class="nn">plt</span>
+<span class="kn">from</span> <span class="nn">openpiv.tools</span> <span class="kn">import</span> <span class="n">imread</span>
+
+<span class="n">__licence_</span> <span class="o">=</span> <span class="s2">&quot;&quot;&quot;</span>
+<span class="s2">Copyright (C) 2011  www.openpiv.net</span>
+
+<span class="s2">This program is free software: you can redistribute it and/or modify</span>
+<span class="s2">it under the terms of the GNU General Public License as published by</span>
+<span class="s2">the Free Software Foundation, either version 3 of the License, or</span>
+<span class="s2">(at your option) any later version.</span>
+
+<span class="s2">This program is distributed in the hope that it will be useful,</span>
+<span class="s2">but WITHOUT ANY WARRANTY; without even the implied warranty of</span>
+<span class="s2">MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the</span>
+<span class="s2">GNU General Public License for more details.</span>
+
+<span class="s2">You should have received a copy of the GNU General Public License</span>
+<span class="s2">along with this program.  If not, see &lt;http://www.gnu.org/licenses/&gt;.</span>
+<span class="s2">&quot;&quot;&quot;</span>
+
+
+
+<div class="viewcode-block" id="dynamic_masking"><a class="viewcode-back" href="../../src/openpiv.html#openpiv.preprocess.dynamic_masking">[docs]</a><span class="k">def</span> <span class="nf">dynamic_masking</span><span class="p">(</span><span class="n">image</span><span class="p">,</span> <span class="n">method</span><span class="o">=</span><span class="s2">&quot;edges&quot;</span><span class="p">,</span> <span class="n">filter_size</span><span class="o">=</span><span class="mi">7</span><span class="p">,</span> <span class="n">threshold</span><span class="o">=</span><span class="mf">0.005</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Dynamically masks out the objects in the PIV images</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    image: image</span>
+<span class="sd">        a two dimensional array of uint16, uint8 or similar type</span>
+
+<span class="sd">    method: string</span>
+<span class="sd">        &#39;edges&#39; or &#39;intensity&#39;:</span>
+<span class="sd">        &#39;edges&#39; method is used for relatively dark and sharp objects,</span>
+<span class="sd">        with visible edges, on</span>
+<span class="sd">        dark backgrounds, i.e. low contrast</span>
+<span class="sd">        &#39;intensity&#39; method is useful for smooth bright objects or dark objects</span>
+<span class="sd">        or vice versa,</span>
+<span class="sd">        i.e. images with high contrast between the object and the background</span>
+
+<span class="sd">    filter_size: integer</span>
+<span class="sd">        a scalar that defines the size of the Gaussian filter</span>
+
+<span class="sd">    threshold: float</span>
+<span class="sd">        a value of the threshold to segment the background from the object</span>
+<span class="sd">        default value: None, replaced by sckimage.filter.threshold_otsu value</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    image : array of the same datatype as the incoming image with the</span>
+<span class="sd">    object masked out</span>
+<span class="sd">    as a completely black region(s) of zeros (integers or floats).</span>
+
+
+<span class="sd">    Example</span>
+<span class="sd">    --------</span>
+<span class="sd">    frame_a  = openpiv.tools.imread( &#39;Camera1-001.tif&#39; )</span>
+<span class="sd">    imshow(frame_a) # original</span>
+
+<span class="sd">    frame_a = dynamic_masking(frame_a,method=&#39;edges&#39;,filter_size=7,</span>
+<span class="sd">    threshold=0.005)</span>
+<span class="sd">    imshow(frame_a) # masked</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">imcopy</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">copy</span><span class="p">(</span><span class="n">image</span><span class="p">)</span>
+    <span class="c1"># stretch the histogram</span>
+    <span class="n">image</span> <span class="o">=</span> <span class="n">exposure</span><span class="o">.</span><span class="n">rescale_intensity</span><span class="p">(</span><span class="n">img_as_float</span><span class="p">(</span><span class="n">image</span><span class="p">),</span> <span class="n">in_range</span><span class="o">=</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">))</span>
+    <span class="c1"># blur the image, low-pass</span>
+    <span class="n">blurback</span> <span class="o">=</span> <span class="n">img_as_ubyte</span><span class="p">(</span><span class="n">gaussian_filter</span><span class="p">(</span><span class="n">image</span><span class="p">,</span> <span class="n">filter_size</span><span class="p">))</span>
+    <span class="k">if</span> <span class="n">method</span> <span class="o">==</span> <span class="s2">&quot;edges&quot;</span><span class="p">:</span>
+        <span class="c1"># identify edges</span>
+        <span class="n">edges</span> <span class="o">=</span> <span class="n">filters</span><span class="o">.</span><span class="n">sobel</span><span class="p">(</span><span class="n">blurback</span><span class="p">)</span>
+        <span class="n">blur_edges</span> <span class="o">=</span> <span class="n">gaussian_filter</span><span class="p">(</span><span class="n">edges</span><span class="p">,</span> <span class="mi">21</span><span class="p">)</span>
+        <span class="c1"># create the boolean mask</span>
+        <span class="n">mask</span> <span class="o">=</span> <span class="n">blur_edges</span> <span class="o">&gt;</span> <span class="n">threshold</span>
+        <span class="n">mask</span> <span class="o">=</span> <span class="n">img_as_ubyte</span><span class="p">(</span><span class="n">binary_fill_holes</span><span class="p">(</span><span class="n">mask</span><span class="p">))</span>
+        <span class="n">imcopy</span> <span class="o">-=</span> <span class="n">blurback</span>
+        <span class="n">imcopy</span><span class="p">[</span><span class="n">mask</span><span class="p">]</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="k">elif</span> <span class="n">method</span> <span class="o">==</span> <span class="s2">&quot;intensity&quot;</span><span class="p">:</span>
+        <span class="n">background</span> <span class="o">=</span> <span class="n">gaussian_filter</span><span class="p">(</span><span class="n">median_filter</span><span class="p">(</span><span class="n">image</span><span class="p">,</span> <span class="n">filter_size</span><span class="p">),</span>
+                                     <span class="n">filter_size</span><span class="p">)</span>
+        <span class="n">mask</span> <span class="o">=</span> <span class="n">background</span> <span class="o">&gt;</span> <span class="n">filters</span><span class="o">.</span><span class="n">threshold_otsu</span><span class="p">(</span><span class="n">background</span><span class="p">)</span>
+        <span class="n">imcopy</span><span class="p">[</span><span class="n">mask</span><span class="p">]</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;method </span><span class="si">{</span><span class="n">method</span><span class="si">}</span><span class="s2"> is not implemented&quot;</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">imcopy</span><span class="p">,</span> <span class="n">mask</span></div>
+
+
+<div class="viewcode-block" id="mask_coordinates"><a class="viewcode-back" href="../../src/openpiv.html#openpiv.preprocess.mask_coordinates">[docs]</a><span class="k">def</span> <span class="nf">mask_coordinates</span><span class="p">(</span><span class="n">image_mask</span><span class="p">,</span> <span class="n">tolerance</span><span class="o">=</span><span class="mf">1.5</span><span class="p">,</span> <span class="n">min_length</span><span class="o">=</span><span class="mi">10</span><span class="p">,</span> <span class="n">plot</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot; Creates set of coordinates of polygons from the image mask</span>
+<span class="sd">        Inputs:</span>
+<span class="sd">        mask : binary image of a mask.</span>
+
+<span class="sd">        [tolerance] : float - tolerance for approximate_polygons, default = 1.5</span>
+
+<span class="sd">        [min_length] : int - minimum length of the polygon, filters out</span>
+<span class="sd">        the small polygons like noisy regions, default = 10</span>
+
+<span class="sd">    Outputs:</span>
+<span class="sd">        mask_coord : list of mask coordinates in pixels</span>
+
+<span class="sd">    Example:</span>
+<span class="sd">        # if masks of image A and B are slightly different:</span>
+<span class="sd">        image_mask = np.logical_and(image_mask_a, image_mask_b)</span>
+<span class="sd">        mask_coords = mask_coordinates(image_mask)</span>
+<span class="sd">    </span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">mask_coords</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">if</span> <span class="n">plot</span><span class="p">:</span>
+        <span class="n">plt</span><span class="o">.</span><span class="n">figure</span><span class="p">()</span>
+        <span class="n">plt</span><span class="o">.</span><span class="n">imshow</span><span class="p">(</span><span class="n">image_mask</span><span class="p">)</span>
+    <span class="k">for</span> <span class="n">contour</span> <span class="ow">in</span> <span class="n">find_contours</span><span class="p">(</span><span class="n">image_mask</span><span class="p">,</span> <span class="mi">0</span><span class="p">):</span>
+        <span class="n">coords</span> <span class="o">=</span> <span class="n">approximate_polygon</span><span class="p">(</span><span class="n">contour</span><span class="p">,</span> <span class="n">tolerance</span><span class="o">=</span><span class="n">tolerance</span><span class="p">)</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">coords</span><span class="p">)</span> <span class="o">&gt;</span> <span class="n">min_length</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">plot</span><span class="p">:</span>
+                <span class="n">plt</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">coords</span><span class="p">[:,</span> <span class="mi">1</span><span class="p">],</span> <span class="n">coords</span><span class="p">[:,</span> <span class="mi">0</span><span class="p">],</span> <span class="s1">&#39;-r&#39;</span><span class="p">,</span> <span class="n">linewidth</span><span class="o">=</span><span class="mi">3</span><span class="p">)</span>
+            <span class="n">mask_coords</span> <span class="o">=</span> <span class="n">coords</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+
+    <span class="k">return</span> <span class="n">mask_coords</span></div>
+
+
+<div class="viewcode-block" id="prepare_mask_on_grid"><a class="viewcode-back" href="../../src/openpiv.html#openpiv.preprocess.prepare_mask_on_grid">[docs]</a><span class="k">def</span> <span class="nf">prepare_mask_on_grid</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">mask_coords</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot; Converts mask coordinates of the image mask</span>
+<span class="sd">    to the grid of 1/0 on the x,y grid</span>
+<span class="sd">    Inputs:</span>
+<span class="sd">        x,y : grid of x,y points</span>
+<span class="sd">        mask_coords : array of coordinates in pixels of the image_mask</span>
+
+<span class="sd">    Outputs:</span>
+<span class="sd">        grid of points of the mask, of the shape of x</span>
+<span class="sd">    </span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">xymask</span> <span class="o">=</span> <span class="n">points_in_poly</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">c_</span><span class="p">[</span><span class="n">y</span><span class="o">.</span><span class="n">flatten</span><span class="p">(),</span> <span class="n">x</span><span class="o">.</span><span class="n">flatten</span><span class="p">()],</span> <span class="n">mask_coords</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">xymask</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="n">x</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="normalize_array"><a class="viewcode-back" href="../../src/openpiv.html#openpiv.preprocess.normalize_array">[docs]</a><span class="k">def</span> <span class="nf">normalize_array</span><span class="p">(</span><span class="n">array</span><span class="p">,</span> <span class="n">axis</span> <span class="o">=</span> <span class="kc">None</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Min/max normalization to [0,1].</span>
+<span class="sd">    </span>
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    array: np.ndarray</span>
+<span class="sd">        array to normalize</span>
+<span class="sd">        </span>
+<span class="sd">    axis: int, tuple</span>
+<span class="sd">        axis to find values for normalization</span>
+<span class="sd">        </span>
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    array: np.ndarray</span>
+<span class="sd">        normalized array</span>
+<span class="sd">    </span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">array</span> <span class="o">=</span> <span class="n">array</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">float32</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">axis</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">return</span><span class="p">((</span><span class="n">array</span> <span class="o">-</span> <span class="n">np</span><span class="o">.</span><span class="n">nanmin</span><span class="p">(</span><span class="n">array</span><span class="p">))</span> <span class="o">/</span> <span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">nanmax</span><span class="p">(</span><span class="n">array</span><span class="p">)</span> <span class="o">-</span> <span class="n">np</span><span class="o">.</span><span class="n">nanmin</span><span class="p">(</span><span class="n">array</span><span class="p">)))</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">return</span><span class="p">((</span><span class="n">array</span> <span class="o">-</span> <span class="n">np</span><span class="o">.</span><span class="n">nanmin</span><span class="p">(</span><span class="n">array</span><span class="p">,</span> <span class="n">axis</span> <span class="o">=</span> <span class="n">axis</span><span class="p">))</span> <span class="o">/</span> 
+               <span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">nanmax</span><span class="p">(</span><span class="n">array</span><span class="p">,</span> <span class="n">axis</span> <span class="o">=</span> <span class="n">axis</span><span class="p">)</span> <span class="o">-</span> <span class="n">np</span><span class="o">.</span><span class="n">nanmin</span><span class="p">(</span><span class="n">array</span><span class="p">,</span> <span class="n">axis</span> <span class="o">=</span> <span class="n">axis</span><span class="p">)))</span></div>
+
+    
+<div class="viewcode-block" id="standardize_array"><a class="viewcode-back" href="../../src/openpiv.html#openpiv.preprocess.standardize_array">[docs]</a><span class="k">def</span> <span class="nf">standardize_array</span><span class="p">(</span><span class="n">array</span><span class="p">,</span> <span class="n">axis</span> <span class="o">=</span> <span class="kc">None</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Standardize an array.</span>
+<span class="sd">    </span>
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    array: np.ndarray</span>
+<span class="sd">        array to normalize</span>
+<span class="sd">        </span>
+<span class="sd">    axis: int, tuple</span>
+<span class="sd">        axis to find values for standardization</span>
+<span class="sd">        </span>
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    array: np.ndarray</span>
+<span class="sd">        normalized array</span>
+<span class="sd">    </span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">array</span> <span class="o">=</span> <span class="n">array</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">float32</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">axis</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">return</span><span class="p">((</span><span class="n">array</span> <span class="o">-</span> <span class="n">np</span><span class="o">.</span><span class="n">nanmean</span><span class="p">(</span><span class="n">array</span><span class="p">)</span> <span class="o">/</span> <span class="n">np</span><span class="o">.</span><span class="n">nanstd</span><span class="p">(</span><span class="n">array</span><span class="p">)))</span>  
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">return</span><span class="p">((</span><span class="n">array</span> <span class="o">-</span> <span class="n">np</span><span class="o">.</span><span class="n">nanmean</span><span class="p">(</span><span class="n">array</span><span class="p">,</span> <span class="n">axis</span> <span class="o">=</span> <span class="n">axis</span><span class="p">)</span> <span class="o">/</span> <span class="n">np</span><span class="o">.</span><span class="n">nanstd</span><span class="p">(</span><span class="n">array</span><span class="p">,</span> <span class="n">axis</span> <span class="o">=</span> <span class="n">axis</span><span class="p">)))</span></div>
+    
+    
+<div class="viewcode-block" id="instensity_cap"><a class="viewcode-back" href="../../src/openpiv.html#openpiv.preprocess.instensity_cap">[docs]</a><span class="k">def</span> <span class="nf">instensity_cap</span><span class="p">(</span><span class="n">img</span><span class="p">,</span> <span class="n">std_mult</span> <span class="o">=</span> <span class="mi">2</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Simple intensity capping.</span>
+<span class="sd">    </span>
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    img: image</span>
+<span class="sd">        a two dimensional array of float32 or float64,</span>
+<span class="sd">        but can be uint16, uint8 or similar type</span>
+<span class="sd">        </span>
+<span class="sd">    std_mult: int</span>
+<span class="sd">        how strong the intensity capping is. Lower values</span>
+<span class="sd">        yields a lower threshold</span>
+<span class="sd">        </span>
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    img: image</span>
+<span class="sd">        a filtered two dimensional array of the input image</span>
+<span class="sd">    </span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">upper_limit</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">img</span><span class="p">)</span> <span class="o">+</span> <span class="n">std_mult</span> <span class="o">*</span> <span class="n">img</span><span class="o">.</span><span class="n">std</span><span class="p">()</span>
+    <span class="n">img</span><span class="p">[</span><span class="n">img</span> <span class="o">&gt;</span> <span class="n">upper_limit</span><span class="p">]</span> <span class="o">=</span> <span class="n">upper_limit</span>
+    <span class="k">return</span> <span class="n">img</span></div>
+
+
+<div class="viewcode-block" id="intensity_clip"><a class="viewcode-back" href="../../src/openpiv.html#openpiv.preprocess.intensity_clip">[docs]</a><span class="k">def</span> <span class="nf">intensity_clip</span><span class="p">(</span><span class="n">img</span><span class="p">,</span> <span class="n">min_val</span> <span class="o">=</span> <span class="mi">0</span><span class="p">,</span> <span class="n">max_val</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">flag</span> <span class="o">=</span> <span class="s1">&#39;clip&#39;</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Simple intensity clipping</span>
+<span class="sd">    </span>
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    img: image</span>
+<span class="sd">        a two dimensional array of float32 or float64,</span>
+<span class="sd">        but can be uint16, uint8 or similar type</span>
+<span class="sd">        </span>
+<span class="sd">    min_val: int or float</span>
+<span class="sd">        min allowed pixel intensity</span>
+<span class="sd">        </span>
+<span class="sd">    max_val: int or float</span>
+<span class="sd">        min allowed pixel intensity</span>
+<span class="sd">        </span>
+<span class="sd">    flag: str</span>
+<span class="sd">        one of two methods to set invalid pixels intensities</span>
+<span class="sd">        </span>
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    img: image</span>
+<span class="sd">        a filtered two dimensional array of the input image</span>
+<span class="sd">    </span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">flag</span> <span class="ow">not</span> <span class="ow">in</span> <span class="p">[</span><span class="s1">&#39;clip&#39;</span><span class="p">,</span> <span class="s1">&#39;cap&#39;</span><span class="p">]:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;Flag not supported </span><span class="si">{</span><span class="n">flag</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">flag</span> <span class="o">==</span> <span class="s1">&#39;clip&#39;</span><span class="p">:</span>
+        <span class="n">flag_min</span><span class="p">,</span> <span class="n">flag_max</span> <span class="o">=</span> <span class="mi">0</span> <span class="p">,</span> <span class="mi">0</span>
+    <span class="k">elif</span> <span class="n">flag</span> <span class="o">==</span> <span class="s1">&#39;cap&#39;</span><span class="p">:</span>
+        <span class="n">flag_min</span><span class="p">,</span> <span class="n">flag_max</span> <span class="o">=</span> <span class="n">min_val</span><span class="p">,</span> <span class="n">max_val</span>
+    <span class="n">img</span><span class="p">[</span><span class="n">img</span> <span class="o">&lt;</span> <span class="n">min_val</span><span class="p">]</span> <span class="o">=</span> <span class="n">flag_min</span>
+    <span class="k">if</span> <span class="n">max_val</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">img</span><span class="p">[</span><span class="n">img</span> <span class="o">&gt;</span> <span class="n">max_val</span><span class="p">]</span> <span class="o">=</span> <span class="n">flag_max</span>
+    <span class="k">return</span> <span class="n">img</span></div>
+
+
+<div class="viewcode-block" id="high_pass"><a class="viewcode-back" href="../../src/openpiv.html#openpiv.preprocess.high_pass">[docs]</a><span class="k">def</span> <span class="nf">high_pass</span><span class="p">(</span><span class="n">img</span><span class="p">,</span> <span class="n">sigma</span> <span class="o">=</span> <span class="mi">5</span><span class="p">,</span> <span class="n">clip</span> <span class="o">=</span> <span class="kc">False</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Simple high pass filter</span>
+<span class="sd">    </span>
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    img: image</span>
+<span class="sd">        a two dimensional array of float32 or float64, </span>
+<span class="sd">        but can be uint16, uint8 or similar type</span>
+<span class="sd">        </span>
+<span class="sd">    sigma: float</span>
+<span class="sd">        sigma value of the gaussian filter</span>
+<span class="sd">        </span>
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    img: image</span>
+<span class="sd">        a filtered two dimensional array of the input image</span>
+<span class="sd">    </span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">low_pass</span> <span class="o">=</span> <span class="n">gaussian_filter</span><span class="p">(</span><span class="n">img</span><span class="p">,</span> <span class="n">sigma</span> <span class="o">=</span> <span class="n">sigma</span><span class="p">)</span>
+    <span class="n">img</span> <span class="o">-=</span> <span class="n">low_pass</span>
+    <span class="k">if</span> <span class="n">clip</span><span class="p">:</span>
+        <span class="n">img</span><span class="p">[</span><span class="n">img</span> <span class="o">&lt;</span> <span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="k">return</span> <span class="n">img</span></div>
+
+
+<div class="viewcode-block" id="local_variance_normalization"><a class="viewcode-back" href="../../src/openpiv.html#openpiv.preprocess.local_variance_normalization">[docs]</a><span class="k">def</span> <span class="nf">local_variance_normalization</span><span class="p">(</span><span class="n">img</span><span class="p">,</span> <span class="n">sigma_1</span> <span class="o">=</span> <span class="mi">2</span><span class="p">,</span> <span class="n">sigma_2</span> <span class="o">=</span> <span class="mi">1</span><span class="p">,</span> <span class="n">clip</span> <span class="o">=</span> <span class="kc">True</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Local variance normalization by two gaussian filters.</span>
+<span class="sd">    This method is used by common commercial softwares</span>
+<span class="sd">    </span>
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    img: image</span>
+<span class="sd">        a two dimensional array of float32 or float64, </span>
+<span class="sd">        but can be uint16, uint8 or similar type</span>
+<span class="sd">        </span>
+<span class="sd">    sigma_1: float</span>
+<span class="sd">        sigma value of the first gaussian low pass filter</span>
+<span class="sd">        </span>
+<span class="sd">    sigma_2: float</span>
+<span class="sd">        sigma value of the second gaussian low pass filter</span>
+<span class="sd">        </span>
+<span class="sd">    clip: bool</span>
+<span class="sd">        set negative pixels to zero</span>
+<span class="sd">        </span>
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    img: image</span>
+<span class="sd">        a filtered two dimensional array of the input image</span>
+<span class="sd">    </span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">_high_pass</span> <span class="o">=</span> <span class="n">img</span> <span class="o">-</span> <span class="n">gaussian_filter</span><span class="p">(</span><span class="n">img</span><span class="p">,</span> <span class="n">sigma_1</span><span class="p">)</span>
+    <span class="n">img_blur</span> <span class="o">=</span> <span class="n">gaussian_filter</span><span class="p">(</span><span class="n">_high_pass</span> <span class="o">*</span> <span class="n">_high_pass</span><span class="p">,</span> <span class="n">sigma</span> <span class="o">=</span> <span class="n">sigma_2</span><span class="p">)</span>
+    <span class="n">den</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">img_blur</span><span class="p">)</span>
+    <span class="n">img</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">divide</span><span class="p">(</span> <span class="c1"># stops image from being all black</span>
+        <span class="n">_high_pass</span><span class="p">,</span> <span class="n">den</span><span class="p">,</span>
+        <span class="n">out</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros_like</span><span class="p">(</span><span class="n">img</span><span class="p">),</span>
+        <span class="n">where</span> <span class="o">=</span> <span class="p">(</span><span class="n">den</span> <span class="o">!=</span> <span class="mf">0.0</span><span class="p">)</span>
+    <span class="p">)</span>    
+    <span class="k">if</span> <span class="n">clip</span><span class="p">:</span>
+        <span class="n">img</span><span class="p">[</span><span class="n">img</span> <span class="o">&lt;</span> <span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="mi">0</span> 
+    <span class="n">img</span> <span class="o">=</span> <span class="p">(</span><span class="n">img</span> <span class="o">-</span> <span class="n">img</span><span class="o">.</span><span class="n">min</span><span class="p">())</span> <span class="o">/</span> <span class="p">(</span><span class="n">img</span><span class="o">.</span><span class="n">max</span><span class="p">()</span> <span class="o">-</span> <span class="n">img</span><span class="o">.</span><span class="n">min</span><span class="p">())</span>
+    <span class="k">return</span> <span class="n">img</span></div>
+
+
+
+<div class="viewcode-block" id="contrast_stretch"><a class="viewcode-back" href="../../src/openpiv.html#openpiv.preprocess.contrast_stretch">[docs]</a><span class="k">def</span> <span class="nf">contrast_stretch</span><span class="p">(</span><span class="n">img</span><span class="p">,</span> <span class="n">lower_limit</span> <span class="o">=</span> <span class="mi">2</span><span class="p">,</span> <span class="n">upper_limit</span> <span class="o">=</span> <span class="mi">98</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Simple percentile-based contrast stretching</span>
+<span class="sd">    </span>
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    img: image</span>
+<span class="sd">        a two dimensional array of float32 or float64, </span>
+<span class="sd">        but can be uint16, uint8 or similar type</span>
+<span class="sd">        </span>
+<span class="sd">    lower_limit: int</span>
+<span class="sd">        lower percentile limit</span>
+<span class="sd">        </span>
+<span class="sd">    upper_limit: int</span>
+<span class="sd">        upper percentile limit</span>
+<span class="sd">        </span>
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    img: image</span>
+<span class="sd">        a filtered two dimensional array of the input image  </span>
+<span class="sd">    </span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">lower_limit</span> <span class="o">&lt;</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="n">lower_limit</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="k">if</span> <span class="n">upper_limit</span> <span class="o">&gt;</span> <span class="mi">100</span><span class="p">:</span>
+        <span class="n">upper_limit</span> <span class="o">=</span> <span class="mi">100</span>
+                
+    <span class="n">lower</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">percentile</span><span class="p">(</span><span class="n">img</span><span class="p">,</span> <span class="n">lower_limit</span><span class="p">)</span>
+    <span class="n">upper</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">percentile</span><span class="p">(</span><span class="n">img</span><span class="p">,</span> <span class="n">upper_limit</span><span class="p">)</span>
+    <span class="n">img</span> <span class="o">=</span> <span class="n">exposure</span><span class="o">.</span><span class="n">rescale_intensity</span><span class="p">(</span><span class="n">img</span><span class="p">,</span> <span class="n">in_range</span> <span class="o">=</span> <span class="p">(</span><span class="n">lower</span><span class="p">,</span> <span class="n">upper</span><span class="p">))</span>
+    <span class="k">return</span> <span class="n">img</span></div>
+
+<div class="viewcode-block" id="threshold_binarize"><a class="viewcode-back" href="../../src/openpiv.html#openpiv.preprocess.threshold_binarize">[docs]</a><span class="k">def</span> <span class="nf">threshold_binarize</span><span class="p">(</span><span class="n">img</span><span class="p">,</span> <span class="n">threshold</span><span class="p">,</span> <span class="n">max_val</span> <span class="o">=</span> <span class="mi">255</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Simple binarizing threshold</span>
+<span class="sd">    </span>
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    img: image</span>
+<span class="sd">        a two dimensional array of float32 or float64, </span>
+<span class="sd">        but can be uint16, uint8 or similar type</span>
+<span class="sd">        </span>
+<span class="sd">    threshold: int or float</span>
+<span class="sd">        boundary where pixels set lower than the threshold are set to zero</span>
+<span class="sd">        and values higher than the threshold are set to the maximum user selected value</span>
+<span class="sd">        </span>
+<span class="sd">    max_val: int or float</span>
+<span class="sd">        maximum pixel value of the image</span>
+<span class="sd">        </span>
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    img: image</span>
+<span class="sd">        a filtered two dimensional array of the input image</span>
+<span class="sd">    </span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">img</span><span class="p">[</span><span class="n">img</span> <span class="o">&lt;</span> <span class="n">threshold</span><span class="p">]</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="n">img</span><span class="p">[</span><span class="n">img</span> <span class="o">&gt;</span> <span class="n">threshold</span><span class="p">]</span> <span class="o">=</span> <span class="n">max_val</span>
+    <span class="k">return</span> <span class="n">img</span></div>
+
+
+<div class="viewcode-block" id="gen_min_background"><a class="viewcode-back" href="../../src/openpiv.html#openpiv.preprocess.gen_min_background">[docs]</a><span class="k">def</span> <span class="nf">gen_min_background</span><span class="p">(</span><span class="n">img_list</span><span class="p">,</span> <span class="n">resize</span> <span class="o">=</span> <span class="mi">255</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Generate a background by averaging the minimum intensity </span>
+<span class="sd">    of all images in an image list.</span>
+<span class="sd">    Apply by subtracting generated background image.</span>
+<span class="sd">    </span>
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    img_list: list</span>
+<span class="sd">        list of image directories</span>
+<span class="sd">        </span>
+<span class="sd">    resize: int or float</span>
+<span class="sd">        disabled by default, normalize array and set value to user</span>
+<span class="sd">        selected max pixel intensity</span>
+<span class="sd">        </span>
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    img: image</span>
+<span class="sd">        a mean of all images</span>
+<span class="sd">    </span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">background</span> <span class="o">=</span> <span class="n">imread</span><span class="p">(</span><span class="n">img_list</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+    <span class="k">if</span> <span class="n">resize</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">background</span> <span class="o">=</span> <span class="n">normalize_array</span><span class="p">(</span><span class="n">background</span><span class="p">)</span> <span class="o">*</span> <span class="n">resize</span>
+    <span class="k">for</span> <span class="n">img</span> <span class="ow">in</span> <span class="n">img_list</span><span class="p">:</span> 
+        <span class="k">if</span> <span class="n">img</span> <span class="o">==</span> <span class="n">img_list</span><span class="p">:</span> <span class="c1"># the original image is already included, so skip it in the for loop</span>
+            <span class="k">pass</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">img</span> <span class="o">=</span> <span class="n">imread</span><span class="p">(</span><span class="n">img</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">resize</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="n">img</span> <span class="o">=</span> <span class="n">normalize_array</span><span class="p">(</span><span class="n">img</span><span class="p">)</span> <span class="o">*</span> <span class="n">resize</span>
+            <span class="n">background</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">min</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="n">background</span><span class="p">,</span> <span class="n">img</span><span class="p">]),</span> <span class="n">axis</span> <span class="o">=</span> <span class="mi">0</span><span class="p">)</span>
+    <span class="k">return</span><span class="p">(</span><span class="n">background</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="gen_lowpass_background"><a class="viewcode-back" href="../../src/openpiv.html#openpiv.preprocess.gen_lowpass_background">[docs]</a><span class="k">def</span> <span class="nf">gen_lowpass_background</span><span class="p">(</span><span class="n">img_list</span><span class="p">,</span> <span class="n">sigma</span> <span class="o">=</span> <span class="mi">3</span><span class="p">,</span> <span class="n">resize</span> <span class="o">=</span> <span class="kc">None</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Generate a background by averaging a low pass of all images in an image list.</span>
+<span class="sd">    Apply by subtracting generated background image.</span>
+<span class="sd">    </span>
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    img_list: list</span>
+<span class="sd">        list of image directories</span>
+<span class="sd">        </span>
+<span class="sd">    sigma: float</span>
+<span class="sd">        sigma of the gaussian filter</span>
+<span class="sd">        </span>
+<span class="sd">    resize: int or float</span>
+<span class="sd">        disabled by default, normalize array and set value to user</span>
+<span class="sd">        selected max pixel intensity</span>
+<span class="sd">        </span>
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    img: image</span>
+<span class="sd">        a mean of all low-passed images</span>
+<span class="sd">    </span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">for</span> <span class="n">img_file</span> <span class="ow">in</span> <span class="n">img_list</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">resize</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">img</span> <span class="o">=</span> <span class="n">normalize_array</span><span class="p">(</span><span class="n">imread</span><span class="p">(</span><span class="n">img_file</span><span class="p">))</span> <span class="o">*</span> <span class="n">resize</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">img</span> <span class="o">=</span> <span class="n">imread</span><span class="p">(</span><span class="n">img_file</span><span class="p">)</span>
+        <span class="n">img</span> <span class="o">=</span> <span class="n">gaussian_filter</span><span class="p">(</span><span class="n">img</span><span class="p">,</span> <span class="n">sigma</span> <span class="o">=</span> <span class="n">sigma</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">img_file</span> <span class="o">==</span> <span class="n">img_list</span><span class="p">[</span><span class="mi">0</span><span class="p">]:</span>
+            <span class="n">background</span> <span class="o">=</span> <span class="n">img</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">background</span> <span class="o">+=</span> <span class="n">img</span>
+    <span class="k">return</span> <span class="p">(</span><span class="n">background</span> <span class="o">/</span> <span class="nb">len</span><span class="p">(</span><span class="n">img_list</span><span class="p">))</span></div>
+
+
+<div class="viewcode-block" id="offset_image"><a class="viewcode-back" href="../../src/openpiv.html#openpiv.preprocess.offset_image">[docs]</a><span class="k">def</span> <span class="nf">offset_image</span><span class="p">(</span><span class="n">img</span><span class="p">,</span> <span class="n">offset_x</span><span class="p">,</span> <span class="n">offset_y</span><span class="p">,</span> <span class="n">pad</span> <span class="o">=</span> <span class="s1">&#39;zero&#39;</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Offset an image by padding.</span>
+<span class="sd">    </span>
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    img: image</span>
+<span class="sd">        a two dimensional array of float32 or float64, </span>
+<span class="sd">        but can be uint16, uint8 or similar type</span>
+<span class="sd">        </span>
+<span class="sd">    offset_x: int</span>
+<span class="sd">        offset an image by integer values. Positive values shifts </span>
+<span class="sd">        the image to the right and negative values shift to the left</span>
+<span class="sd">        </span>
+<span class="sd">    offset_y: int</span>
+<span class="sd">        offset an image by integer values. Positive values shifts </span>
+<span class="sd">        the image to the top and negative values shift to the bottom</span>
+<span class="sd">        </span>
+<span class="sd">    pad: str</span>
+<span class="sd">        pad the shift with zeros or a reflection of the shift</span>
+<span class="sd">        </span>
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    img: image</span>
+<span class="sd">        a transformed two dimensional array of the input image</span>
+<span class="sd">    </span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">pad</span> <span class="ow">not</span> <span class="ow">in</span> <span class="p">[</span>
+        <span class="s1">&#39;zero&#39;</span><span class="p">,</span> <span class="s1">&#39;reflect&#39;</span>
+    <span class="p">]:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;pad method not supported: </span><span class="si">{</span><span class="n">pad</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)</span>
+    <span class="n">end_y</span><span class="p">,</span> <span class="n">end_x</span> <span class="o">=</span> <span class="n">img</span><span class="o">.</span><span class="n">shape</span>
+    <span class="n">start_x</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span> <span class="n">start_y</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="k">if</span> <span class="n">offset_x</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="n">offset_x1</span> <span class="o">=</span> <span class="n">offset_x</span>
+        <span class="n">offset_x2</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">offset_x1</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="n">offset_x2</span> <span class="o">=</span> <span class="n">offset_x</span> <span class="o">*</span> <span class="o">-</span><span class="mi">1</span>
+        <span class="n">start_x</span> <span class="o">=</span> <span class="n">offset_x2</span>
+        <span class="n">end_x</span> <span class="o">+=</span> <span class="n">offset_x2</span>
+    <span class="k">if</span> <span class="n">offset_y</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="n">offset_y1</span> <span class="o">=</span> <span class="n">offset_y</span>
+        <span class="n">offset_y2</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">offset_y1</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="n">offset_y2</span> <span class="o">=</span> <span class="n">offset_y</span> <span class="o">*</span> <span class="o">-</span><span class="mi">1</span>
+        <span class="n">start_y</span> <span class="o">=</span> <span class="n">offset_y2</span>
+        <span class="n">end_y</span> <span class="o">+=</span> <span class="n">offset_y2</span>   
+    <span class="k">if</span> <span class="n">pad</span> <span class="o">==</span> <span class="s1">&#39;zero&#39;</span><span class="p">:</span>
+        <span class="n">pad</span> <span class="o">=</span> <span class="s1">&#39;constant&#39;</span>
+    <span class="n">img</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">pad</span><span class="p">(</span>
+        <span class="n">img</span><span class="p">,</span>
+        <span class="p">((</span><span class="n">offset_y1</span><span class="p">,</span> <span class="n">offset_y2</span><span class="p">),</span>
+        <span class="p">(</span><span class="n">offset_x1</span><span class="p">,</span> <span class="n">offset_x2</span><span class="p">)),</span>
+        <span class="n">mode</span> <span class="o">=</span> <span class="n">pad</span>
+    <span class="p">)</span>
+    <span class="k">return</span> <span class="n">img</span><span class="p">[</span><span class="n">start_y</span><span class="p">:</span><span class="n">end_y</span><span class="p">,</span> <span class="n">start_x</span><span class="p">:</span><span class="n">end_x</span><span class="p">]</span></div>
+
+
+<div class="viewcode-block" id="stretch_image"><a class="viewcode-back" href="../../src/openpiv.html#openpiv.preprocess.stretch_image">[docs]</a><span class="k">def</span> <span class="nf">stretch_image</span><span class="p">(</span><span class="n">img</span><span class="p">,</span>
+                  <span class="n">x_axis</span> <span class="o">=</span> <span class="mi">0</span><span class="p">,</span>
+                  <span class="n">y_axis</span> <span class="o">=</span> <span class="mi">0</span><span class="p">,</span>
+                 <span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Stretch an image by interplation.</span>
+<span class="sd">    </span>
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    img: image</span>
+<span class="sd">        a two dimensional array of float32 or float64, </span>
+<span class="sd">        but can be uint16, uint8 or similar type</span>
+<span class="sd">        </span>
+<span class="sd">    x_axis: float</span>
+<span class="sd">        stretch the x-axis of an image where 0 == no stretching</span>
+<span class="sd">        </span>
+<span class="sd">    y_axis: float</span>
+<span class="sd">        stretch the y-axis of an image where 0 == no stretching</span>
+<span class="sd">        </span>
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    img: image</span>
+<span class="sd">        a transformed two dimensional array of the input image  </span>
+<span class="sd">    </span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">y_axis</span> <span class="o">+=</span> <span class="mi">1</span> <span class="c1"># set so zero = no stretch</span>
+    <span class="n">x_axis</span> <span class="o">+=</span> <span class="mi">1</span>
+
+    <span class="n">x_axis</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="n">x_axis</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+    <span class="n">y_axis</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="n">y_axis</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">rescale</span><span class="p">(</span><span class="n">img</span><span class="p">,</span> <span class="p">(</span><span class="n">y_axis</span><span class="p">,</span> <span class="n">x_axis</span><span class="p">))</span></div>
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2014, OpenPIV group.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

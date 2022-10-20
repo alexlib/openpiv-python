@@ -1,159 +1,1585 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
 
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>API reference &mdash; OpenPIV  documentation</title>
+      <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
+  <!--[if lt IE 9]>
+    <script src="../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js"></script>
+        <script src="../_static/jquery.js"></script>
+        <script src="../_static/underscore.js"></script>
+        <script src="../_static/_sphinx_javascript_frameworks_compat.js"></script>
+        <script src="../_static/doctools.js"></script>
+        <script src="../_static/sphinx_highlight.js"></script>
+        <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+    <script src="../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="Frequently Asked Questions about PIV parameters" href="faq.html" />
+    <link rel="prev" title="Information for developers and contributors" href="developers.html" /> 
+</head>
 
-<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
-  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+            <a href="../index.html" class="icon icon-home"> OpenPIV
+          </a>
+              <div class="version">
+                0.24.4a
+              </div>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="piv_basics.html">Basics of the PIV algorithms</a></li>
+<li class="toctree-l1"><a class="reference internal" href="installation_instruction.html">Installation instruction</a></li>
+<li class="toctree-l1"><a class="reference internal" href="tutorial1.html">OpenPIV tutorial</a></li>
+<li class="toctree-l1"><a class="reference internal" href="windef.html">Multi-grid window deformation algorithm tutorial</a></li>
+<li class="toctree-l1"><a class="reference internal" href="masking.html">OpenPIV masking tutorial</a></li>
+<li class="toctree-l1"><a class="reference internal" href="developers.html">Information for developers and contributors</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">API reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="faq.html">Frequently Asked Questions about PIV parameters</a></li>
+</ul>
 
-
-<html xmlns="http://www.w3.org/1999/xhtml">
-  <head>
-    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
-    
-    <title>API reference &mdash; OpenPIV 0.0.1 documentation</title>
-    
-    <link rel="stylesheet" href="../_static/default.css" type="text/css" />
-    <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
-    
-    <script type="text/javascript">
-      var DOCUMENTATION_OPTIONS = {
-        URL_ROOT:    '../',
-        VERSION:     '0.0.1',
-        COLLAPSE_INDEX: false,
-        FILE_SUFFIX: '.html',
-        HAS_SOURCE:  true
-      };
-    </script>
-    <script type="text/javascript" src="../_static/jquery.js"></script>
-    <script type="text/javascript" src="../_static/underscore.js"></script>
-    <script type="text/javascript" src="../_static/doctools.js"></script>
-    <script type="text/javascript" src="http://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
-    <link rel="top" title="OpenPIV 0.0.1 documentation" href="../index.html" />
-    <link rel="prev" title="Download OpenPIV Example" href="downloads_page.html" /> 
-  </head>
-  <body>
-    <div class="related">
-      <h3>Navigation</h3>
-      <ul>
-        <li class="right" style="margin-right: 10px">
-          <a href="../genindex.html" title="General Index"
-             accesskey="I">index</a></li>
-        <li class="right" >
-          <a href="../py-modindex.html" title="Python Module Index"
-             >modules</a> |</li>
-        <li class="right" >
-          <a href="downloads_page.html" title="Download OpenPIV Example"
-             accesskey="P">previous</a> |</li>
-        <li><a href="../index.html">OpenPIV 0.0.1 documentation</a> &raquo;</li> 
-      </ul>
-    </div>  
-
-    <div class="document">
-      <div class="documentwrapper">
-        <div class="bodywrapper">
-          <div class="body">
-            
-  <div class="section" id="api-reference">
-<span id="id1"></span><h1>API reference<a class="headerlink" href="#api-reference" title="Permalink to this headline">¶</a></h1>
-<p>This is a complete api reference to the openpiv python module.</p>
-<div class="section" id="module-openpiv.preprocess">
-<span id="the-openpiv-preprocess-module"></span><h2>The <tt class="docutils literal"><span class="pre">openpiv.preprocess</span></tt> module<a class="headerlink" href="#module-openpiv.preprocess" title="Permalink to this headline">¶</a></h2>
-<p>This module contains a pure python implementation of the basic 
-cross-correlation algorithm for PIV image processing.</p>
-</div>
-<div class="section" id="module-openpiv.tools">
-<span id="the-openpiv-tools-module"></span><h2>The <tt class="docutils literal"><span class="pre">openpiv.tools</span></tt> module<a class="headerlink" href="#module-openpiv.tools" title="Permalink to this headline">¶</a></h2>
-<p>The openpiv.tools module is a collection of utilities and tools.</p>
-</div>
-<div class="section" id="module-openpiv.pyprocess">
-<span id="the-openpiv-pyprocess-module"></span><h2>The <tt class="docutils literal"><span class="pre">openpiv.pyprocess</span></tt> module<a class="headerlink" href="#module-openpiv.pyprocess" title="Permalink to this headline">¶</a></h2>
-<p>This module contains a pure python implementation of the basic 
-cross-correlation algorithm for PIV image processing.</p>
-</div>
-<div class="section" id="module-openpiv.process">
-<span id="the-openpiv-process-module"></span><h2>The <tt class="docutils literal"><span class="pre">openpiv.process</span></tt> module<a class="headerlink" href="#module-openpiv.process" title="Permalink to this headline">¶</a></h2>
-<p>This module is dedicated to advanced algorithms for PIV image analysis.</p>
-</div>
-<div class="section" id="module-openpiv.lib">
-<span id="the-openpiv-lib-module"></span><h2>The <tt class="docutils literal"><span class="pre">openpiv.lib</span></tt> module<a class="headerlink" href="#module-openpiv.lib" title="Permalink to this headline">¶</a></h2>
-<p>A module for various utilities and helper functions</p>
-</div>
-<div class="section" id="module-openpiv.filters">
-<span id="the-openpiv-filters-module"></span><h2>The <tt class="docutils literal"><span class="pre">openpiv.filters</span></tt> module<a class="headerlink" href="#module-openpiv.filters" title="Permalink to this headline">¶</a></h2>
-<p>The openpiv.filters module contains some filtering/smoothing routines.</p>
-</div>
-<div class="section" id="module-openpiv.validation">
-<span id="the-openpiv-validation-module"></span><h2>The <tt class="docutils literal"><span class="pre">openpiv.validation</span></tt> module<a class="headerlink" href="#module-openpiv.validation" title="Permalink to this headline">¶</a></h2>
-<p>A module for spurious vector detection.</p>
-</div>
-<div class="section" id="module-openpiv.scaling">
-<span id="the-openpiv-scaling-module"></span><h2>The <tt class="docutils literal"><span class="pre">openpiv.scaling</span></tt> module<a class="headerlink" href="#module-openpiv.scaling" title="Permalink to this headline">¶</a></h2>
-<p>Scaling utilities</p>
-</div>
-</div>
-
-
-          </div>
         </div>
       </div>
-      <div class="sphinxsidebar">
-        <div class="sphinxsidebarwrapper">
-  <h3><a href="../index.html">Table Of Contents</a></h3>
-  <ul>
-<li><a class="reference internal" href="#">API reference</a><ul>
-<li><a class="reference internal" href="#module-openpiv.preprocess">The <tt class="docutils literal"><span class="pre">openpiv.preprocess</span></tt> module</a></li>
-<li><a class="reference internal" href="#module-openpiv.tools">The <tt class="docutils literal"><span class="pre">openpiv.tools</span></tt> module</a></li>
-<li><a class="reference internal" href="#module-openpiv.pyprocess">The <tt class="docutils literal"><span class="pre">openpiv.pyprocess</span></tt> module</a></li>
-<li><a class="reference internal" href="#module-openpiv.process">The <tt class="docutils literal"><span class="pre">openpiv.process</span></tt> module</a></li>
-<li><a class="reference internal" href="#module-openpiv.lib">The <tt class="docutils literal"><span class="pre">openpiv.lib</span></tt> module</a></li>
-<li><a class="reference internal" href="#module-openpiv.filters">The <tt class="docutils literal"><span class="pre">openpiv.filters</span></tt> module</a></li>
-<li><a class="reference internal" href="#module-openpiv.validation">The <tt class="docutils literal"><span class="pre">openpiv.validation</span></tt> module</a></li>
-<li><a class="reference internal" href="#module-openpiv.scaling">The <tt class="docutils literal"><span class="pre">openpiv.scaling</span></tt> module</a></li>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">OpenPIV</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../index.html" class="icon icon-home"></a> &raquo;</li>
+      <li>API reference</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="../_sources/src/api_reference.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  
+<style>
+/* CSS overrides for sphinx_rtd_theme */
+
+/* 24px margin */
+.nbinput.nblast.container,
+.nboutput.nblast.container {
+    margin-bottom: 19px;  /* padding has already 5px */
+}
+
+/* ... except between code cells! */
+.nblast.container + .nbinput.container {
+    margin-top: -19px;
+}
+
+.admonition > p:before {
+    margin-right: 4px;  /* make room for the exclamation icon */
+}
+
+/* Fix math alignment, see https://github.com/rtfd/sphinx_rtd_theme/pull/686 */
+.math {
+    text-align: unset;
+}
+</style>
+<section id="api-reference">
+<span id="id1"></span><h1>API reference<a class="headerlink" href="#api-reference" title="Permalink to this heading"></a></h1>
+<p>This is a complete api reference to the openpiv python module.</p>
+<section id="module-openpiv.preprocess">
+<span id="the-openpiv-preprocess-module"></span><h2>The <code class="docutils literal notranslate"><span class="pre">openpiv.preprocess</span></code> module<a class="headerlink" href="#module-openpiv.preprocess" title="Permalink to this heading"></a></h2>
+<p>This module contains image processing routines that improve
+images prior to PIV processing.</p>
+<dl class="py function">
+<dt class="sig sig-object py" id="openpiv.preprocess.contrast_stretch">
+<span class="sig-prename descclassname"><span class="pre">openpiv.preprocess.</span></span><span class="sig-name descname"><span class="pre">contrast_stretch</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">img</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">lower_limit</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">2</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">upper_limit</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">98</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/openpiv/preprocess.html#contrast_stretch"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#openpiv.preprocess.contrast_stretch" title="Permalink to this definition"></a></dt>
+<dd><p>Simple percentile-based contrast stretching</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>img</strong> (<em>image</em>) – a two dimensional array of float32 or float64,
+but can be uint16, uint8 or similar type</p></li>
+<li><p><strong>lower_limit</strong> (<em>int</em>) – lower percentile limit</p></li>
+<li><p><strong>upper_limit</strong> (<em>int</em>) – upper percentile limit</p></li>
 </ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><strong>img</strong> – a filtered two dimensional array of the input image</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>image</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="openpiv.preprocess.dynamic_masking">
+<span class="sig-prename descclassname"><span class="pre">openpiv.preprocess.</span></span><span class="sig-name descname"><span class="pre">dynamic_masking</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">image</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">method</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'edges'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">filter_size</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">7</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">threshold</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.005</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/openpiv/preprocess.html#dynamic_masking"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#openpiv.preprocess.dynamic_masking" title="Permalink to this definition"></a></dt>
+<dd><p>Dynamically masks out the objects in the PIV images</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>image</strong> (<em>image</em>) – a two dimensional array of uint16, uint8 or similar type</p></li>
+<li><p><strong>method</strong> (<em>string</em>) – ‘edges’ or ‘intensity’:
+‘edges’ method is used for relatively dark and sharp objects,
+with visible edges, on
+dark backgrounds, i.e. low contrast
+‘intensity’ method is useful for smooth bright objects or dark objects
+or vice versa,
+i.e. images with high contrast between the object and the background</p></li>
+<li><p><strong>filter_size</strong> (<em>integer</em>) – a scalar that defines the size of the Gaussian filter</p></li>
+<li><p><strong>threshold</strong> (<em>float</em>) – a value of the threshold to segment the background from the object
+default value: None, replaced by sckimage.filter.threshold_otsu value</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><ul class="simple">
+<li><p><strong>image</strong> (<em>array of the same datatype as the incoming image with the</em>)</p></li>
+<li><p><em>object masked out</em></p></li>
+<li><p><em>as a completely black region(s) of zeros (integers or floats).</em></p></li>
+</ul>
+</p>
+</dd>
+</dl>
+<p class="rubric">Example</p>
+<p>frame_a  = openpiv.tools.imread( ‘Camera1-001.tif’ )
+imshow(frame_a) # original</p>
+<p>frame_a = dynamic_masking(frame_a,method=’edges’,filter_size=7,
+threshold=0.005)
+imshow(frame_a) # masked</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="openpiv.preprocess.gen_lowpass_background">
+<span class="sig-prename descclassname"><span class="pre">openpiv.preprocess.</span></span><span class="sig-name descname"><span class="pre">gen_lowpass_background</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">img_list</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sigma</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">3</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">resize</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/openpiv/preprocess.html#gen_lowpass_background"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#openpiv.preprocess.gen_lowpass_background" title="Permalink to this definition"></a></dt>
+<dd><p>Generate a background by averaging a low pass of all images in an image list.
+Apply by subtracting generated background image.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>img_list</strong> (<em>list</em>) – list of image directories</p></li>
+<li><p><strong>sigma</strong> (<em>float</em>) – sigma of the gaussian filter</p></li>
+<li><p><strong>resize</strong> (<em>int</em><em> or </em><em>float</em>) – disabled by default, normalize array and set value to user
+selected max pixel intensity</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><strong>img</strong> – a mean of all low-passed images</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>image</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="openpiv.preprocess.gen_min_background">
+<span class="sig-prename descclassname"><span class="pre">openpiv.preprocess.</span></span><span class="sig-name descname"><span class="pre">gen_min_background</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">img_list</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">resize</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">255</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/openpiv/preprocess.html#gen_min_background"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#openpiv.preprocess.gen_min_background" title="Permalink to this definition"></a></dt>
+<dd><p>Generate a background by averaging the minimum intensity
+of all images in an image list.
+Apply by subtracting generated background image.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>img_list</strong> (<em>list</em>) – list of image directories</p></li>
+<li><p><strong>resize</strong> (<em>int</em><em> or </em><em>float</em>) – disabled by default, normalize array and set value to user
+selected max pixel intensity</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><strong>img</strong> – a mean of all images</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>image</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="openpiv.preprocess.high_pass">
+<span class="sig-prename descclassname"><span class="pre">openpiv.preprocess.</span></span><span class="sig-name descname"><span class="pre">high_pass</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">img</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sigma</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">5</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">clip</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/openpiv/preprocess.html#high_pass"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#openpiv.preprocess.high_pass" title="Permalink to this definition"></a></dt>
+<dd><p>Simple high pass filter</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>img</strong> (<em>image</em>) – a two dimensional array of float32 or float64,
+but can be uint16, uint8 or similar type</p></li>
+<li><p><strong>sigma</strong> (<em>float</em>) – sigma value of the gaussian filter</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><strong>img</strong> – a filtered two dimensional array of the input image</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>image</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="openpiv.preprocess.instensity_cap">
+<span class="sig-prename descclassname"><span class="pre">openpiv.preprocess.</span></span><span class="sig-name descname"><span class="pre">instensity_cap</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">img</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">std_mult</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">2</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/openpiv/preprocess.html#instensity_cap"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#openpiv.preprocess.instensity_cap" title="Permalink to this definition"></a></dt>
+<dd><p>Simple intensity capping.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>img</strong> (<em>image</em>) – a two dimensional array of float32 or float64,
+but can be uint16, uint8 or similar type</p></li>
+<li><p><strong>std_mult</strong> (<em>int</em>) – how strong the intensity capping is. Lower values
+yields a lower threshold</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><strong>img</strong> – a filtered two dimensional array of the input image</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>image</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="openpiv.preprocess.intensity_clip">
+<span class="sig-prename descclassname"><span class="pre">openpiv.preprocess.</span></span><span class="sig-name descname"><span class="pre">intensity_clip</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">img</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">min_val</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_val</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">flag</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'clip'</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/openpiv/preprocess.html#intensity_clip"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#openpiv.preprocess.intensity_clip" title="Permalink to this definition"></a></dt>
+<dd><p>Simple intensity clipping</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>img</strong> (<em>image</em>) – a two dimensional array of float32 or float64,
+but can be uint16, uint8 or similar type</p></li>
+<li><p><strong>min_val</strong> (<em>int</em><em> or </em><em>float</em>) – min allowed pixel intensity</p></li>
+<li><p><strong>max_val</strong> (<em>int</em><em> or </em><em>float</em>) – min allowed pixel intensity</p></li>
+<li><p><strong>flag</strong> (<em>str</em>) – one of two methods to set invalid pixels intensities</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><strong>img</strong> – a filtered two dimensional array of the input image</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>image</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="openpiv.preprocess.local_variance_normalization">
+<span class="sig-prename descclassname"><span class="pre">openpiv.preprocess.</span></span><span class="sig-name descname"><span class="pre">local_variance_normalization</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">img</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sigma_1</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">2</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sigma_2</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">clip</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/openpiv/preprocess.html#local_variance_normalization"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#openpiv.preprocess.local_variance_normalization" title="Permalink to this definition"></a></dt>
+<dd><p>Local variance normalization by two gaussian filters.
+This method is used by common commercial softwares</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>img</strong> (<em>image</em>) – a two dimensional array of float32 or float64,
+but can be uint16, uint8 or similar type</p></li>
+<li><p><strong>sigma_1</strong> (<em>float</em>) – sigma value of the first gaussian low pass filter</p></li>
+<li><p><strong>sigma_2</strong> (<em>float</em>) – sigma value of the second gaussian low pass filter</p></li>
+<li><p><strong>clip</strong> (<em>bool</em>) – set negative pixels to zero</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><strong>img</strong> – a filtered two dimensional array of the input image</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>image</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="openpiv.preprocess.mask_coordinates">
+<span class="sig-prename descclassname"><span class="pre">openpiv.preprocess.</span></span><span class="sig-name descname"><span class="pre">mask_coordinates</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">image_mask</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tolerance</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1.5</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">min_length</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">10</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">plot</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/openpiv/preprocess.html#mask_coordinates"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#openpiv.preprocess.mask_coordinates" title="Permalink to this definition"></a></dt>
+<dd><dl>
+<dt>Creates set of coordinates of polygons from the image mask</dt><dd><p>Inputs:
+mask : binary image of a mask.</p>
+<p>[tolerance] : float - tolerance for approximate_polygons, default = 1.5</p>
+<p>[min_length] : int - minimum length of the polygon, filters out
+the small polygons like noisy regions, default = 10</p>
+</dd>
+<dt>Outputs:</dt><dd><p>mask_coord : list of mask coordinates in pixels</p>
+</dd>
+</dl>
+<p class="rubric">Example</p>
+<p># if masks of image A and B are slightly different:
+image_mask = np.logical_and(image_mask_a, image_mask_b)
+mask_coords = mask_coordinates(image_mask)</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="openpiv.preprocess.normalize_array">
+<span class="sig-prename descclassname"><span class="pre">openpiv.preprocess.</span></span><span class="sig-name descname"><span class="pre">normalize_array</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">array</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">axis</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/openpiv/preprocess.html#normalize_array"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#openpiv.preprocess.normalize_array" title="Permalink to this definition"></a></dt>
+<dd><p>Min/max normalization to [0,1].</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>array</strong> (<em>np.ndarray</em>) – array to normalize</p></li>
+<li><p><strong>axis</strong> (<em>int</em><em>, </em><em>tuple</em>) – axis to find values for normalization</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><strong>array</strong> – normalized array</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>np.ndarray</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="openpiv.preprocess.offset_image">
+<span class="sig-prename descclassname"><span class="pre">openpiv.preprocess.</span></span><span class="sig-name descname"><span class="pre">offset_image</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">img</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">offset_x</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">offset_y</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">pad</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'zero'</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/openpiv/preprocess.html#offset_image"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#openpiv.preprocess.offset_image" title="Permalink to this definition"></a></dt>
+<dd><p>Offset an image by padding.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>img</strong> (<em>image</em>) – a two dimensional array of float32 or float64,
+but can be uint16, uint8 or similar type</p></li>
+<li><p><strong>offset_x</strong> (<em>int</em>) – offset an image by integer values. Positive values shifts
+the image to the right and negative values shift to the left</p></li>
+<li><p><strong>offset_y</strong> (<em>int</em>) – offset an image by integer values. Positive values shifts
+the image to the top and negative values shift to the bottom</p></li>
+<li><p><strong>pad</strong> (<em>str</em>) – pad the shift with zeros or a reflection of the shift</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><strong>img</strong> – a transformed two dimensional array of the input image</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>image</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="openpiv.preprocess.prepare_mask_on_grid">
+<span class="sig-prename descclassname"><span class="pre">openpiv.preprocess.</span></span><span class="sig-name descname"><span class="pre">prepare_mask_on_grid</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">y</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">mask_coords</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/openpiv/preprocess.html#prepare_mask_on_grid"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#openpiv.preprocess.prepare_mask_on_grid" title="Permalink to this definition"></a></dt>
+<dd><p>Converts mask coordinates of the image mask
+to the grid of 1/0 on the x,y grid
+Inputs:</p>
+<blockquote>
+<div><p>x,y : grid of x,y points
+mask_coords : array of coordinates in pixels of the image_mask</p>
+</div></blockquote>
+<dl class="simple">
+<dt>Outputs:</dt><dd><p>grid of points of the mask, of the shape of x</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="openpiv.preprocess.standardize_array">
+<span class="sig-prename descclassname"><span class="pre">openpiv.preprocess.</span></span><span class="sig-name descname"><span class="pre">standardize_array</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">array</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">axis</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/openpiv/preprocess.html#standardize_array"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#openpiv.preprocess.standardize_array" title="Permalink to this definition"></a></dt>
+<dd><p>Standardize an array.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>array</strong> (<em>np.ndarray</em>) – array to normalize</p></li>
+<li><p><strong>axis</strong> (<em>int</em><em>, </em><em>tuple</em>) – axis to find values for standardization</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><strong>array</strong> – normalized array</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>np.ndarray</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="openpiv.preprocess.stretch_image">
+<span class="sig-prename descclassname"><span class="pre">openpiv.preprocess.</span></span><span class="sig-name descname"><span class="pre">stretch_image</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">img</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">x_axis</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">y_axis</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/openpiv/preprocess.html#stretch_image"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#openpiv.preprocess.stretch_image" title="Permalink to this definition"></a></dt>
+<dd><p>Stretch an image by interplation.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>img</strong> (<em>image</em>) – a two dimensional array of float32 or float64,
+but can be uint16, uint8 or similar type</p></li>
+<li><p><strong>x_axis</strong> (<em>float</em>) – stretch the x-axis of an image where 0 == no stretching</p></li>
+<li><p><strong>y_axis</strong> (<em>float</em>) – stretch the y-axis of an image where 0 == no stretching</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><strong>img</strong> – a transformed two dimensional array of the input image</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>image</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="openpiv.preprocess.threshold_binarize">
+<span class="sig-prename descclassname"><span class="pre">openpiv.preprocess.</span></span><span class="sig-name descname"><span class="pre">threshold_binarize</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">img</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">threshold</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_val</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">255</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/openpiv/preprocess.html#threshold_binarize"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#openpiv.preprocess.threshold_binarize" title="Permalink to this definition"></a></dt>
+<dd><p>Simple binarizing threshold</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>img</strong> (<em>image</em>) – a two dimensional array of float32 or float64,
+but can be uint16, uint8 or similar type</p></li>
+<li><p><strong>threshold</strong> (<em>int</em><em> or </em><em>float</em>) – boundary where pixels set lower than the threshold are set to zero
+and values higher than the threshold are set to the maximum user selected value</p></li>
+<li><p><strong>max_val</strong> (<em>int</em><em> or </em><em>float</em>) – maximum pixel value of the image</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><strong>img</strong> – a filtered two dimensional array of the input image</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>image</p>
+</dd>
+</dl>
+</dd></dl>
+
+</section>
+<section id="module-openpiv.tools">
+<span id="the-openpiv-tools-module"></span><h2>The <code class="docutils literal notranslate"><span class="pre">openpiv.tools</span></code> module<a class="headerlink" href="#module-openpiv.tools" title="Permalink to this heading"></a></h2>
+<p>The openpiv.tools module is a collection of utilities and tools.</p>
+<dl class="py function">
+<dt class="sig sig-object py" id="openpiv.tools.display">
+<span class="sig-prename descclassname"><span class="pre">openpiv.tools.</span></span><span class="sig-name descname"><span class="pre">display</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">message</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/openpiv/tools.html#display"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#openpiv.tools.display" title="Permalink to this definition"></a></dt>
+<dd><p>Display a message to standard output.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>message</strong> (<em>string</em>) – a message to be printed</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="openpiv.tools.display_vector_field">
+<span class="sig-prename descclassname"><span class="pre">openpiv.tools.</span></span><span class="sig-name descname"><span class="pre">display_vector_field</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">filename</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Union</span><span class="p"><span class="pre">[</span></span><span class="pre">Path</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">on_img</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">bool</span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">image_name</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">Union</span><span class="p"><span class="pre">[</span></span><span class="pre">Path</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">str</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">window_size</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">int</span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">32</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">scaling_factor</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">float</span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">1.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ax</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">Any</span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">width</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">float</span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">0.0025</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">show_invalid</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">bool</span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kw</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/openpiv/tools.html#display_vector_field"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#openpiv.tools.display_vector_field" title="Permalink to this definition"></a></dt>
+<dd><p>Displays quiver plot of the data stored in the file</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>filename</strong> (<em>string</em>) – the absolute path of the text file</p></li>
+<li><p><strong>on_img</strong> (<em>Bool</em><em>, </em><em>optional</em>) – if True, display the vector field on top of the image provided by
+image_name</p></li>
+<li><p><strong>image_name</strong> (<em>string</em><em>, </em><em>optional</em>) – path to the image to plot the vector field onto when on_img is True</p></li>
+<li><p><strong>window_size</strong> (<em>int</em><em>, </em><em>optional</em>) – when on_img is True, provide the interrogation window size to fit the
+background image to the vector field</p></li>
+<li><p><strong>scaling_factor</strong> (<em>float</em><em>, </em><em>optional</em>) – when on_img is True, provide the scaling factor to scale the background
+image to the vector field</p></li>
+<li><p><strong>show_invalid</strong> (<em>bool</em><em>, </em><em>show</em><em> or </em><em>not the invalid vectors</em><em>, </em><em>default is True</em>) – </p></li>
+</ul>
+</dd>
+</dl>
+<dl class="simple">
+<dt>Key arguments<span class="classifier">(additional parameters, optional)</span></dt><dd><p><em>scale</em>: [None | float]
+<em>width</em>: [None | float]</p>
+</dd>
+</dl>
+<section id="see-also">
+<h3>See also:<a class="headerlink" href="#see-also" title="Permalink to this heading"></a></h3>
+<p>matplotlib.pyplot.quiver</p>
+<p class="rubric">Examples</p>
+<p>— only vector field
+&gt;&gt;&gt; openpiv.tools.display_vector_field(‘./exp1_0000.txt’,scale=100,</p>
+<blockquote>
+<div><p>width=0.0025)</p>
+</div></blockquote>
+<p>— vector field on top of image
+&gt;&gt;&gt; openpiv.tools.display_vector_field(Path(‘./exp1_0000.txt’), on_img=True,</p>
+<blockquote>
+<div><p>image_name=Path(‘exp1_001_a.bmp’),
+window_size=32, scaling_factor=70,
+scale=100, width=0.0025)</p>
+</div></blockquote>
+</section>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="openpiv.tools.display_windows_sampling">
+<span class="sig-prename descclassname"><span class="pre">openpiv.tools.</span></span><span class="sig-name descname"><span class="pre">display_windows_sampling</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">y</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">window_size</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">skip</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">method</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'standard'</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/openpiv/tools.html#display_windows_sampling"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#openpiv.tools.display_windows_sampling" title="Permalink to this definition"></a></dt>
+<dd><p>Displays a map of the interrogation points and windows</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>x</strong> (<em>2d np.ndarray</em>) – a two dimensional array containing the x coordinates of the
+interrogation window centers, in pixels.</p></li>
+<li><p><strong>y</strong> (<em>2d np.ndarray</em>) – a two dimensional array containing the y coordinates of the
+interrogation window centers, in pixels.</p></li>
+<li><p><strong>window_size</strong> (<em>the interrogation window size</em><em>, </em><em>in pixels</em>) – </p></li>
+<li><p><strong>skip</strong> (<em>the number</em><em> of </em><em>windows to skip on a row during display.</em>) – Recommended value is 0 or 1 for standard method, can be more for random method
+-1 to not show any window</p></li>
+<li><p><strong>method</strong> (<em>can be only &lt;standard&gt;</em><em> (</em><em>uniform sampling and constant window size</em><em>)</em>) – &lt;random&gt; (pick randomly some windows)</p></li>
+</ul>
+</dd>
+</dl>
+<p class="rubric">Examples</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">openpiv</span><span class="o">.</span><span class="n">tools</span><span class="o">.</span><span class="n">display_windows_sampling</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">window_size</span><span class="o">=</span><span class="mi">32</span><span class="p">,</span> <span class="n">skip</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">method</span><span class="o">=</span><span class="s1">&#39;standard&#39;</span><span class="p">)</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="openpiv.tools.imread">
+<span class="sig-prename descclassname"><span class="pre">openpiv.tools.</span></span><span class="sig-name descname"><span class="pre">imread</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">filename</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">flatten</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/openpiv/tools.html#imread"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#openpiv.tools.imread" title="Permalink to this definition"></a></dt>
+<dd><p>Read an image file into a numpy array
+using imageio imread</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>filename</strong> (<em>string</em>) – the absolute path of the image file</p></li>
+<li><p><strong>flatten</strong> (<em>bool</em>) – True if the image is RGB color or False (default) if greyscale</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><strong>frame</strong> – a numpy array with grey levels</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>np.ndarray</p>
+</dd>
+</dl>
+<p class="rubric">Examples</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">image</span> <span class="o">=</span> <span class="n">openpiv</span><span class="o">.</span><span class="n">tools</span><span class="o">.</span><span class="n">imread</span><span class="p">(</span> <span class="s1">&#39;image.bmp&#39;</span> <span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span> <span class="n">image</span><span class="o">.</span><span class="n">shape</span>
+<span class="go">    (1280, 1024)</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="openpiv.tools.imsave">
+<span class="sig-prename descclassname"><span class="pre">openpiv.tools.</span></span><span class="sig-name descname"><span class="pre">imsave</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">filename</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">arr</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/openpiv/tools.html#imsave"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#openpiv.tools.imsave" title="Permalink to this definition"></a></dt>
+<dd><p>Write an image file from a numpy array
+using imageio imread</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>filename</strong> (<em>string</em>) – the absolute path of the image file that will be created</p></li>
+<li><p><strong>arr</strong> (<em>2d np.ndarray</em>) – a 2d numpy array with grey levels</p></li>
+</ul>
+</dd>
+</dl>
+<p class="rubric">Example</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">image</span> <span class="o">=</span> <span class="n">openpiv</span><span class="o">.</span><span class="n">tools</span><span class="o">.</span><span class="n">imread</span><span class="p">(</span> <span class="s1">&#39;image.bmp&#39;</span> <span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">image2</span> <span class="o">=</span> <span class="n">openpiv</span><span class="o">.</span><span class="n">tools</span><span class="o">.</span><span class="n">negative</span><span class="p">(</span><span class="n">image</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">imsave</span><span class="p">(</span> <span class="s1">&#39;negative-image.tif&#39;</span><span class="p">,</span> <span class="n">image2</span><span class="p">)</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="openpiv.tools.natural_sort">
+<span class="sig-prename descclassname"><span class="pre">openpiv.tools.</span></span><span class="sig-name descname"><span class="pre">natural_sort</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">file_list</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">Path</span><span class="p"><span class="pre">]</span></span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">Path</span><span class="p"><span class="pre">]</span></span></span></span><a class="reference internal" href="../_modules/openpiv/tools.html#natural_sort"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#openpiv.tools.natural_sort" title="Permalink to this definition"></a></dt>
+<dd><p>Creates naturally sorted list</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="openpiv.tools.negative">
+<span class="sig-prename descclassname"><span class="pre">openpiv.tools.</span></span><span class="sig-name descname"><span class="pre">negative</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">image</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/openpiv/tools.html#negative"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#openpiv.tools.negative" title="Permalink to this definition"></a></dt>
+<dd><p>Return the negative of an image</p>
+<section id="parameter">
+<h3>Parameter<a class="headerlink" href="#parameter" title="Permalink to this heading"></a></h3>
+<p>image : 2d np.ndarray of grey levels</p>
+<dl class="field-list simple">
+<dt class="field-odd">returns</dt>
+<dd class="field-odd"><p><strong>(255-image)</strong></p>
+</dd>
+<dt class="field-even">rtype</dt>
+<dd class="field-even"><p>2d np.ndarray of grey levels</p>
+</dd>
+</dl>
+</section>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="openpiv.tools.rgb2gray">
+<span class="sig-prename descclassname"><span class="pre">openpiv.tools.</span></span><span class="sig-name descname"><span class="pre">rgb2gray</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">rgb</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">ndarray</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">ndarray</span></span></span><a class="reference internal" href="../_modules/openpiv/tools.html#rgb2gray"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#openpiv.tools.rgb2gray" title="Permalink to this definition"></a></dt>
+<dd><p>converts rgb image to gray</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>rgb</strong> (<em>_type_</em>) – numpy.ndarray, image size, three channels</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>numpy.ndarray of the same shape, one channel</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>gray</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="openpiv.tools.save">
+<span class="sig-prename descclassname"><span class="pre">openpiv.tools.</span></span><span class="sig-name descname"><span class="pre">save</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">ndarray</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">y</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">ndarray</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">u</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">ndarray</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">v</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">ndarray</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">mask</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">ndarray</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">filename</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Union</span><span class="p"><span class="pre">[</span></span><span class="pre">Path</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">fmt</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'%8.4f'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">delimiter</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'\t'</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="reference internal" href="../_modules/openpiv/tools.html#save"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#openpiv.tools.save" title="Permalink to this definition"></a></dt>
+<dd><p>Save flow field to an ascii file.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>x</strong> (<em>2d np.ndarray</em>) – a two dimensional array containing the x coordinates of the
+interrogation window centers, in pixels.</p></li>
+<li><p><strong>y</strong> (<em>2d np.ndarray</em>) – a two dimensional array containing the y coordinates of the
+interrogation window centers, in pixels.</p></li>
+<li><p><strong>u</strong> (<em>2d np.ndarray</em>) – a two dimensional array containing the u velocity components,
+in pixels/seconds.</p></li>
+<li><p><strong>v</strong> (<em>2d np.ndarray</em>) – a two dimensional array containing the v velocity components,
+in pixels/seconds.</p></li>
+<li><p><strong>mask</strong> (<em>2d np.ndarray</em>) – a two dimensional boolen array where elements corresponding to
+invalid vectors are True.</p></li>
+<li><p><strong>filename</strong> (<em>string</em>) – the path of the file where to save the flow field</p></li>
+<li><p><strong>fmt</strong> (<em>string</em>) – a format string. See documentation of numpy.savetxt
+for more details.</p></li>
+<li><p><strong>delimiter</strong> (<em>string</em>) – character separating columns</p></li>
+</ul>
+</dd>
+</dl>
+<p class="rubric">Examples</p>
+<dl class="simple">
+<dt>openpiv.tools.save( x, y, u, v, ‘field_001.txt’, fmt=’%6.3f’,</dt><dd><p>delimiter=’     ‘)</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="openpiv.tools.sorted_unique">
+<span class="sig-prename descclassname"><span class="pre">openpiv.tools.</span></span><span class="sig-name descname"><span class="pre">sorted_unique</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">array</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">ndarray</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">ndarray</span></span></span><a class="reference internal" href="../_modules/openpiv/tools.html#sorted_unique"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#openpiv.tools.sorted_unique" title="Permalink to this definition"></a></dt>
+<dd><p>Creates sorted unique array</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="openpiv.tools.transform_coordinates">
+<span class="sig-prename descclassname"><span class="pre">openpiv.tools.</span></span><span class="sig-name descname"><span class="pre">transform_coordinates</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">y</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">u</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">v</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/openpiv/tools.html#transform_coordinates"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#openpiv.tools.transform_coordinates" title="Permalink to this definition"></a></dt>
+<dd><p>Converts coordinate systems from/to the image based / physical based</p>
+<p>Input/Output: x,y,u,v</p>
+<blockquote>
+<div><p>image based is 0,0 top left, x = columns to the right, y = rows downwards
+and so u,v</p>
+<p>physical or right hand one is that leads to the positive vorticity with
+the 0,0 origin at bottom left to be counterclockwise</p>
+</div></blockquote>
+</dd></dl>
+
+</section>
+<section id="module-openpiv.pyprocess">
+<span id="the-openpiv-pyprocess-module"></span><h2>The <code class="docutils literal notranslate"><span class="pre">openpiv.pyprocess</span></code> module<a class="headerlink" href="#module-openpiv.pyprocess" title="Permalink to this heading"></a></h2>
+<p>This module contains a pure python implementation of the basic
+cross-correlation algorithm for PIV image processing.</p>
+<dl class="py function">
+<dt class="sig sig-object py" id="openpiv.pyprocess.correlate_windows">
+<span class="sig-prename descclassname"><span class="pre">openpiv.pyprocess.</span></span><span class="sig-name descname"><span class="pre">correlate_windows</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">window_a</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">window_b</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">correlation_method='fft'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">convolve2d=&lt;function</span> <span class="pre">convolve2d&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">rfft2=&lt;function</span> <span class="pre">rfft2&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">irfft2=&lt;function</span> <span class="pre">irfft2&gt;</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/openpiv/pyprocess.html#correlate_windows"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#openpiv.pyprocess.correlate_windows" title="Permalink to this definition"></a></dt>
+<dd><p>Compute correlation function between two interrogation windows.
+The correlation function can be computed by using the correlation
+theorem to speed up the computation.
+:param window_a: a two dimensions array for the first interrogation window
+:type window_a: 2d np.ndarray
+:param window_b: a two dimensions array for the second interrogation window
+:type window_b: 2d np.ndarray
+:param correlation_method: ‘circular’ - FFT based without zero-padding</p>
+<blockquote>
+<div><p>‘linear’ -  FFT based with zero-padding
+‘direct’ -  linear convolution based
+Default is ‘fft’, which is much faster.</p>
+</div></blockquote>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>convolve2d</strong> (<em>function</em>) – function used for 2d convolutions</p></li>
+<li><p><strong>rfft2</strong> (<em>function</em>) – function used for rfft2</p></li>
+<li><p><strong>irfft2</strong> (<em>function</em>) – function used for irfft2</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><ul class="simple">
+<li><p><strong>corr</strong> (<em>2d np.ndarray</em>) – a two dimensions array for the correlation function.</p></li>
+<li><p><em>Note that due to the wish to use 2^N windows for faster FFT</em></p></li>
+<li><p><em>we use a slightly different convention for the size of the</em></p></li>
+<li><p><em>correlation map. The theory says it is M+N-1, and the</em></p></li>
+<li><p><em>’direct’ method gets this size out</em></p></li>
+<li><p><em>the FFT-based method returns M+N size out, where M is the window_size</em></p></li>
+<li><p><em>and N is the search_area_size</em></p></li>
+<li><p><em>It leads to inconsistency of the output</em></p></li>
+</ul>
+</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="openpiv.pyprocess.correlation_to_displacement">
+<span class="sig-prename descclassname"><span class="pre">openpiv.pyprocess.</span></span><span class="sig-name descname"><span class="pre">correlation_to_displacement</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">corr</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">n_rows</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">n_cols</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">subpixel_method</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'gaussian'</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/openpiv/pyprocess.html#correlation_to_displacement"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#openpiv.pyprocess.correlation_to_displacement" title="Permalink to this definition"></a></dt>
+<dd><p>Correlation maps are converted to displacement for each interrogation
+window using the convention that the size of the correlation map
+is 2N -1 where N is the size of the largest interrogation window
+(in frame B) that is called search_area_size
+Inputs:</p>
+<blockquote>
+<div><dl class="simple">
+<dt>corr<span class="classifier">3D nd.array</span></dt><dd><p>contains output of the fft_correlate_images</p>
+</dd>
+<dt>n_rows, n_cols<span class="classifier">number of interrogation windows, output of the</span></dt><dd><p>get_field_shape</p>
+</dd>
+</dl>
+</div></blockquote>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="openpiv.pyprocess.extended_search_area_piv">
+<span class="sig-prename descclassname"><span class="pre">openpiv.pyprocess.</span></span><span class="sig-name descname"><span class="pre">extended_search_area_piv</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">frame_a</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">ndarray</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">frame_b</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">ndarray</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">window_size</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Union</span><span class="p"><span class="pre">[</span></span><span class="pre">int</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">Tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">int</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">int</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">overlap</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Union</span><span class="p"><span class="pre">[</span></span><span class="pre">int</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">Tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">int</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">int</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">(0,</span> <span class="pre">0)</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dt</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">1.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">search_area_size</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">Union</span><span class="p"><span class="pre">[</span></span><span class="pre">int</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">Tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">int</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">int</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">correlation_method</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'circular'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">subpixel_method</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'gaussian'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sig2noise_method</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'peak2mean'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">width</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">2</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">normalized_correlation</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">use_vectorized</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/openpiv/pyprocess.html#extended_search_area_piv"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#openpiv.pyprocess.extended_search_area_piv" title="Permalink to this definition"></a></dt>
+<dd><p>Standard PIV cross-correlation algorithm, with an option for
+extended area search that increased dynamic range. The search region
+in the second frame is larger than the interrogation window size in the
+first frame. For Cython implementation see
+openpiv.process.extended_search_area_piv</p>
+<p>This is a pure python implementation of the standard PIV cross-correlation
+algorithm. It is a zero order displacement predictor, and no iterative
+process is performed.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>frame_a</strong> (<em>2d np.ndarray</em>) – an two dimensions array of integers containing grey levels of
+the first frame.</p></li>
+<li><p><strong>frame_b</strong> (<em>2d np.ndarray</em>) – an two dimensions array of integers containing grey levels of
+the second frame.</p></li>
+<li><p><strong>window_size</strong> (<em>int</em>) – the size of the (square) interrogation window, [default: 32 pix].</p></li>
+<li><p><strong>overlap</strong> (<em>int</em>) – the number of pixels by which two adjacent windows overlap
+[default: 16 pix].</p></li>
+<li><p><strong>dt</strong> (<em>float</em>) – the time delay separating the two frames [default: 1.0].</p></li>
+<li><p><strong>correlation_method</strong> (<em>string</em>) – one of the two methods implemented: ‘circular’ or ‘linear’,
+default: ‘circular’, it’s faster, without zero-padding
+‘linear’ requires also normalized_correlation = True (see below)</p></li>
+<li><p><strong>subpixel_method</strong> (<em>string</em>) – one of the following methods to estimate subpixel location of the
+peak:
+‘centroid’ [replaces default if correlation map is negative],
+‘gaussian’ [default if correlation map is positive],
+‘parabolic’.</p></li>
+<li><p><strong>sig2noise_method</strong> (<em>string</em>) – defines the method of signal-to-noise-ratio measure,
+(‘peak2peak’ or ‘peak2mean’. If None, no measure is performed.)</p></li>
+<li><p><strong>width</strong> (<em>int</em>) – the half size of the region around the first
+correlation peak to ignore for finding the second
+peak. [default: 2]. Only used if <code class="docutils literal notranslate"><span class="pre">sig2noise_method==peak2peak</span></code>.</p></li>
+<li><p><strong>search_area_size</strong> (<em>int</em>) – the size of the interrogation window in the second frame,
+default is the same interrogation window size and it is a
+fallback to the simplest FFT based PIV</p></li>
+<li><p><strong>normalized_correlation</strong> (<em>bool</em>) – if True, then the image intensity will be modified by removing
+the mean, dividing by the standard deviation and
+the correlation map will be normalized. It’s slower but could be
+more robust</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><ul class="simple">
+<li><p><strong>u</strong> (<em>2d np.ndarray</em>) – a two dimensional array containing the u velocity component,
+in pixels/seconds.</p></li>
+<li><p><strong>v</strong> (<em>2d np.ndarray</em>) – a two dimensional array containing the v velocity component,
+in pixels/seconds.</p></li>
+<li><p><strong>sig2noise</strong> (<em>2d np.ndarray, ( optional: only if sig2noise_method != None )</em>) – a two dimensional array the signal to noise ratio for each
+window pair.</p></li>
+</ul>
+</p>
+</dd>
+</dl>
+<p>The implementation of the one-step direct correlation with different
+size of the interrogation window and the search area. The increased
+size of the search areas cope with the problem of loss of pairs due
+to in-plane motion, allowing for a smaller interrogation window size,
+without increasing the number of outlier vectors.</p>
+<p>See:</p>
+<p>Particle-Imaging Techniques for Experimental Fluid Mechanics</p>
+<p>Annual Review of Fluid Mechanics
+Vol. 23: 261-304 (Volume publication date January 1991)
+DOI: 10.1146/annurev.fl.23.010191.001401</p>
+<p>originally implemented in process.pyx in Cython and converted to
+a NumPy vectorized solution in pyprocess.py</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="openpiv.pyprocess.fft_correlate_images">
+<span class="sig-prename descclassname"><span class="pre">openpiv.pyprocess.</span></span><span class="sig-name descname"><span class="pre">fft_correlate_images</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">image_a:</span> <span class="pre">~numpy.ndarray</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">image_b:</span> <span class="pre">~numpy.ndarray</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">correlation_method:</span> <span class="pre">str</span> <span class="pre">=</span> <span class="pre">'circular'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">normalized_correlation:</span> <span class="pre">bool</span> <span class="pre">=</span> <span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">conj:</span> <span class="pre">~typing.Callable</span> <span class="pre">=</span> <span class="pre">&lt;ufunc</span> <span class="pre">'conjugate'&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">rfft2=&lt;function</span> <span class="pre">rfft2&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">irfft2=&lt;function</span> <span class="pre">irfft2&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">fftshift=&lt;function</span> <span class="pre">fftshift&gt;</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">ndarray</span></span></span><a class="reference internal" href="../_modules/openpiv/pyprocess.html#fft_correlate_images"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#openpiv.pyprocess.fft_correlate_images" title="Permalink to this definition"></a></dt>
+<dd><p>FFT based cross correlation
+of two images with multiple views of np.stride_tricks()
+The 2D FFT should be applied to the last two axes (-2,-1) and the
+zero axis is the number of the interrogation window
+This should also work out of the box for rectangular windows.
+:param image_a: and two last dimensions are interrogation windows of the first image
+:type image_a: 3d np.ndarray, first dimension is the number of windows,
+:param image_b:
+:type image_b: similar
+:param correlation_method: one of the three methods implemented: ‘circular’ or ‘linear’</p>
+<blockquote>
+<div><p>[default: ‘circular].</p>
+</div></blockquote>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>normalized_correlation</strong> (<em>string</em>) – decides wetehr normalized correlation is done or not: True or False
+[default: True].</p></li>
+<li><p><strong>conj</strong> (<em>function</em>) – function used for complex conjugate</p></li>
+<li><p><strong>rfft2</strong> (<em>function</em>) – function used for rfft2</p></li>
+<li><p><strong>irfft2</strong> (<em>function</em>) – function used for irfft2</p></li>
+<li><p><strong>fftshift</strong> (<em>function</em>) – function used for fftshift</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="openpiv.pyprocess.fft_correlate_windows">
+<span class="sig-prename descclassname"><span class="pre">openpiv.pyprocess.</span></span><span class="sig-name descname"><span class="pre">fft_correlate_windows</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">window_a</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">window_b</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">rfft2=&lt;function</span> <span class="pre">rfft2&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">irfft2=&lt;function</span> <span class="pre">irfft2&gt;</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/openpiv/pyprocess.html#fft_correlate_windows"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#openpiv.pyprocess.fft_correlate_windows" title="Permalink to this definition"></a></dt>
+<dd><p>FFT based cross correlation
+it is a so-called linear convolution based,
+since we increase the size of the FFT to
+reduce the edge effects.
+This should also work out of the box for rectangular windows.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>window_a</strong> (<em>2d np.ndarray</em>) – a two dimensions array for the first interrogation window</p></li>
+<li><p><strong>window_b</strong> (<em>2d np.ndarray</em>) – a two dimensions array for the second interrogation window</p></li>
+<li><p><strong>rfft2</strong> (<em>function</em>) – function used for rfft2</p></li>
+<li><p><strong>irfft2</strong> (<em>function</em>) – function used for irfft2</p></li>
+<li><p><strong>Stackoverflow</strong> (<em># from</em>) – </p></li>
+<li><p><strong>linalg</strong> (<em>from scipy import</em>) – </p></li>
+<li><p><strong>np</strong> (<em>import numpy as</em>) – </p></li>
+<li><p><strong>well</strong> (<em># works for rectangular windows as</em>) – </p></li>
+<li><p><strong>[</strong><strong>[</strong><strong>1</strong> (<em>x =</em>) – [0 , 0 , 0 , 1], [0 , 0 , 0 , 1]]</p></li>
+<li><p><strong>0</strong> – [0 , 0 , 0 , 1], [0 , 0 , 0 , 1]]</p></li>
+<li><p><strong>0</strong> – [0 , 0 , 0 , 1], [0 , 0 , 0 , 1]]</p></li>
+<li><p><strong>0</strong><strong>]</strong> – [0 , 0 , 0 , 1], [0 , 0 , 0 , 1]]</p></li>
+<li><p><strong>[</strong><strong>0</strong> – [0 , 0 , 0 , 1], [0 , 0 , 0 , 1]]</p></li>
+<li><p><strong>-1</strong> – [0 , 0 , 0 , 1], [0 , 0 , 0 , 1]]</p></li>
+<li><p><strong>0</strong> – [0 , 0 , 0 , 1], [0 , 0 , 0 , 1]]</p></li>
+<li><p><strong>0</strong><strong>]</strong> – [0 , 0 , 0 , 1], [0 , 0 , 0 , 1]]</p></li>
+<li><p><strong>[</strong><strong>0</strong> – [0 , 0 , 0 , 1], [0 , 0 , 0 , 1]]</p></li>
+<li><p><strong>0</strong> – [0 , 0 , 0 , 1], [0 , 0 , 0 , 1]]</p></li>
+<li><p><strong>3</strong> – [0 , 0 , 0 , 1], [0 , 0 , 0 , 1]]</p></li>
+<li><p><strong>0</strong><strong>]</strong> – [0 , 0 , 0 , 1], [0 , 0 , 0 , 1]]</p></li>
+</ul>
+</dd>
+</dl>
+<p>:param : [0 , 0 , 0 , 1], [0 , 0 , 0 , 1]]
+:param x = np.array(x:
+:param dtype=np.float):
+:param y = [[4:
+:param 5]:
+:param [3:
+:param 4]]:
+:param y = np.array(y):
+:param print (“conv:
+:type print (“conv: ” ,  signal.convolve2d(x , y , ‘full’))
+:param s1 = np.array(x.shape):
+:param s2 = np.array(y.shape):
+:param size = s1 + s2 - 1:
+:param fsize = 2 ** np.ceil(np.log2(size)).astype(int):
+:param fslice = tuple([slice(0:
+:param int(sz)) for sz in size]):
+:param new_x = np.fft.fft2(x:
+:param fsize):
+:param new_y = np.fft.fft2(y:
+:param fsize):
+:param result = np.fft.ifft2(new_x*new_y)[fslice].copy():
+:param print(“fft for my method:
+:type print(“fft for my method: ” , np.array(result.real, np.int32))</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="openpiv.pyprocess.find_all_first_peaks">
+<span class="sig-prename descclassname"><span class="pre">openpiv.pyprocess.</span></span><span class="sig-name descname"><span class="pre">find_all_first_peaks</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">corr</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/openpiv/pyprocess.html#find_all_first_peaks"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#openpiv.pyprocess.find_all_first_peaks" title="Permalink to this definition"></a></dt>
+<dd><p>Find row and column indices of the first correlation peak.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>corr</strong> (<em>np.ndarray</em>) – the correlation map fof the strided images (N,K,M) where
+N is the number of windows, KxM is the interrogation window size</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><ul class="simple">
+<li><p><strong>index_list</strong> (<em>integers, index of the peak position in (N,i,j)</em>)</p></li>
+<li><p><strong>peaks_max</strong> (<em>amplitude of the peak</em>)</p></li>
+</ul>
+</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="openpiv.pyprocess.find_all_second_peaks">
+<span class="sig-prename descclassname"><span class="pre">openpiv.pyprocess.</span></span><span class="sig-name descname"><span class="pre">find_all_second_peaks</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">corr</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">width</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">2</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/openpiv/pyprocess.html#find_all_second_peaks"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#openpiv.pyprocess.find_all_second_peaks" title="Permalink to this definition"></a></dt>
+<dd><p>Find row and column indices of the first correlation peak.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>corr</strong> (<em>np.ndarray</em>) – the correlation map fof the strided images (N,K,M) where
+N is the number of windows, KxM is the interrogation window size</p></li>
+<li><p><strong>width</strong> (<em>int</em>) – the half size of the region around the first correlation
+peak to ignore for finding the second peak</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><ul class="simple">
+<li><p><strong>index_list</strong> (<em>integers, index of the peak position in (N,i,j)</em>)</p></li>
+<li><p><strong>peaks_max</strong> (<em>amplitude of the peak</em>)</p></li>
+</ul>
+</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="openpiv.pyprocess.find_first_peak">
+<span class="sig-prename descclassname"><span class="pre">openpiv.pyprocess.</span></span><span class="sig-name descname"><span class="pre">find_first_peak</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">corr</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/openpiv/pyprocess.html#find_first_peak"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#openpiv.pyprocess.find_first_peak" title="Permalink to this definition"></a></dt>
+<dd><p>Find row and column indices of the first correlation peak.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>corr</strong> (<em>np.ndarray</em>) – the correlation map fof the strided images (N,K,M) where
+N is the number of windows, KxM is the interrogation window size</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><ul class="simple">
+<li><p><strong>(i,j)</strong> (<em>integers, index of the peak position</em>)</p></li>
+<li><p><strong>peak</strong> (<em>amplitude of the peak</em>)</p></li>
+</ul>
+</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="openpiv.pyprocess.find_second_peak">
+<span class="sig-prename descclassname"><span class="pre">openpiv.pyprocess.</span></span><span class="sig-name descname"><span class="pre">find_second_peak</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">corr</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">i</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">j</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">width</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">2</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/openpiv/pyprocess.html#find_second_peak"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#openpiv.pyprocess.find_second_peak" title="Permalink to this definition"></a></dt>
+<dd><p>Find the value of the second largest peak.</p>
+<p>The second largest peak is the height of the peak in
+the region outside a 3x3 submatrxi around the first
+correlation peak.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>corr</strong> (<em>np.ndarray</em>) – the correlation map.</p></li>
+<li><p><strong>i</strong> (<em>ints</em>) – row and column location of the first peak.</p></li>
+<li><p><strong>j</strong> (<em>ints</em>) – row and column location of the first peak.</p></li>
+<li><p><strong>width</strong> (<em>int</em>) – the half size of the region around the first correlation
+peak to ignore for finding the second peak.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><ul class="simple">
+<li><p><strong>i</strong> (<em>int</em>) – the row index of the second correlation peak.</p></li>
+<li><p><strong>j</strong> (<em>int</em>) – the column index of the second correlation peak.</p></li>
+<li><p><strong>corr_max2</strong> (<em>int</em>) – the value of the second correlation peak.</p></li>
+</ul>
+</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="openpiv.pyprocess.find_subpixel_peak_position">
+<span class="sig-prename descclassname"><span class="pre">openpiv.pyprocess.</span></span><span class="sig-name descname"><span class="pre">find_subpixel_peak_position</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">corr</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">subpixel_method</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'gaussian'</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/openpiv/pyprocess.html#find_subpixel_peak_position"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#openpiv.pyprocess.find_subpixel_peak_position" title="Permalink to this definition"></a></dt>
+<dd><p>Find subpixel approximation of the correlation peak.</p>
+<p>This function returns a subpixels approximation of the correlation
+peak by using one of the several methods available. If requested,
+the function also returns the signal to noise ratio level evaluated
+from the correlation map.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>corr</strong> (<em>np.ndarray</em>) – the correlation map.</p></li>
+<li><p><strong>subpixel_method</strong> (<em>string</em>) – one of the following methods to estimate subpixel location of the
+peak:
+‘centroid’ [replaces default if correlation map is negative],
+‘gaussian’ [default if correlation map is positive],
+‘parabolic’.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><strong>subp_peak_position</strong> – the fractional row and column indices for the sub-pixel
+approximation of the correlation peak.
+If the first peak is on the border of the correlation map
+or any other problem, the returned result is a tuple of NaNs.</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>two elements tuple</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="openpiv.pyprocess.get_coordinates">
+<span class="sig-prename descclassname"><span class="pre">openpiv.pyprocess.</span></span><span class="sig-name descname"><span class="pre">get_coordinates</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">image_size</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">int</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">int</span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">search_area_size</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">overlap</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">center_on_field</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">Tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">ndarray</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">ndarray</span><span class="p"><span class="pre">]</span></span></span></span><a class="reference internal" href="../_modules/openpiv/pyprocess.html#get_coordinates"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#openpiv.pyprocess.get_coordinates" title="Permalink to this definition"></a></dt>
+<dd><p>Compute the x, y coordinates of the centers of the interrogation windows.
+for the SQUARE windows only, see also get_rect_coordinates</p>
+<p>the origin (0,0) is like in the image, top left corner
+positive x is an increasing column index from left to right
+positive y is increasing row index, from top to bottom</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>image_size</strong> (<em>two elements tuple</em>) – a two dimensional tuple for the pixel size of the image
+first element is number of rows, second element is
+the number of columns.</p></li>
+<li><p><strong>search_area_size</strong> (<em>int</em>) – the size of the search area windows, sometimes it’s equal to
+the interrogation window size in both frames A and B</p></li>
+<li><p><strong>overlap</strong> (<em>int = 0</em><em> (</em><em>default is no overlap</em><em>)</em>) – the number of pixel by which two adjacent interrogation
+windows overlap.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><ul>
+<li><p><strong>x</strong> (<em>2d np.ndarray</em>) – a two dimensional array containing the x coordinates of the
+interrogation window centers, in pixels.</p></li>
+<li><p><strong>y</strong> (<em>2d np.ndarray</em>) – a two dimensional array containing the y coordinates of the
+interrogation window centers, in pixels.</p>
+<p>Coordinate system 0,0 is at the top left corner, positive
+x to the right, positive y from top downwards, i.e.
+image coordinate system</p>
 </li>
 </ul>
+</p>
+</dd>
+</dl>
+</dd></dl>
 
-  <h4>Previous topic</h4>
-  <p class="topless"><a href="downloads_page.html"
-                        title="previous chapter">Download OpenPIV Example</a></p>
-  <h3>This Page</h3>
-  <ul class="this-page-menu">
-    <li><a href="../_sources/src/api_reference.txt"
-           rel="nofollow">Show Source</a></li>
-  </ul>
-<div id="searchbox" style="display: none">
-  <h3>Quick search</h3>
-    <form class="search" action="../search.html" method="get">
-      <input type="text" name="q" />
-      <input type="submit" value="Go" />
-      <input type="hidden" name="check_keywords" value="yes" />
-      <input type="hidden" name="area" value="default" />
-    </form>
-    <p class="searchtip" style="font-size: 90%">
-    Enter search terms or a module, class or function name.
-    </p>
+<dl class="py function">
+<dt class="sig sig-object py" id="openpiv.pyprocess.get_field_shape">
+<span class="sig-prename descclassname"><span class="pre">openpiv.pyprocess.</span></span><span class="sig-name descname"><span class="pre">get_field_shape</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">image_size</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">int</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">int</span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">search_area_size</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">int</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">int</span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">overlap</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">int</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">int</span><span class="p"><span class="pre">]</span></span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">Tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">int</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">int</span><span class="p"><span class="pre">]</span></span></span></span><a class="reference internal" href="../_modules/openpiv/pyprocess.html#get_field_shape"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#openpiv.pyprocess.get_field_shape" title="Permalink to this definition"></a></dt>
+<dd><p>Compute the shape of the resulting flow field.</p>
+<p>Given the image size, the interrogation window size and
+the overlap size, it is possible to calculate the number
+of rows and columns of the resulting flow field.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>image_size</strong> (<em>two elements tuple</em>) – a two dimensional tuple for the pixel size of the image
+first element is number of rows, second element is
+the number of columns, easy to obtain using .shape</p></li>
+<li><p><strong>search_area_size</strong> (<em>tuple</em>) – the size of the interrogation windows (if equal in frames A,B)
+or the search area (in frame B), the largest  of the two</p></li>
+<li><p><strong>overlap</strong> (<em>tuple</em>) – the number of pixel by which two adjacent interrogation
+windows overlap.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><strong>field_shape</strong> – the shape of the resulting flow field</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>2-element tuple</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="openpiv.pyprocess.get_rect_coordinates">
+<span class="sig-prename descclassname"><span class="pre">openpiv.pyprocess.</span></span><span class="sig-name descname"><span class="pre">get_rect_coordinates</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">image_size</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">int</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">int</span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">window_size</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Union</span><span class="p"><span class="pre">[</span></span><span class="pre">int</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">Tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">int</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">int</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">overlap</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Union</span><span class="p"><span class="pre">[</span></span><span class="pre">int</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">Tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">int</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">int</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">center_on_field</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/openpiv/pyprocess.html#get_rect_coordinates"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#openpiv.pyprocess.get_rect_coordinates" title="Permalink to this definition"></a></dt>
+<dd><p>Rectangular grid version of get_coordinates.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="openpiv.pyprocess.moving_window_array">
+<span class="sig-prename descclassname"><span class="pre">openpiv.pyprocess.</span></span><span class="sig-name descname"><span class="pre">moving_window_array</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">array</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">window_size</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">overlap</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/openpiv/pyprocess.html#moving_window_array"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#openpiv.pyprocess.moving_window_array" title="Permalink to this definition"></a></dt>
+<dd><p>This is a nice numpy trick. The concept of numpy strides should be
+clear to understand this code.</p>
+<p>Basically, we have a 2d array and we want to perform cross-correlation
+over the interrogation windows. An approach could be to loop over the array
+but loops are expensive in python. So we create from the array a new array
+with three dimension, of size (n_windows, window_size, window_size), in
+which each slice, (along the first axis) is an interrogation window.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="openpiv.pyprocess.nextpower2">
+<span class="sig-prename descclassname"><span class="pre">openpiv.pyprocess.</span></span><span class="sig-name descname"><span class="pre">nextpower2</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">i</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/openpiv/pyprocess.html#nextpower2"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#openpiv.pyprocess.nextpower2" title="Permalink to this definition"></a></dt>
+<dd><p>Find 2^n that is equal to or greater than.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="openpiv.pyprocess.normalize_intensity">
+<span class="sig-prename descclassname"><span class="pre">openpiv.pyprocess.</span></span><span class="sig-name descname"><span class="pre">normalize_intensity</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">window</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/openpiv/pyprocess.html#normalize_intensity"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#openpiv.pyprocess.normalize_intensity" title="Permalink to this definition"></a></dt>
+<dd><dl class="simple">
+<dt>Normalize interrogation window or strided image of many windows,</dt><dd><p>by removing the mean intensity value per window and clipping the
+negative values to zero</p>
+</dd>
+</dl>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>window</strong> (<em>2d np.ndarray</em>) – the interrogation window array</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><strong>window</strong> – the interrogation window array, with mean value equal to zero and
+intensity normalized to -1 +1 and clipped if some pixels are
+extra low/high</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>2d np.ndarray</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="openpiv.pyprocess.sig2noise_ratio">
+<span class="sig-prename descclassname"><span class="pre">openpiv.pyprocess.</span></span><span class="sig-name descname"><span class="pre">sig2noise_ratio</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">correlation</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">ndarray</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sig2noise_method</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'peak2peak'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">width</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">2</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">ndarray</span></span></span><a class="reference internal" href="../_modules/openpiv/pyprocess.html#sig2noise_ratio"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#openpiv.pyprocess.sig2noise_ratio" title="Permalink to this definition"></a></dt>
+<dd><p>Computes the signal to noise ratio from the correlation map.</p>
+<p>The signal to noise ratio is computed from the correlation map with
+one of two available method. It is a measure of the quality of the
+matching between to interrogation windows.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>corr</strong> (<em>3d np.ndarray</em>) – the correlation maps of the image pair, concatenated along 0th axis</p></li>
+<li><p><strong>sig2noise_method</strong> (<em>string</em>) – the method for evaluating the signal to noise ratio value from
+the correlation map. Can be <cite>peak2peak</cite>, <cite>peak2mean</cite> or None
+if no evaluation should be made.</p></li>
+<li><p><strong>width</strong> (<em>int</em><em>, </em><em>optional</em>) – the half size of the region around the first
+correlation peak to ignore for finding the second
+peak. [default: 2]. Only used if <code class="docutils literal notranslate"><span class="pre">sig2noise_method==peak2peak</span></code>.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><strong>sig2noise</strong> – the signal to noise ratios from the correlation maps.</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>np.array</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="openpiv.pyprocess.sliding_window_array">
+<span class="sig-prename descclassname"><span class="pre">openpiv.pyprocess.</span></span><span class="sig-name descname"><span class="pre">sliding_window_array</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">image</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">ndarray</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">window_size</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">int</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">int</span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">(64,</span> <span class="pre">64)</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">overlap</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">int</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">int</span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">(32,</span> <span class="pre">32)</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">ndarray</span></span></span><a class="reference internal" href="../_modules/openpiv/pyprocess.html#sliding_window_array"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#openpiv.pyprocess.sliding_window_array" title="Permalink to this definition"></a></dt>
+<dd><p>This version does not use numpy as_strided and is much more memory efficient.
+Basically, we have a 2d array and we want to perform cross-correlation
+over the interrogation windows. An approach could be to loop over the array
+but loops are expensive in python. So we create from the array a new array
+with three dimension, of size (n_windows, window_size, window_size), in
+which each slice, (along the first axis) is an interrogation window.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="openpiv.pyprocess.vectorized_correlation_to_displacements">
+<span class="sig-prename descclassname"><span class="pre">openpiv.pyprocess.</span></span><span class="sig-name descname"><span class="pre">vectorized_correlation_to_displacements</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">corr</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">ndarray</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">n_rows</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">int</span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">n_cols</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">int</span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">subpixel_method</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'gaussian'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">eps</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">1e-07</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/openpiv/pyprocess.html#vectorized_correlation_to_displacements"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#openpiv.pyprocess.vectorized_correlation_to_displacements" title="Permalink to this definition"></a></dt>
+<dd><p>Correlation maps are converted to displacement for each interrogation
+window using the convention that the size of the correlation map
+is 2N -1 where N is the size of the largest interrogation window
+(in frame B) that is called search_area_size</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>corr</strong> (<em>3D nd.array</em>) – contains output of the fft_correlate_images</p></li>
+<li><p><strong>n_rows</strong> – number of interrogation windows, output of the get_field_shape</p></li>
+<li><p><strong>n_cols</strong> – number of interrogation windows, output of the get_field_shape</p></li>
+<li><p><strong>mask_width</strong> (<em>int</em>) – distance, in pixels, from the interrogation window in which
+correlation peaks would be flagged as invalid</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><strong>u, v</strong> – 2d array of displacements in pixels/dt</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>2D nd.array</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="openpiv.pyprocess.vectorized_sig2noise_ratio">
+<span class="sig-prename descclassname"><span class="pre">openpiv.pyprocess.</span></span><span class="sig-name descname"><span class="pre">vectorized_sig2noise_ratio</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">correlation</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sig2noise_method</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'peak2peak'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">width</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">2</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/openpiv/pyprocess.html#vectorized_sig2noise_ratio"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#openpiv.pyprocess.vectorized_sig2noise_ratio" title="Permalink to this definition"></a></dt>
+<dd><p>Computes the signal to noise ratio from the correlation map in a
+mostly vectorized approach, thus much faster.</p>
+<p>The signal to noise ratio is computed from the correlation map with
+one of two available method. It is a measure of the quality of the
+matching between to interrogation windows.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>corr</strong> (<em>3d np.ndarray</em>) – the correlation maps of the image pair, concatenated along 0th axis</p></li>
+<li><p><strong>sig2noise_method</strong> (<em>string</em>) – the method for evaluating the signal to noise ratio value from
+the correlation map. Can be <cite>peak2peak</cite>, <cite>peak2mean</cite> or None
+if no evaluation should be made.</p></li>
+<li><p><strong>width</strong> (<em>int</em><em>, </em><em>optional</em>) – the half size of the region around the first
+correlation peak to ignore for finding the second
+peak. [default: 2]. Only used if sig2noise_method==peak2peak.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><strong>sig2noise</strong> – the signal to noise ratios from the correlation maps.</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>np.array</p>
+</dd>
+</dl>
+</dd></dl>
+
+</section>
+<section id="the-openpiv-process-module">
+<h2>The <code class="docutils literal notranslate"><span class="pre">openpiv.process</span></code> module<a class="headerlink" href="#the-openpiv-process-module" title="Permalink to this heading"></a></h2>
+</section>
+<section id="module-openpiv.lib">
+<span id="the-openpiv-lib-module"></span><h2>The <code class="docutils literal notranslate"><span class="pre">openpiv.lib</span></code> module<a class="headerlink" href="#module-openpiv.lib" title="Permalink to this heading"></a></h2>
+<dl class="py function">
+<dt class="sig sig-object py" id="openpiv.lib.replace_nans">
+<span class="sig-prename descclassname"><span class="pre">openpiv.lib.</span></span><span class="sig-name descname"><span class="pre">replace_nans</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">array</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_iter</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tol</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">kernel_size</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">2</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">method</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'disk'</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/openpiv/lib.html#replace_nans"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#openpiv.lib.replace_nans" title="Permalink to this definition"></a></dt>
+<dd><dl class="simple">
+<dt>Replace NaN elements in an array using an iterative image inpainting</dt><dd><p>algorithm.</p>
+</dd>
+</dl>
+<p>The algorithm is the following:</p>
+<ol class="arabic simple">
+<li><p>For each element in the input array, replace it by a weighted average
+of the neighbouring elements which are not NaN themselves. The weights
+depend on the method type. See Methods below.</p></li>
+<li><p>Several iterations are needed if there are adjacent NaN elements.
+If this is the case, information is “spread” from the edges of the
+missing regions iteratively, until the variation is below a certain
+threshold.</p></li>
+</ol>
+<p>Methods:</p>
+<dl>
+<dt>localmean - A square kernel where all elements have the same value,</dt><dd><p>weights are equal to n/( (2*kernel_size+1)**2 -1 ),
+where n is the number of non-NaN elements.</p>
+</dd>
+<dt>disk - A circular kernel where all elements have the same value,</dt><dd><dl class="simple">
+<dt>kernel is calculated by::</dt><dd><dl class="simple">
+<dt>if ((S-i)**2 + (S-j)**2)**0.5 &lt;= S:</dt><dd><p>kernel[i,j] = 1.0</p>
+</dd>
+<dt>else:</dt><dd><p>kernel[i,j] = 0.0</p>
+</dd>
+</dl>
+</dd>
+</dl>
+<p>where S is the kernel radius.</p>
+</dd>
+<dt>distance - A circular inverse distance kernel where elements are</dt><dd><p>weighted proportional to their distance away from the
+center of the kernel, elements farther away have less
+weight. Elements outside the specified radius are set
+to 0.0 as in ‘disk’, the remaining of the weights are
+calculated as:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">maxDist</span> <span class="o">=</span> <span class="p">((</span><span class="n">S</span><span class="p">)</span><span class="o">**</span><span class="mi">2</span> <span class="o">+</span> <span class="p">(</span><span class="n">S</span><span class="p">)</span><span class="o">**</span><span class="mi">2</span><span class="p">)</span><span class="o">**</span><span class="mf">0.5</span>
+<span class="n">kernel</span><span class="p">[</span><span class="n">i</span><span class="p">,</span><span class="n">j</span><span class="p">]</span> <span class="o">=</span> <span class="o">-</span><span class="mi">1</span><span class="o">*</span><span class="p">(((</span><span class="n">S</span><span class="o">-</span><span class="n">i</span><span class="p">)</span><span class="o">**</span><span class="mi">2</span> <span class="o">+</span> <span class="p">(</span><span class="n">S</span><span class="o">-</span><span class="n">j</span><span class="p">)</span><span class="o">**</span><span class="mi">2</span><span class="p">)</span><span class="o">**</span><span class="mf">0.5</span> <span class="o">-</span> <span class="n">maxDist</span><span class="p">)</span>
+</pre></div>
 </div>
-<script type="text/javascript">$('#searchbox').show(0);</script>
+<p>where S is the kernel radius.</p>
+</dd>
+</dl>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>array</strong> (<em>2d</em><em> or </em><em>3d np.ndarray</em>) – an array containing NaN elements that have to be replaced
+if array is a masked array (numpy.ma.MaskedArray), then
+the mask is reapplied after the replacement</p></li>
+<li><p><strong>max_iter</strong> (<em>int</em>) – the number of iterations</p></li>
+<li><p><strong>tol</strong> (<em>float</em>) – On each iteration check if the mean square difference between
+values of replaced elements is below a certain tolerance <cite>tol</cite></p></li>
+<li><p><strong>kernel_size</strong> (<em>int</em>) – the size of the kernel, default is 1</p></li>
+<li><p><strong>method</strong> (<em>str</em>) – the method used to replace invalid values. Valid options are
+<cite>localmean</cite>, <cite>disk</cite>, and <cite>distance</cite>.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><strong>filled</strong> – a copy of the input array, where NaN elements have been replaced.</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>2d or 3d np.ndarray</p>
+</dd>
+</dl>
+</dd></dl>
+
+</section>
+<section id="module-openpiv.filters">
+<span id="the-openpiv-filters-module"></span><h2>The <code class="docutils literal notranslate"><span class="pre">openpiv.filters</span></code> module<a class="headerlink" href="#module-openpiv.filters" title="Permalink to this heading"></a></h2>
+<p>The openpiv.filters module contains some filtering/smoothing routines.</p>
+<dl class="py function">
+<dt class="sig sig-object py" id="openpiv.filters.gaussian">
+<span class="sig-prename descclassname"><span class="pre">openpiv.filters.</span></span><span class="sig-name descname"><span class="pre">gaussian</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">u</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">ndarray</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">v</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">ndarray</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">half_width</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">1</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">Tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">ndarray</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">ndarray</span><span class="p"><span class="pre">]</span></span></span></span><a class="reference internal" href="../_modules/openpiv/filters.html#gaussian"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#openpiv.filters.gaussian" title="Permalink to this definition"></a></dt>
+<dd><p>Smooths the velocity field with a Gaussian kernel.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>u</strong> (<em>2d np.ndarray</em>) – the u velocity component field</p></li>
+<li><p><strong>v</strong> (<em>2d np.ndarray</em>) – the v velocity component field</p></li>
+<li><p><strong>half_width</strong> (<em>int</em>) – the half width of the kernel. Kernel
+has shape 2*half_width+1, default = 1</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><ul class="simple">
+<li><p><strong>uf</strong> (<em>2d np.ndarray</em>) – the smoothed u velocity component field</p></li>
+<li><p><strong>vf</strong> (<em>2d np.ndarray</em>) – the smoothed v velocity component field</p></li>
+</ul>
+</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="openpiv.filters.gaussian_kernel">
+<span class="sig-prename descclassname"><span class="pre">openpiv.filters.</span></span><span class="sig-name descname"><span class="pre">gaussian_kernel</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">sigma</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">truncate</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">4.0</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">ndarray</span></span></span><a class="reference internal" href="../_modules/openpiv/filters.html#gaussian_kernel"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#openpiv.filters.gaussian_kernel" title="Permalink to this definition"></a></dt>
+<dd><p>Return Gaussian that truncates at the given number of standard deviations.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="openpiv.filters.replace_outliers">
+<span class="sig-prename descclassname"><span class="pre">openpiv.filters.</span></span><span class="sig-name descname"><span class="pre">replace_outliers</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">u</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">ndarray</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">v</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">ndarray</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">invalid_mask</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">ndarray</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">w</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">ndarray</span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">method</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'localmean'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_iter</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">5</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tol</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">0.001</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">kernel_size</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">1</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">Tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">ndarray</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="p"><span class="pre">...</span></span><span class="p"><span class="pre">]</span></span></span></span><a class="reference internal" href="../_modules/openpiv/filters.html#replace_outliers"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#openpiv.filters.replace_outliers" title="Permalink to this definition"></a></dt>
+<dd><dl class="simple">
+<dt>Replace invalid vectors in an velocity field using an iterative image</dt><dd><p>inpainting algorithm.</p>
+</dd>
+</dl>
+<p>The algorithm is the following:</p>
+<ol class="arabic simple">
+<li><p>For each element in the arrays of the <code class="docutils literal notranslate"><span class="pre">u</span></code> and <code class="docutils literal notranslate"><span class="pre">v</span></code> components,
+replace it by a weighted average
+of the neighbouring elements which are not invalid themselves. The
+weights depends of the method type. If <code class="docutils literal notranslate"><span class="pre">method=localmean</span></code> weight
+are equal to 1/( (2*kernel_size+1)**2 -1 )</p></li>
+<li><p>Several iterations are needed if there are adjacent invalid elements.
+If this is the case, inforation is “spread” from the edges of the
+missing regions iteratively, until the variation is below a certain
+threshold.</p></li>
+</ol>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>u</strong> (<em>2d</em><em> or </em><em>3d np.ndarray</em>) – the u velocity component field</p></li>
+<li><p><strong>v</strong> (<em>2d</em><em> or </em><em>3d  np.ndarray</em>) – the v velocity component field</p></li>
+<li><p><strong>w</strong> (<em>2d</em><em> or </em><em>3d  np.ndarray</em>) – the w velocity component field</p></li>
+<li><p><strong>invalid_mask</strong> (<em>2d array</em><em> of </em><em>positions with invalid vectors</em>) – </p></li>
+<li><p><strong>grid_mask</strong> (<em>2d array</em><em> of </em><em>positions masked by the user</em>) – </p></li>
+<li><p><strong>max_iter</strong> (<em>int</em>) – the number of iterations</p></li>
+<li><p><strong>kernel_size</strong> (<em>int</em>) – the size of the kernel, default is 1</p></li>
+<li><p><strong>method</strong> (<em>str</em>) – the type of kernel used for repairing missing vectors</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><ul class="simple">
+<li><p><strong>uf</strong> (<em>2d or 3d np.ndarray</em>) – the smoothed u velocity component field, where invalid vectors have
+been replaced</p></li>
+<li><p><strong>vf</strong> (<em>2d or 3d np.ndarray</em>) – the smoothed v velocity component field, where invalid vectors have
+been replaced</p></li>
+<li><p><strong>wf</strong> (<em>2d or 3d np.ndarray</em>) – the smoothed w velocity component field, where invalid vectors have
+been replaced</p></li>
+</ul>
+</p>
+</dd>
+</dl>
+</dd></dl>
+
+</section>
+<section id="module-openpiv.validation">
+<span id="the-openpiv-validation-module"></span><h2>The <code class="docutils literal notranslate"><span class="pre">openpiv.validation</span></code> module<a class="headerlink" href="#module-openpiv.validation" title="Permalink to this heading"></a></h2>
+<p>A module for spurious vector detection.</p>
+<dl class="py function">
+<dt class="sig sig-object py" id="openpiv.validation.global_std">
+<span class="sig-prename descclassname"><span class="pre">openpiv.validation.</span></span><span class="sig-name descname"><span class="pre">global_std</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">u</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">ndarray</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">v</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">ndarray</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">std_threshold</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">5</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">ndarray</span></span></span><a class="reference internal" href="../_modules/openpiv/validation.html#global_std"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#openpiv.validation.global_std" title="Permalink to this definition"></a></dt>
+<dd><p>Eliminate spurious vectors with a global threshold defined by the
+standard deviation</p>
+<p>This validation method tests for the spatial consistency of the data
+and outliers vector are replaced with NaN (Not a Number) if at least
+one of the two velocity components is out of a specified global range.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>u</strong> (<em>2d masked np.ndarray</em>) – a two dimensional array containing the u velocity component.</p></li>
+<li><p><strong>v</strong> (<em>2d masked np.ndarray</em>) – a two dimensional array containing the v velocity component.</p></li>
+<li><p><strong>std_threshold</strong> (<em>float</em>) – If the length of the vector (actually the sum of squared components) is
+larger than std_threshold times standard deviation of the flow field,
+then the vector is treated as an outlier. [default = 3]</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><strong>mask</strong> – a boolean array. True elements corresponds to outliers.</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>boolean 2d np.ndarray</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="openpiv.validation.global_val">
+<span class="sig-prename descclassname"><span class="pre">openpiv.validation.</span></span><span class="sig-name descname"><span class="pre">global_val</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">u</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">ndarray</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">v</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">ndarray</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">u_thresholds</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">int</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">int</span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">v_thresholds</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">int</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">int</span><span class="p"><span class="pre">]</span></span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">ndarray</span></span></span><a class="reference internal" href="../_modules/openpiv/validation.html#global_val"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#openpiv.validation.global_val" title="Permalink to this definition"></a></dt>
+<dd><p>Eliminate spurious vectors with a global threshold.</p>
+<p>This validation method tests for the spatial consistency of the data
+and outliers vector are replaced with Nan (Not a Number) if at
+least one of the two velocity components is out of a specified global
+range.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>u</strong> (<em>2d np.ndarray</em>) – a two dimensional array containing the u velocity component.</p></li>
+<li><p><strong>v</strong> (<em>2d np.ndarray</em>) – a two dimensional array containing the v velocity component.</p></li>
+<li><p><strong>u_thresholds</strong> (<em>two elements tuple</em>) – u_thresholds = (u_min, u_max). If <code class="docutils literal notranslate"><span class="pre">u&lt;u_min</span></code> or <code class="docutils literal notranslate"><span class="pre">u&gt;u_max</span></code>
+the vector is treated as an outlier.</p></li>
+<li><p><strong>v_thresholds</strong> (<em>two elements tuple</em>) – <code class="docutils literal notranslate"><span class="pre">v_thresholds</span> <span class="pre">=</span> <span class="pre">(v_min,</span> <span class="pre">v_max)</span></code>. If <code class="docutils literal notranslate"><span class="pre">v&lt;v_min</span></code> or <code class="docutils literal notranslate"><span class="pre">v&gt;v_max</span></code>
+the vector is treated as an outlier.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><strong>mask</strong> – a boolean array. True elements corresponds to outliers.</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>boolean 2d np.ndarray</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="openpiv.validation.local_median_val">
+<span class="sig-prename descclassname"><span class="pre">openpiv.validation.</span></span><span class="sig-name descname"><span class="pre">local_median_val</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">u</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">v</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">u_threshold</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">v_threshold</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">size</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/openpiv/validation.html#local_median_val"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#openpiv.validation.local_median_val" title="Permalink to this definition"></a></dt>
+<dd><p>Eliminate spurious vectors with a local median threshold.</p>
+<p>This validation method tests for the spatial consistency of the data.
+Vectors are classified as outliers and replaced with Nan (Not a Number) if
+the absolute difference with the local median is greater than a user
+specified threshold. The median is computed for both velocity components.</p>
+<dl class="simple">
+<dt>The image masked areas (obstacles, reflections) are marked as masked array:</dt><dd><p>u = np.ma.masked(u, mask = image_mask)</p>
+</dd>
+</dl>
+<p>and it should not be replaced by the local median, but remain masked.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>u</strong> (<em>2d np.ndarray</em>) – a two dimensional array containing the u velocity component.</p></li>
+<li><p><strong>v</strong> (<em>2d np.ndarray</em>) – a two dimensional array containing the v velocity component.</p></li>
+<li><p><strong>u_threshold</strong> (<em>float</em>) – the threshold value for component u</p></li>
+<li><p><strong>v_threshold</strong> (<em>float</em>) – the threshold value for component v</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><strong>mask</strong> – a boolean array. True elements corresponds to outliers.</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>boolean 2d np.ndarray</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="openpiv.validation.sig2noise_val">
+<span class="sig-prename descclassname"><span class="pre">openpiv.validation.</span></span><span class="sig-name descname"><span class="pre">sig2noise_val</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">s2n</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">ndarray</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">threshold</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">1.05</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">ndarray</span></span></span><a class="reference internal" href="../_modules/openpiv/validation.html#sig2noise_val"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#openpiv.validation.sig2noise_val" title="Permalink to this definition"></a></dt>
+<dd><p>Marks spurious vectors if signal to noise ratio is below a specified threshold.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>u</strong> (<em>2d</em><em> or </em><em>3d np.ndarray</em>) – a two or three dimensional array containing the u velocity component.</p></li>
+<li><p><strong>v</strong> (<em>2d</em><em> or </em><em>3d np.ndarray</em>) – a two or three dimensional array containing the v velocity component.</p></li>
+<li><p><strong>s2n</strong> (<em>2d np.ndarray</em>) – a two or three dimensional array containing the value  of the signal to
+noise ratio from cross-correlation function.</p></li>
+<li><p><strong>w</strong> (<em>2d</em><em> or </em><em>3d np.ndarray</em>) – a two or three dimensional array containing the w (in z-direction)
+velocity component.</p></li>
+<li><p><strong>threshold</strong> (<em>float</em>) – the signal to noise ratio threshold value.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><strong>mask</strong> – a boolean array. True elements corresponds to outliers.</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>boolean 2d np.ndarray</p>
+</dd>
+</dl>
+<p class="rubric">References</p>
+<ol class="upperalpha" start="18">
+<li><ol class="upperalpha simple" start="4">
+<li><p>Keane and R. J. Adrian, Measurement Science &amp; Technology, 1990,</p></li>
+</ol>
+<blockquote>
+<div><p>1, 1202-1215.</p>
+</div></blockquote>
+</li>
+</ol>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="openpiv.validation.typical_validation">
+<span class="sig-prename descclassname"><span class="pre">openpiv.validation.</span></span><span class="sig-name descname"><span class="pre">typical_validation</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">u</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">ndarray</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">v</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">ndarray</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">s2n</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">ndarray</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">settings</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="openpiv.html#openpiv.windef.PIVSettings" title="openpiv.windef.PIVSettings"><span class="pre">PIVSettings</span></a></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">ndarray</span></span></span><a class="reference internal" href="../_modules/openpiv/validation.html#typical_validation"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#openpiv.validation.typical_validation" title="Permalink to this definition"></a></dt>
+<dd><p>validation using gloabl limits and std and local median,</p>
+<p>with a special option of ‘no_std’ for the case of completely
+uniform shift, e.g. in tests.</p>
+<p>see windef.PIVSettings() for the parameters:</p>
+<blockquote>
+<div><dl class="simple">
+<dt>MinMaxU<span class="classifier">two elements tuple</span></dt><dd><p>sets the limits of the u displacment component
+Used for validation.</p>
+</dd>
+<dt>MinMaxV<span class="classifier">two elements tuple</span></dt><dd><p>sets the limits of the v displacment component
+Used for validation.</p>
+</dd>
+<dt>std_threshold<span class="classifier">float</span></dt><dd><p>sets the  threshold for the std validation</p>
+</dd>
+<dt>median_threshold<span class="classifier">float</span></dt><dd><p>sets the threshold for the median validation</p>
+</dd>
+</dl>
+</div></blockquote>
+</dd></dl>
+
+</section>
+<section id="module-openpiv.scaling">
+<span id="the-openpiv-scaling-module"></span><h2>The <code class="docutils literal notranslate"><span class="pre">openpiv.scaling</span></code> module<a class="headerlink" href="#module-openpiv.scaling" title="Permalink to this heading"></a></h2>
+<p>Scaling utilities</p>
+<dl class="py function">
+<dt class="sig sig-object py" id="openpiv.scaling.uniform">
+<span class="sig-prename descclassname"><span class="pre">openpiv.scaling.</span></span><span class="sig-name descname"><span class="pre">uniform</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">y</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">u</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">v</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">scaling_factor</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/openpiv/scaling.html#uniform"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#openpiv.scaling.uniform" title="Permalink to this definition"></a></dt>
+<dd><p>Apply an uniform scaling</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>x</strong> (<em>2d np.ndarray</em>) – </p></li>
+<li><p><strong>y</strong> (<em>2d np.ndarray</em>) – </p></li>
+<li><p><strong>u</strong> (<em>2d np.ndarray</em>) – </p></li>
+<li><p><strong>v</strong> (<em>2d np.ndarray</em>) – </p></li>
+<li><p><strong>scaling_factor</strong> (<em>float</em>) – the image scaling factor in pixels per meter</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><ul class="simple">
+<li><p><strong>x</strong> (<em>2d np.ndarray</em>)</p></li>
+<li><p><strong>y</strong> (<em>2d np.ndarray</em>)</p></li>
+<li><p><strong>u</strong> (<em>2d np.ndarray</em>)</p></li>
+<li><p><strong>v</strong> (<em>2d np.ndarray</em>)</p></li>
+</ul>
+</p>
+</dd>
+</dl>
+</dd></dl>
+
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="developers.html" class="btn btn-neutral float-left" title="Information for developers and contributors" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="faq.html" class="btn btn-neutral float-right" title="Frequently Asked Questions about PIV parameters" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2014, OpenPIV team.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
         </div>
       </div>
-      <div class="clearer"></div>
-    </div>
-    <div class="related">
-      <h3>Navigation</h3>
-      <ul>
-        <li class="right" style="margin-right: 10px">
-          <a href="../genindex.html" title="General Index"
-             >index</a></li>
-        <li class="right" >
-          <a href="../py-modindex.html" title="Python Module Index"
-             >modules</a> |</li>
-        <li class="right" >
-          <a href="downloads_page.html" title="Download OpenPIV Example"
-             >previous</a> |</li>
-        <li><a href="../index.html">OpenPIV 0.0.1 documentation</a> &raquo;</li> 
-      </ul>
-    </div>
-    <div class="footer">
-        &copy; Copyright 2014, OpenPIV group.
-      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.1.3.
-    </div>
-  </body>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
 </html>

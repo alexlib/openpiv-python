@@ -1,0 +1,805 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>openpiv.tools &mdash; OpenPIV  documentation</title>
+      <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="../../_static/css/theme.css" type="text/css" />
+  <!--[if lt IE 9]>
+    <script src="../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script data-url_root="../../" id="documentation_options" src="../../_static/documentation_options.js"></script>
+        <script src="../../_static/jquery.js"></script>
+        <script src="../../_static/underscore.js"></script>
+        <script src="../../_static/_sphinx_javascript_frameworks_compat.js"></script>
+        <script src="../../_static/doctools.js"></script>
+        <script src="../../_static/sphinx_highlight.js"></script>
+        <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+    <script src="../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+            <a href="../../index.html" class="icon icon-home"> OpenPIV
+          </a>
+              <div class="version">
+                0.24.0
+              </div>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul>
+<li class="toctree-l1"><a class="reference internal" href="../../src/piv_basics.html">Basics of the PIV algorithms</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../src/installation_instruction.html">Installation instruction</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../src/tutorial1.html">OpenPIV tutorial</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../src/windef.html">Multi-grid window deformation algorithm tutorial</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../src/masking.html">OpenPIV masking tutorial</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../src/developers.html">Information for developers and contributors</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../src/api_reference.html">API reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../src/faq.html">Frequently Asked Questions about PIV parameters</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../index.html">OpenPIV</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../index.html" class="icon icon-home"></a> &raquo;</li>
+          <li><a href="../index.html">Module code</a> &raquo;</li>
+          <li><a href="../openpiv.html">openpiv</a> &raquo;</li>
+      <li>openpiv.tools</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for openpiv.tools</h1><div class="highlight"><pre>
+<span></span><span class="sd">&quot;&quot;&quot;The openpiv.tools module is a collection of utilities and tools.</span>
+<span class="sd">&quot;&quot;&quot;</span>
+
+<span class="n">__licence__</span> <span class="o">=</span> <span class="s2">&quot;&quot;&quot;</span>
+<span class="s2">Copyright (C) 2011  www.openpiv.net</span>
+
+<span class="s2">This program is free software: you can redistribute it and/or modify</span>
+<span class="s2">it under the terms of the GNU General Public License as published by</span>
+<span class="s2">the Free Software Foundation, either version 3 of the License, or</span>
+<span class="s2">(at your option) any later version.</span>
+
+<span class="s2">This program is distributed in the hope that it will be useful,</span>
+<span class="s2">but WITHOUT ANY WARRANTY without even the implied warranty of</span>
+<span class="s2">MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the</span>
+<span class="s2">GNU General Public License for more details.</span>
+
+<span class="s2">You should have received a copy of the GNU General Public License</span>
+<span class="s2">along with this program.  If not, see &lt;http://www.gnu.org/licenses/&gt;.</span>
+<span class="s2">&quot;&quot;&quot;</span>
+
+<span class="kn">import</span> <span class="nn">sys</span>
+<span class="kn">import</span> <span class="nn">pathlib</span>
+<span class="kn">import</span> <span class="nn">multiprocessing</span>
+<span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Any</span><span class="p">,</span> <span class="n">Union</span><span class="p">,</span> <span class="n">List</span><span class="p">,</span> <span class="n">Optional</span>
+<span class="c1"># import re</span>
+
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">import</span> <span class="nn">numpy.typing</span> <span class="k">as</span> <span class="nn">npt</span>
+<span class="kn">import</span> <span class="nn">matplotlib.pyplot</span> <span class="k">as</span> <span class="nn">plt</span>
+<span class="kn">import</span> <span class="nn">matplotlib.patches</span> <span class="k">as</span> <span class="nn">pt</span>
+<span class="kn">from</span> <span class="nn">natsort</span> <span class="kn">import</span> <span class="n">natsorted</span>
+
+<span class="c1"># from builtins import range</span>
+<span class="kn">from</span> <span class="nn">imageio.v3</span> <span class="kn">import</span> <span class="n">imread</span> <span class="k">as</span> <span class="n">_imread</span><span class="p">,</span> <span class="n">imwrite</span> <span class="k">as</span> <span class="n">_imsave</span>
+<span class="kn">from</span> <span class="nn">skimage.feature</span> <span class="kn">import</span> <span class="n">canny</span>
+
+
+<div class="viewcode-block" id="natural_sort"><a class="viewcode-back" href="../../src/openpiv.html#openpiv.tools.natural_sort">[docs]</a><span class="k">def</span> <span class="nf">natural_sort</span><span class="p">(</span><span class="n">file_list</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">pathlib</span><span class="o">.</span><span class="n">Path</span><span class="p">])</span><span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="n">pathlib</span><span class="o">.</span><span class="n">Path</span><span class="p">]:</span>
+    <span class="sd">&quot;&quot;&quot; Creates naturally sorted list &quot;&quot;&quot;</span>
+    <span class="c1"># convert = lambda text: int(text) if text.isdigit() else text.lower()</span>
+    <span class="c1"># alphanum_key = lambda key: [convert(c) for c in re.split(&#39;([0-9]+)&#39;, key)]</span>
+    <span class="c1"># return sorted(file_list, key=alphanum_key)</span>
+    <span class="k">return</span> <span class="n">natsorted</span><span class="p">(</span><span class="n">file_list</span><span class="p">,</span> <span class="n">key</span><span class="o">=</span><span class="nb">str</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="sorted_unique"><a class="viewcode-back" href="../../src/openpiv.html#openpiv.tools.sorted_unique">[docs]</a><span class="k">def</span> <span class="nf">sorted_unique</span><span class="p">(</span><span class="n">array</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">)</span><span class="o">-&gt;</span><span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
+    <span class="sd">&quot;&quot;&quot;Creates sorted unique array &quot;&quot;&quot;</span>
+    <span class="n">uniq</span><span class="p">,</span> <span class="n">index</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">unique</span><span class="p">(</span><span class="n">array</span><span class="p">,</span> <span class="n">return_index</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">uniq</span><span class="p">[</span><span class="n">index</span><span class="o">.</span><span class="n">argsort</span><span class="p">()]</span></div>
+
+
+<div class="viewcode-block" id="display_vector_field"><a class="viewcode-back" href="../../src/openpiv.html#openpiv.tools.display_vector_field">[docs]</a><span class="k">def</span> <span class="nf">display_vector_field</span><span class="p">(</span>
+    <span class="n">filename</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="n">pathlib</span><span class="o">.</span><span class="n">Path</span><span class="p">,</span> <span class="nb">str</span><span class="p">],</span>
+    <span class="n">on_img</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">bool</span><span class="p">]</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+    <span class="n">image_name</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Union</span><span class="p">[</span><span class="n">pathlib</span><span class="o">.</span><span class="n">Path</span><span class="p">,</span><span class="nb">str</span><span class="p">]]</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+    <span class="n">window_size</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span><span class="o">=</span><span class="mi">32</span><span class="p">,</span>
+    <span class="n">scaling_factor</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">float</span><span class="p">]</span><span class="o">=</span><span class="mf">1.</span><span class="p">,</span>
+    <span class="n">ax</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Any</span><span class="p">]</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+    <span class="n">width</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">float</span><span class="p">]</span><span class="o">=</span><span class="mf">0.0025</span><span class="p">,</span>
+    <span class="n">show_invalid</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">bool</span><span class="p">]</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+    <span class="o">**</span><span class="n">kw</span>
+<span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot; Displays quiver plot of the data stored in the file </span>
+<span class="sd">    </span>
+<span class="sd">    </span>
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    filename :  string</span>
+<span class="sd">        the absolute path of the text file</span>
+
+<span class="sd">    on_img : Bool, optional</span>
+<span class="sd">        if True, display the vector field on top of the image provided by </span>
+<span class="sd">        image_name</span>
+
+<span class="sd">    image_name : string, optional</span>
+<span class="sd">        path to the image to plot the vector field onto when on_img is True</span>
+
+<span class="sd">    window_size : int, optional</span>
+<span class="sd">        when on_img is True, provide the interrogation window size to fit the </span>
+<span class="sd">        background image to the vector field</span>
+
+<span class="sd">    scaling_factor : float, optional</span>
+<span class="sd">        when on_img is True, provide the scaling factor to scale the background</span>
+<span class="sd">        image to the vector field</span>
+<span class="sd">    </span>
+<span class="sd">    show_invalid: bool, show or not the invalid vectors, default is True</span>
+
+<span class="sd">        </span>
+<span class="sd">    Key arguments   : (additional parameters, optional)</span>
+<span class="sd">        *scale*: [None | float]</span>
+<span class="sd">        *width*: [None | float]</span>
+<span class="sd">    </span>
+<span class="sd">    </span>
+<span class="sd">    See also:</span>
+<span class="sd">    ---------</span>
+<span class="sd">    matplotlib.pyplot.quiver</span>
+<span class="sd">    </span>
+<span class="sd">        </span>
+<span class="sd">    Examples</span>
+<span class="sd">    --------</span>
+<span class="sd">    --- only vector field</span>
+<span class="sd">    &gt;&gt;&gt; openpiv.tools.display_vector_field(&#39;./exp1_0000.txt&#39;,scale=100, </span>
+<span class="sd">                                           width=0.0025) </span>
+
+<span class="sd">    --- vector field on top of image</span>
+<span class="sd">    &gt;&gt;&gt; openpiv.tools.display_vector_field(Path(&#39;./exp1_0000.txt&#39;), on_img=True, </span>
+<span class="sd">                                          image_name=Path(&#39;exp1_001_a.bmp&#39;), </span>
+<span class="sd">                                          window_size=32, scaling_factor=70, </span>
+<span class="sd">                                          scale=100, width=0.0025)</span>
+<span class="sd">    </span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">a</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">loadtxt</span><span class="p">(</span><span class="n">filename</span><span class="p">)</span>
+    <span class="c1"># parse</span>
+    <span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">u</span><span class="p">,</span> <span class="n">v</span><span class="p">,</span> <span class="n">mask</span> <span class="o">=</span> <span class="n">a</span><span class="p">[:,</span> <span class="mi">0</span><span class="p">],</span> <span class="n">a</span><span class="p">[:,</span> <span class="mi">1</span><span class="p">],</span> <span class="n">a</span><span class="p">[:,</span> <span class="mi">2</span><span class="p">],</span> <span class="n">a</span><span class="p">[:,</span> <span class="mi">3</span><span class="p">],</span> <span class="n">a</span><span class="p">[:,</span> <span class="mi">4</span><span class="p">]</span>
+
+
+    <span class="k">if</span> <span class="n">ax</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">fig</span><span class="p">,</span> <span class="n">ax</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">subplots</span><span class="p">()</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">fig</span> <span class="o">=</span> <span class="n">ax</span><span class="o">.</span><span class="n">get_figure</span><span class="p">()</span>
+
+    <span class="k">if</span> <span class="n">on_img</span> <span class="ow">is</span> <span class="kc">True</span><span class="p">:</span>  <span class="c1"># plot a background image</span>
+        <span class="n">im</span> <span class="o">=</span> <span class="n">imread</span><span class="p">(</span><span class="n">image_name</span><span class="p">)</span>
+        <span class="n">im</span> <span class="o">=</span> <span class="n">negative</span><span class="p">(</span><span class="n">im</span><span class="p">)</span>  <span class="c1"># plot negative of the image for more clarity</span>
+        <span class="n">xmax</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">amax</span><span class="p">(</span><span class="n">x</span><span class="p">)</span> <span class="o">+</span> <span class="n">window_size</span> <span class="o">/</span> <span class="p">(</span><span class="mi">2</span> <span class="o">*</span> <span class="n">scaling_factor</span><span class="p">)</span>
+        <span class="n">ymax</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">amax</span><span class="p">(</span><span class="n">y</span><span class="p">)</span> <span class="o">+</span> <span class="n">window_size</span> <span class="o">/</span> <span class="p">(</span><span class="mi">2</span> <span class="o">*</span> <span class="n">scaling_factor</span><span class="p">)</span>
+        <span class="n">ax</span><span class="o">.</span><span class="n">imshow</span><span class="p">(</span><span class="n">im</span><span class="p">,</span> <span class="n">cmap</span><span class="o">=</span><span class="s2">&quot;Greys_r&quot;</span><span class="p">,</span> <span class="n">extent</span><span class="o">=</span><span class="p">[</span><span class="mf">0.0</span><span class="p">,</span> <span class="n">xmax</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">,</span> <span class="n">ymax</span><span class="p">])</span>    
+
+    <span class="n">invalid</span> <span class="o">=</span> <span class="n">mask</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="s2">&quot;bool&quot;</span><span class="p">)</span>  
+    <span class="n">valid</span> <span class="o">=</span> <span class="o">~</span><span class="n">invalid</span>
+
+    <span class="c1"># visual conversion for the data on image</span>
+    <span class="c1"># to be consistent with the image coordinate system</span>
+
+    <span class="c1"># if on_img:</span>
+    <span class="c1">#     y = y.max() - y</span>
+    <span class="c1">#     v *= -1</span>
+
+    <span class="n">ax</span><span class="o">.</span><span class="n">quiver</span><span class="p">(</span>
+        <span class="n">x</span><span class="p">[</span><span class="n">valid</span><span class="p">],</span>
+        <span class="n">y</span><span class="p">[</span><span class="n">valid</span><span class="p">],</span>
+        <span class="n">u</span><span class="p">[</span><span class="n">valid</span><span class="p">],</span>
+        <span class="n">v</span><span class="p">[</span><span class="n">valid</span><span class="p">],</span>
+        <span class="n">color</span><span class="o">=</span><span class="s2">&quot;b&quot;</span><span class="p">,</span>
+        <span class="n">width</span><span class="o">=</span><span class="n">width</span><span class="p">,</span>
+        <span class="o">**</span><span class="n">kw</span>
+        <span class="p">)</span>
+        
+    <span class="k">if</span> <span class="n">show_invalid</span> <span class="ow">and</span> <span class="nb">len</span><span class="p">(</span><span class="n">invalid</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="n">ax</span><span class="o">.</span><span class="n">quiver</span><span class="p">(</span>
+                <span class="n">x</span><span class="p">[</span><span class="n">invalid</span><span class="p">],</span>
+                <span class="n">y</span><span class="p">[</span><span class="n">invalid</span><span class="p">],</span>
+                <span class="n">u</span><span class="p">[</span><span class="n">invalid</span><span class="p">],</span>
+                <span class="n">v</span><span class="p">[</span><span class="n">invalid</span><span class="p">],</span>
+                <span class="n">color</span><span class="o">=</span><span class="s2">&quot;r&quot;</span><span class="p">,</span>
+                <span class="n">width</span><span class="o">=</span><span class="n">width</span><span class="p">,</span>
+                <span class="o">**</span><span class="n">kw</span><span class="p">,</span>
+                <span class="p">)</span>
+    
+    
+    <span class="c1"># if on_img is False:</span>
+    <span class="c1">#     ax.invert_yaxis()</span>
+    
+    <span class="n">ax</span><span class="o">.</span><span class="n">set_aspect</span><span class="p">(</span><span class="mf">1.</span><span class="p">)</span>
+    <span class="c1"># fig.canvas.set_window_title(&#39;Vector field, &#39;+str(np.count_nonzero(invalid))+&#39; wrong vectors&#39;)</span>
+
+    <span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
+
+    <span class="k">return</span> <span class="n">fig</span><span class="p">,</span> <span class="n">ax</span></div>
+
+
+<div class="viewcode-block" id="imread"><a class="viewcode-back" href="../../src/openpiv.html#openpiv.tools.imread">[docs]</a><span class="k">def</span> <span class="nf">imread</span><span class="p">(</span><span class="n">filename</span><span class="p">,</span> <span class="n">flatten</span><span class="o">=</span><span class="mi">0</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Read an image file into a numpy array</span>
+<span class="sd">    using imageio imread</span>
+<span class="sd">    </span>
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    filename :  string</span>
+<span class="sd">        the absolute path of the image file</span>
+<span class="sd">    flatten :   bool</span>
+<span class="sd">        True if the image is RGB color or False (default) if greyscale</span>
+<span class="sd">        </span>
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    frame : np.ndarray</span>
+<span class="sd">        a numpy array with grey levels</span>
+<span class="sd">        </span>
+<span class="sd">        </span>
+<span class="sd">    Examples</span>
+<span class="sd">    --------</span>
+<span class="sd">    </span>
+<span class="sd">    &gt;&gt;&gt; image = openpiv.tools.imread( &#39;image.bmp&#39; )</span>
+<span class="sd">    &gt;&gt;&gt; print image.shape </span>
+<span class="sd">        (1280, 1024)</span>
+<span class="sd">    </span>
+<span class="sd">    </span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">im</span> <span class="o">=</span> <span class="n">_imread</span><span class="p">(</span><span class="n">filename</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">np</span><span class="o">.</span><span class="n">ndim</span><span class="p">(</span><span class="n">im</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">2</span><span class="p">:</span>
+        <span class="n">im</span> <span class="o">=</span> <span class="n">rgb2gray</span><span class="p">(</span><span class="n">im</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">im</span></div>
+
+
+<div class="viewcode-block" id="rgb2gray"><a class="viewcode-back" href="../../src/openpiv.html#openpiv.tools.rgb2gray">[docs]</a><span class="k">def</span> <span class="nf">rgb2gray</span><span class="p">(</span><span class="n">rgb</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">)</span><span class="o">-&gt;</span><span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
+    <span class="sd">&quot;&quot;&quot;converts rgb image to gray </span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        rgb (_type_): numpy.ndarray, image size, three channels</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        gray: numpy.ndarray of the same shape, one channel</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">rgb</span><span class="p">[</span><span class="o">...</span><span class="p">,</span> <span class="p">:</span><span class="mi">3</span><span class="p">],</span> <span class="p">[</span><span class="mf">0.299</span><span class="p">,</span> <span class="mf">0.587</span><span class="p">,</span> <span class="mf">0.144</span><span class="p">])</span></div>
+
+
+<div class="viewcode-block" id="imsave"><a class="viewcode-back" href="../../src/openpiv.html#openpiv.tools.imsave">[docs]</a><span class="k">def</span> <span class="nf">imsave</span><span class="p">(</span><span class="n">filename</span><span class="p">,</span> <span class="n">arr</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Write an image file from a numpy array</span>
+<span class="sd">    using imageio imread</span>
+<span class="sd">    </span>
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    filename :  string</span>
+<span class="sd">        the absolute path of the image file that will be created</span>
+<span class="sd">    arr : 2d np.ndarray</span>
+<span class="sd">        a 2d numpy array with grey levels</span>
+<span class="sd">        </span>
+<span class="sd">    Example</span>
+<span class="sd">    --------</span>
+<span class="sd">    </span>
+<span class="sd">    &gt;&gt;&gt; image = openpiv.tools.imread( &#39;image.bmp&#39; )</span>
+<span class="sd">    &gt;&gt;&gt; image2 = openpiv.tools.negative(image)</span>
+<span class="sd">    &gt;&gt;&gt; imsave( &#39;negative-image.tif&#39;, image2)</span>
+<span class="sd">    </span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">if</span> <span class="n">np</span><span class="o">.</span><span class="n">ndim</span><span class="p">(</span><span class="n">arr</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">2</span><span class="p">:</span>
+        <span class="n">arr</span> <span class="o">=</span> <span class="n">rgb2gray</span><span class="p">(</span><span class="n">arr</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">np</span><span class="o">.</span><span class="n">amin</span><span class="p">(</span><span class="n">arr</span><span class="p">)</span> <span class="o">&lt;</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="n">arr</span> <span class="o">-=</span> <span class="n">arr</span><span class="o">.</span><span class="n">min</span><span class="p">()</span>
+
+    <span class="k">if</span> <span class="n">np</span><span class="o">.</span><span class="n">amax</span><span class="p">(</span><span class="n">arr</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">255</span><span class="p">:</span>
+        <span class="n">arr</span> <span class="o">/=</span> <span class="n">arr</span><span class="o">.</span><span class="n">max</span><span class="p">()</span>
+        <span class="n">arr</span> <span class="o">*=</span> <span class="mi">255</span>
+
+    <span class="k">if</span> <span class="n">filename</span><span class="o">.</span><span class="n">endswith</span><span class="p">(</span><span class="s2">&quot;tif&quot;</span><span class="p">):</span>
+        <span class="n">_imsave</span><span class="p">(</span><span class="n">filename</span><span class="p">,</span> <span class="n">arr</span><span class="p">,</span> <span class="nb">format</span><span class="o">=</span><span class="s2">&quot;TIFF&quot;</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">_imsave</span><span class="p">(</span><span class="n">filename</span><span class="p">,</span> <span class="n">arr</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="convert16bitsTIF"><a class="viewcode-back" href="../../src/openpiv.html#openpiv.tools.convert16bitsTIF">[docs]</a><span class="k">def</span> <span class="nf">convert16bitsTIF</span><span class="p">(</span><span class="n">filename</span><span class="p">,</span> <span class="n">save_name</span><span class="p">):</span>
+    <span class="n">img</span> <span class="o">=</span> <span class="n">imread</span><span class="p">(</span><span class="n">filename</span><span class="p">)</span>
+    <span class="n">img2</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">([</span><span class="n">img</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">img</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]],</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">int32</span><span class="p">)</span>
+    <span class="k">for</span> <span class="n">I</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">img</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]):</span>
+        <span class="k">for</span> <span class="n">J</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">img</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]):</span>
+            <span class="n">img2</span><span class="p">[</span><span class="n">I</span><span class="p">,</span> <span class="n">J</span><span class="p">]</span> <span class="o">=</span> <span class="n">img</span><span class="p">[</span><span class="n">I</span><span class="p">,</span> <span class="n">J</span><span class="p">,</span> <span class="mi">0</span><span class="p">]</span>
+
+    <span class="n">imsave</span><span class="p">(</span><span class="n">save_name</span><span class="p">,</span> <span class="n">img2</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="mark_background"><a class="viewcode-back" href="../../src/openpiv.html#openpiv.tools.mark_background">[docs]</a><span class="k">def</span> <span class="nf">mark_background</span><span class="p">(</span><span class="n">threshold</span><span class="p">,</span> <span class="n">list_img</span><span class="p">,</span> <span class="n">filename</span><span class="p">):</span>
+    <span class="n">list_frame</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">for</span> <span class="n">I</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">list_img</span><span class="p">)):</span>
+        <span class="n">list_frame</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">imread</span><span class="p">(</span><span class="n">list_img</span><span class="p">[</span><span class="n">I</span><span class="p">]))</span>
+    <span class="n">mark</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">list_frame</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">shape</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">int32</span><span class="p">)</span>
+    <span class="n">background</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">list_frame</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">shape</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">int32</span><span class="p">)</span>
+    <span class="k">for</span> <span class="n">I</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">mark</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]):</span>
+        <span class="nb">print</span><span class="p">((</span><span class="s2">&quot; row &quot;</span><span class="p">,</span> <span class="n">I</span><span class="p">,</span> <span class="s2">&quot; / &quot;</span><span class="p">,</span> <span class="n">mark</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]))</span>
+        <span class="k">for</span> <span class="n">J</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">mark</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]):</span>
+            <span class="n">sum1</span> <span class="o">=</span> <span class="mi">0</span>
+            <span class="k">for</span> <span class="n">K</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">list_frame</span><span class="p">)):</span>
+                <span class="n">sum1</span> <span class="o">=</span> <span class="n">sum1</span> <span class="o">+</span> <span class="n">list_frame</span><span class="p">[</span><span class="n">K</span><span class="p">][</span><span class="n">I</span><span class="p">,</span> <span class="n">J</span><span class="p">]</span>
+            <span class="k">if</span> <span class="n">sum1</span> <span class="o">&lt;</span> <span class="n">threshold</span> <span class="o">*</span> <span class="nb">len</span><span class="p">(</span><span class="n">list_img</span><span class="p">):</span>
+                <span class="n">mark</span><span class="p">[</span><span class="n">I</span><span class="p">,</span> <span class="n">J</span><span class="p">]</span> <span class="o">=</span> <span class="mi">0</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">mark</span><span class="p">[</span><span class="n">I</span><span class="p">,</span> <span class="n">J</span><span class="p">]</span> <span class="o">=</span> <span class="mi">1</span>
+            <span class="n">background</span><span class="p">[</span><span class="n">I</span><span class="p">,</span> <span class="n">J</span><span class="p">]</span> <span class="o">=</span> <span class="n">mark</span><span class="p">[</span><span class="n">I</span><span class="p">,</span> <span class="n">J</span><span class="p">]</span> <span class="o">*</span> <span class="mi">255</span>
+    <span class="n">imsave</span><span class="p">(</span><span class="n">filename</span><span class="p">,</span> <span class="n">background</span><span class="p">)</span>
+    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;done with background&quot;</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">background</span></div>
+
+
+<div class="viewcode-block" id="mark_background2"><a class="viewcode-back" href="../../src/openpiv.html#openpiv.tools.mark_background2">[docs]</a><span class="k">def</span> <span class="nf">mark_background2</span><span class="p">(</span><span class="n">list_img</span><span class="p">,</span> <span class="n">filename</span><span class="p">):</span>
+    <span class="n">list_frame</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">for</span> <span class="n">I</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">list_img</span><span class="p">)):</span>
+        <span class="n">list_frame</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">imread</span><span class="p">(</span><span class="n">list_img</span><span class="p">[</span><span class="n">I</span><span class="p">]))</span>
+    <span class="n">background</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">list_frame</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">shape</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">int32</span><span class="p">)</span>
+    <span class="k">for</span> <span class="n">I</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">background</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]):</span>
+        <span class="nb">print</span><span class="p">((</span><span class="s2">&quot; row &quot;</span><span class="p">,</span> <span class="n">I</span><span class="p">,</span> <span class="s2">&quot; / &quot;</span><span class="p">,</span> <span class="n">background</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]))</span>
+        <span class="k">for</span> <span class="n">J</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">background</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]):</span>
+            <span class="n">min_1</span> <span class="o">=</span> <span class="mi">255</span>
+            <span class="k">for</span> <span class="n">K</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">list_frame</span><span class="p">)):</span>
+                <span class="k">if</span> <span class="n">min_1</span> <span class="o">&gt;</span> <span class="n">list_frame</span><span class="p">[</span><span class="n">K</span><span class="p">][</span><span class="n">I</span><span class="p">,</span> <span class="n">J</span><span class="p">]:</span>
+                    <span class="n">min_1</span> <span class="o">=</span> <span class="n">list_frame</span><span class="p">[</span><span class="n">K</span><span class="p">][</span><span class="n">I</span><span class="p">,</span> <span class="n">J</span><span class="p">]</span>
+            <span class="n">background</span><span class="p">[</span><span class="n">I</span><span class="p">,</span> <span class="n">J</span><span class="p">]</span> <span class="o">=</span> <span class="n">min_1</span>
+    <span class="n">imsave</span><span class="p">(</span><span class="n">filename</span><span class="p">,</span> <span class="n">background</span><span class="p">)</span>
+    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;done with background&quot;</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">background</span></div>
+
+
+<div class="viewcode-block" id="edges"><a class="viewcode-back" href="../../src/openpiv.html#openpiv.tools.edges">[docs]</a><span class="k">def</span> <span class="nf">edges</span><span class="p">(</span><span class="n">list_img</span><span class="p">,</span> <span class="n">filename</span><span class="p">):</span>
+    <span class="n">back</span> <span class="o">=</span> <span class="n">mark_background</span><span class="p">(</span><span class="mi">30</span><span class="p">,</span> <span class="n">list_img</span><span class="p">,</span> <span class="n">filename</span><span class="p">)</span>
+    <span class="n">edges</span> <span class="o">=</span> <span class="n">canny</span><span class="p">(</span><span class="n">back</span><span class="p">,</span> <span class="n">sigma</span><span class="o">=</span><span class="mi">3</span><span class="p">)</span>
+    <span class="n">imsave</span><span class="p">(</span><span class="n">filename</span><span class="p">,</span> <span class="n">edges</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="find_reflexions"><a class="viewcode-back" href="../../src/openpiv.html#openpiv.tools.find_reflexions">[docs]</a><span class="k">def</span> <span class="nf">find_reflexions</span><span class="p">(</span><span class="n">list_img</span><span class="p">,</span> <span class="n">filename</span><span class="p">):</span>
+    <span class="n">background</span> <span class="o">=</span> <span class="n">mark_background2</span><span class="p">(</span><span class="n">list_img</span><span class="p">,</span> <span class="n">filename</span><span class="p">)</span>
+    <span class="n">reflexion</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">background</span><span class="o">.</span><span class="n">shape</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">int32</span><span class="p">)</span>
+    <span class="k">for</span> <span class="n">I</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">background</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]):</span>
+        <span class="nb">print</span><span class="p">((</span><span class="s2">&quot; row &quot;</span><span class="p">,</span> <span class="n">I</span><span class="p">,</span> <span class="s2">&quot; / &quot;</span><span class="p">,</span> <span class="n">background</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]))</span>
+        <span class="k">for</span> <span class="n">J</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">background</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]):</span>
+            <span class="k">if</span> <span class="n">background</span><span class="p">[</span><span class="n">I</span><span class="p">,</span> <span class="n">J</span><span class="p">]</span> <span class="o">&gt;</span> <span class="mi">253</span><span class="p">:</span>
+                <span class="n">reflexion</span><span class="p">[</span><span class="n">I</span><span class="p">,</span> <span class="n">J</span><span class="p">]</span> <span class="o">=</span> <span class="mi">255</span>
+    <span class="n">imsave</span><span class="p">(</span><span class="n">filename</span><span class="p">,</span> <span class="n">reflexion</span><span class="p">)</span>
+    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;done with reflexions&quot;</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">reflexion</span></div>
+
+
+<div class="viewcode-block" id="find_boundaries"><a class="viewcode-back" href="../../src/openpiv.html#openpiv.tools.find_boundaries">[docs]</a><span class="k">def</span> <span class="nf">find_boundaries</span><span class="p">(</span><span class="n">threshold</span><span class="p">,</span> <span class="n">list_img1</span><span class="p">,</span> <span class="n">list_img2</span><span class="p">,</span> <span class="n">filename</span><span class="p">,</span> <span class="n">picname</span><span class="p">):</span>
+    <span class="n">f</span> <span class="o">=</span> <span class="nb">open</span><span class="p">(</span><span class="n">filename</span><span class="p">,</span> <span class="s2">&quot;w&quot;</span><span class="p">)</span>
+    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;mark1..&quot;</span><span class="p">)</span>
+    <span class="n">mark1</span> <span class="o">=</span> <span class="n">mark_background</span><span class="p">(</span><span class="n">threshold</span><span class="p">,</span> <span class="n">list_img1</span><span class="p">,</span> <span class="s2">&quot;mark1.bmp&quot;</span><span class="p">)</span>
+    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;[DONE]&quot;</span><span class="p">)</span>
+    <span class="nb">print</span><span class="p">((</span><span class="n">mark1</span><span class="o">.</span><span class="n">shape</span><span class="p">))</span>
+    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;mark2..&quot;</span><span class="p">)</span>
+    <span class="n">mark2</span> <span class="o">=</span> <span class="n">mark_background</span><span class="p">(</span><span class="n">threshold</span><span class="p">,</span> <span class="n">list_img2</span><span class="p">,</span> <span class="s2">&quot;mark2.bmp&quot;</span><span class="p">)</span>
+    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;[DONE]&quot;</span><span class="p">)</span>
+    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;computing boundary&quot;</span><span class="p">)</span>
+    <span class="nb">print</span><span class="p">((</span><span class="n">mark2</span><span class="o">.</span><span class="n">shape</span><span class="p">))</span>
+    <span class="n">list_bound</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">mark1</span><span class="o">.</span><span class="n">shape</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">int32</span><span class="p">)</span>
+    <span class="k">for</span> <span class="n">I</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">list_bound</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]):</span>
+        <span class="nb">print</span><span class="p">((</span><span class="s2">&quot;bound row &quot;</span><span class="p">,</span> <span class="n">I</span><span class="p">,</span> <span class="s2">&quot; / &quot;</span><span class="p">,</span> <span class="n">mark1</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]))</span>
+        <span class="k">for</span> <span class="n">J</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">list_bound</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]):</span>
+            <span class="n">list_bound</span><span class="p">[</span><span class="n">I</span><span class="p">,</span> <span class="n">J</span><span class="p">]</span> <span class="o">=</span> <span class="mi">0</span>
+            <span class="k">if</span> <span class="n">mark1</span><span class="p">[</span><span class="n">I</span><span class="p">,</span> <span class="n">J</span><span class="p">]</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+                <span class="n">list_bound</span><span class="p">[</span><span class="n">I</span><span class="p">,</span> <span class="n">J</span><span class="p">]</span> <span class="o">=</span> <span class="mi">125</span>
+            <span class="k">if</span> <span class="p">(</span>
+                <span class="n">I</span> <span class="o">&gt;</span> <span class="mi">1</span>
+                <span class="ow">and</span> <span class="n">J</span> <span class="o">&gt;</span> <span class="mi">1</span>
+                <span class="ow">and</span> <span class="n">I</span> <span class="o">&lt;</span> <span class="n">list_bound</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">-</span> <span class="mi">2</span>
+                <span class="ow">and</span> <span class="n">J</span> <span class="o">&lt;</span> <span class="n">list_bound</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">-</span> <span class="mi">2</span>
+            <span class="p">):</span>
+                <span class="k">for</span> <span class="n">K</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">5</span><span class="p">):</span>
+                    <span class="k">for</span> <span class="n">L</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">5</span><span class="p">):</span>
+                        <span class="k">if</span> <span class="n">mark1</span><span class="p">[</span><span class="n">I</span> <span class="o">-</span> <span class="mi">2</span> <span class="o">+</span> <span class="n">K</span><span class="p">,</span> <span class="n">J</span> <span class="o">-</span> <span class="mi">2</span> <span class="o">+</span> <span class="n">L</span><span class="p">]</span> <span class="o">!=</span> <span class="n">mark2</span><span class="p">[</span><span class="n">I</span> <span class="o">-</span> <span class="mi">2</span> <span class="o">+</span> <span class="n">K</span><span class="p">,</span> <span class="n">J</span> <span class="o">-</span> <span class="mi">2</span> <span class="o">+</span> <span class="n">L</span><span class="p">]:</span>
+                            <span class="n">list_bound</span><span class="p">[</span><span class="n">I</span><span class="p">,</span> <span class="n">J</span><span class="p">]</span> <span class="o">=</span> <span class="mi">255</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">list_bound</span><span class="p">[</span><span class="n">I</span><span class="p">,</span> <span class="n">J</span><span class="p">]</span> <span class="o">=</span> <span class="mi">255</span>
+            <span class="n">f</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">I</span><span class="p">)</span> <span class="o">+</span> <span class="s2">&quot;</span><span class="se">\t</span><span class="s2">&quot;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">J</span><span class="p">)</span> <span class="o">+</span> <span class="s2">&quot;</span><span class="se">\t</span><span class="s2">&quot;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">list_bound</span><span class="p">[</span><span class="n">I</span><span class="p">,</span> <span class="n">J</span><span class="p">])</span> <span class="o">+</span> <span class="s2">&quot;</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">)</span>
+    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;[DONE]&quot;</span><span class="p">)</span>
+    <span class="n">f</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+    <span class="n">imsave</span><span class="p">(</span><span class="n">picname</span><span class="p">,</span> <span class="n">list_bound</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">list_bound</span></div>
+
+
+<div class="viewcode-block" id="save"><a class="viewcode-back" href="../../src/openpiv.html#openpiv.tools.save">[docs]</a><span class="k">def</span> <span class="nf">save</span><span class="p">(</span>
+    <span class="n">x</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span>
+    <span class="n">y</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span>
+    <span class="n">u</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span>
+    <span class="n">v</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> 
+    <span class="n">mask</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span>
+    <span class="n">filename</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="n">pathlib</span><span class="o">.</span><span class="n">Path</span><span class="p">,</span><span class="nb">str</span><span class="p">],</span> 
+    <span class="n">fmt</span><span class="p">:</span> <span class="nb">str</span><span class="o">=</span><span class="s2">&quot;</span><span class="si">%8.4f</span><span class="s2">&quot;</span><span class="p">,</span> 
+    <span class="n">delimiter</span><span class="p">:</span> <span class="nb">str</span><span class="o">=</span><span class="s2">&quot;</span><span class="se">\t</span><span class="s2">&quot;</span><span class="p">,</span>
+    <span class="p">)</span><span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+    <span class="sd">&quot;&quot;&quot;Save flow field to an ascii file.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    x : 2d np.ndarray</span>
+<span class="sd">        a two dimensional array containing the x coordinates of the</span>
+<span class="sd">        interrogation window centers, in pixels.</span>
+
+<span class="sd">    y : 2d np.ndarray</span>
+<span class="sd">        a two dimensional array containing the y coordinates of the</span>
+<span class="sd">        interrogation window centers, in pixels.</span>
+
+<span class="sd">    u : 2d np.ndarray</span>
+<span class="sd">        a two dimensional array containing the u velocity components,</span>
+<span class="sd">        in pixels/seconds.</span>
+
+<span class="sd">    v : 2d np.ndarray</span>
+<span class="sd">        a two dimensional array containing the v velocity components,</span>
+<span class="sd">        in pixels/seconds.</span>
+
+<span class="sd">    mask : 2d np.ndarray</span>
+<span class="sd">        a two dimensional boolen array where elements corresponding to</span>
+<span class="sd">        invalid vectors are True.</span>
+
+<span class="sd">    filename : string</span>
+<span class="sd">        the path of the file where to save the flow field</span>
+
+<span class="sd">    fmt : string</span>
+<span class="sd">        a format string. See documentation of numpy.savetxt</span>
+<span class="sd">        for more details.</span>
+
+<span class="sd">    delimiter : string</span>
+<span class="sd">        character separating columns</span>
+
+<span class="sd">    Examples</span>
+<span class="sd">    --------</span>
+
+<span class="sd">    openpiv.tools.save( x, y, u, v, &#39;field_001.txt&#39;, fmt=&#39;%6.3f&#39;,</span>
+<span class="sd">                        delimiter=&#39;\t&#39;)</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">u</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">ma</span><span class="o">.</span><span class="n">MaskedArray</span><span class="p">):</span>
+        <span class="n">u</span> <span class="o">=</span> <span class="n">u</span><span class="o">.</span><span class="n">filled</span><span class="p">(</span><span class="mf">0.</span><span class="p">)</span>
+        <span class="n">v</span> <span class="o">=</span> <span class="n">v</span><span class="o">.</span><span class="n">filled</span><span class="p">(</span><span class="mf">0.</span><span class="p">)</span>
+
+    <span class="c1"># build output array</span>
+    <span class="n">out</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">vstack</span><span class="p">([</span><span class="n">m</span><span class="o">.</span><span class="n">flatten</span><span class="p">()</span> <span class="k">for</span> <span class="n">m</span> <span class="ow">in</span> <span class="p">[</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">u</span><span class="p">,</span> <span class="n">v</span><span class="p">,</span> <span class="n">mask</span><span class="p">]])</span>
+
+    <span class="c1"># save data to file.</span>
+    <span class="n">np</span><span class="o">.</span><span class="n">savetxt</span><span class="p">(</span>
+        <span class="n">filename</span><span class="p">,</span>
+        <span class="n">out</span><span class="o">.</span><span class="n">T</span><span class="p">,</span>
+        <span class="n">fmt</span><span class="o">=</span><span class="n">fmt</span><span class="p">,</span>
+        <span class="n">delimiter</span><span class="o">=</span><span class="n">delimiter</span><span class="p">,</span>
+        <span class="n">header</span><span class="o">=</span><span class="s2">&quot;x&quot;</span>
+        <span class="o">+</span> <span class="n">delimiter</span>
+        <span class="o">+</span> <span class="s2">&quot;y&quot;</span>
+        <span class="o">+</span> <span class="n">delimiter</span>
+        <span class="o">+</span> <span class="s2">&quot;u&quot;</span>
+        <span class="o">+</span> <span class="n">delimiter</span>
+        <span class="o">+</span> <span class="s2">&quot;v&quot;</span>
+        <span class="o">+</span> <span class="n">delimiter</span>
+        <span class="o">+</span> <span class="s2">&quot;mask&quot;</span><span class="p">,</span>
+    <span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="display"><a class="viewcode-back" href="../../src/openpiv.html#openpiv.tools.display">[docs]</a><span class="k">def</span> <span class="nf">display</span><span class="p">(</span><span class="n">message</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Display a message to standard output.</span>
+<span class="sd">    </span>
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    message : string</span>
+<span class="sd">        a message to be printed</span>
+<span class="sd">    </span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">sys</span><span class="o">.</span><span class="n">stdout</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">message</span><span class="p">)</span>
+    <span class="n">sys</span><span class="o">.</span><span class="n">stdout</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">)</span>
+    <span class="n">sys</span><span class="o">.</span><span class="n">stdout</span><span class="o">.</span><span class="n">flush</span><span class="p">()</span></div>
+
+
+<div class="viewcode-block" id="Multiprocesser"><a class="viewcode-back" href="../../src/openpiv.html#openpiv.tools.Multiprocesser">[docs]</a><span class="k">class</span> <span class="nc">Multiprocesser</span><span class="p">:</span>
+<div class="viewcode-block" id="Multiprocesser.__init__"><a class="viewcode-back" href="../../src/generated/openpiv.tools.Multiprocesser.html#openpiv.tools.Multiprocesser.__init__">[docs]</a>    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span>
+    <span class="n">data_dir</span><span class="p">:</span> <span class="n">pathlib</span><span class="o">.</span><span class="n">Path</span><span class="p">,</span>
+    <span class="n">pattern_a</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+    <span class="n">pattern_b</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+    <span class="p">)</span><span class="o">-&gt;</span><span class="kc">None</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;A class to handle and process large sets of images.</span>
+
+<span class="sd">        This class is responsible of loading image datasets</span>
+<span class="sd">        and processing them. It has parallelization facilities</span>
+<span class="sd">        to speed up the computation on multicore machines.</span>
+<span class="sd">        </span>
+<span class="sd">        It currently support only image pair obtained from </span>
+<span class="sd">        conventional double pulse piv acquisition. Support </span>
+<span class="sd">        for continuos time resolved piv acquistion is in the </span>
+<span class="sd">        future.</span>
+<span class="sd">        </span>
+<span class="sd">        </span>
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        data_dir : str</span>
+<span class="sd">            the path where image files are located </span>
+<span class="sd">            </span>
+<span class="sd">        pattern_a : str</span>
+<span class="sd">            a shell glob pattern to match the first (A) frames.</span>
+<span class="sd">            </span>
+<span class="sd">        pattern_b : str</span>
+<span class="sd">            a shell glob pattern to match the second (B) frames. </span>
+<span class="sd">            </span>
+<span class="sd">        Options: </span>
+<span class="sd">                pattern_a = &#39;image_*_a.bmp&#39;</span>
+<span class="sd">                pattern_b = &#39;image_*_b.bmp&#39;</span>
+
+<span class="sd">            or</span>
+<span class="sd">                pattern_a = &#39;000*.tif&#39;</span>
+<span class="sd">                pattern_b = &#39;(1+2),(2+3)&#39;</span>
+<span class="sd">                will create PIV of these pairs: 0001.tif+0002.tif, 0002.tif+0003.tif ...</span>
+<span class="sd">            or</span>
+<span class="sd">                pattern_a = &#39;000*.tif&#39;</span>
+<span class="sd">                pattern_b = &#39;(1+3),(2+4)&#39;</span>
+<span class="sd">                will create PIV of these pairs: 0001.tif+0003.tif, 0002.tif+0004.tif ...</span>
+<span class="sd">            or</span>
+<span class="sd">                pattern_a = &#39;000*.tif&#39;</span>
+<span class="sd">                pattern_b = &#39;(1+2),(3+4)&#39;</span>
+<span class="sd">                will create PIV of these pairs: 0001.tif+0002.tif, 0003.tif+0004.tif ...           </span>
+<span class="sd">          </span>
+
+<span class="sd">        Examples</span>
+<span class="sd">        --------</span>
+<span class="sd">        &gt;&gt;&gt; multi = openpiv.tools.Multiprocesser( &#39;/home/user/images&#39;, &#39;image_*_a.bmp&#39;, &#39;image_*_b.bmp&#39;)</span>
+<span class="sd">    </span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="c1"># load lists of images</span>
+
+        <span class="nb">print</span><span class="p">(</span><span class="n">data_dir</span><span class="p">)</span>
+        <span class="nb">print</span><span class="p">(</span><span class="n">pattern_a</span><span class="p">)</span>
+        <span class="nb">print</span><span class="p">(</span><span class="n">data_dir</span><span class="o">.</span><span class="n">exists</span><span class="p">())</span>
+        <span class="nb">print</span><span class="p">(</span><span class="nb">sorted</span><span class="p">(</span><span class="n">data_dir</span><span class="o">.</span><span class="n">glob</span><span class="p">(</span><span class="n">pattern_a</span><span class="p">)))</span>
+        
+        <span class="bp">self</span><span class="o">.</span><span class="n">files_a</span> <span class="o">=</span> <span class="n">natural_sort</span><span class="p">(</span><span class="nb">list</span><span class="p">(</span><span class="n">data_dir</span><span class="o">.</span><span class="n">glob</span><span class="p">(</span><span class="n">pattern_a</span><span class="p">)))</span>
+
+        <span class="k">if</span> <span class="n">pattern_b</span> <span class="o">==</span> <span class="s1">&#39;(1+2),(2+3)&#39;</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">files_b</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">files_a</span><span class="p">[</span><span class="mi">1</span><span class="p">:]</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">files_a</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">files_a</span><span class="p">[:</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+        <span class="k">elif</span> <span class="n">pattern_b</span> <span class="o">==</span> <span class="s1">&#39;(1+3),(2+4)&#39;</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">files_b</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">files_a</span><span class="p">[</span><span class="mi">2</span><span class="p">:]</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">files_a</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">files_a</span><span class="p">[:</span><span class="o">-</span><span class="mi">2</span><span class="p">]</span>
+        <span class="k">elif</span> <span class="n">pattern_b</span> <span class="o">==</span> <span class="s1">&#39;(1+2),(3+4)&#39;</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">files_b</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">files_a</span><span class="p">[</span><span class="mi">1</span><span class="p">::</span><span class="mi">2</span><span class="p">]</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">files_a</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">files_a</span><span class="p">[</span><span class="mi">0</span><span class="p">::</span><span class="mi">2</span><span class="p">]</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">files_b</span> <span class="o">=</span> <span class="nb">sorted</span><span class="p">(</span><span class="n">data_dir</span><span class="o">.</span><span class="n">glob</span><span class="p">(</span><span class="n">pattern_b</span><span class="p">))</span>
+
+        <span class="c1"># number of images</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">n_files</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">files_a</span><span class="p">)</span>
+
+        <span class="c1"># check if everything was fine</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">files_a</span><span class="p">)</span> <span class="o">==</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">files_b</span><span class="p">):</span>
+            <span class="nb">print</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">files_a</span><span class="p">)</span>
+            <span class="nb">print</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">files_b</span><span class="p">)</span>
+            
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                <span class="s1">&#39;Something failed loading the image file. There should be an equal number of &quot;a&quot; and &quot;b&quot; files.&#39;</span>
+            <span class="p">)</span>
+
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">files_a</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                <span class="s2">&quot;Something failed loading the image file. No images were found. Please check directory and image template name.&quot;</span>
+            <span class="p">)</span></div>
+
+<div class="viewcode-block" id="Multiprocesser.run"><a class="viewcode-back" href="../../src/openpiv.html#openpiv.tools.Multiprocesser.run">[docs]</a>    <span class="k">def</span> <span class="nf">run</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">func</span><span class="p">,</span> <span class="n">n_cpus</span><span class="o">=</span><span class="mi">1</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Start to process images.</span>
+<span class="sd">        </span>
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        </span>
+<span class="sd">        func : python function which will be executed for each </span>
+<span class="sd">            image pair. See tutorial for more details.</span>
+<span class="sd">        </span>
+<span class="sd">        n_cpus : int</span>
+<span class="sd">            the number of processes to launch in parallel.</span>
+<span class="sd">            For debugging purposes use n_cpus=1</span>
+<span class="sd">        </span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="c1"># create a list of tasks to be executed.</span>
+        <span class="n">image_pairs</span> <span class="o">=</span> <span class="p">[</span>
+            <span class="p">(</span><span class="n">file_a</span><span class="p">,</span> <span class="n">file_b</span><span class="p">,</span> <span class="n">i</span><span class="p">)</span>
+            <span class="k">for</span> <span class="n">file_a</span><span class="p">,</span> <span class="n">file_b</span><span class="p">,</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">files_a</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">files_b</span><span class="p">,</span> <span class="nb">range</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">n_files</span><span class="p">)</span>
+            <span class="p">)</span>
+        <span class="p">]</span>
+
+        <span class="c1"># for debugging purposes always use n_cpus = 1,</span>
+        <span class="c1"># since it is difficult to debug multiprocessing stuff.</span>
+        <span class="k">if</span> <span class="n">n_cpus</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="n">pool</span> <span class="o">=</span> <span class="n">multiprocessing</span><span class="o">.</span><span class="n">Pool</span><span class="p">(</span><span class="n">processes</span><span class="o">=</span><span class="n">n_cpus</span><span class="p">)</span>
+            <span class="n">res</span> <span class="o">=</span> <span class="n">pool</span><span class="o">.</span><span class="n">map</span><span class="p">(</span><span class="n">func</span><span class="p">,</span> <span class="n">image_pairs</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">for</span> <span class="n">image_pair</span> <span class="ow">in</span> <span class="n">image_pairs</span><span class="p">:</span>
+                <span class="n">func</span><span class="p">(</span><span class="n">image_pair</span><span class="p">)</span></div></div>
+
+
+<div class="viewcode-block" id="negative"><a class="viewcode-back" href="../../src/openpiv.html#openpiv.tools.negative">[docs]</a><span class="k">def</span> <span class="nf">negative</span><span class="p">(</span><span class="n">image</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot; Return the negative of an image</span>
+<span class="sd">    </span>
+<span class="sd">    Parameter</span>
+<span class="sd">    ----------</span>
+<span class="sd">    image : 2d np.ndarray of grey levels</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    (255-image) : 2d np.ndarray of grey levels</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">return</span> <span class="mi">255</span> <span class="o">-</span> <span class="n">image</span></div>
+
+
+<div class="viewcode-block" id="display_windows_sampling"><a class="viewcode-back" href="../../src/openpiv.html#openpiv.tools.display_windows_sampling">[docs]</a><span class="k">def</span> <span class="nf">display_windows_sampling</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">window_size</span><span class="p">,</span> <span class="n">skip</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">method</span><span class="o">=</span><span class="s2">&quot;standard&quot;</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot; Displays a map of the interrogation points and windows</span>
+<span class="sd">    </span>
+<span class="sd">    </span>
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    x : 2d np.ndarray</span>
+<span class="sd">        a two dimensional array containing the x coordinates of the </span>
+<span class="sd">        interrogation window centers, in pixels.</span>
+<span class="sd">        </span>
+<span class="sd">    y : 2d np.ndarray</span>
+<span class="sd">        a two dimensional array containing the y coordinates of the </span>
+<span class="sd">        interrogation window centers, in pixels.</span>
+
+<span class="sd">    window_size : the interrogation window size, in pixels</span>
+<span class="sd">    </span>
+<span class="sd">    skip : the number of windows to skip on a row during display. </span>
+<span class="sd">           Recommended value is 0 or 1 for standard method, can be more for random method</span>
+<span class="sd">           -1 to not show any window</span>
+
+<span class="sd">    method : can be only &lt;standard&gt; (uniform sampling and constant window size)</span>
+<span class="sd">                         &lt;random&gt; (pick randomly some windows)</span>
+<span class="sd">    </span>
+<span class="sd">    Examples</span>
+<span class="sd">    --------</span>
+<span class="sd">    </span>
+<span class="sd">    &gt;&gt;&gt; openpiv.tools.display_windows_sampling(x, y, window_size=32, skip=0, method=&#39;standard&#39;)</span>
+
+<span class="sd">    </span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">fig</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">figure</span><span class="p">()</span>
+    <span class="k">if</span> <span class="n">skip</span> <span class="o">&lt;</span> <span class="mi">0</span> <span class="ow">or</span> <span class="n">skip</span> <span class="o">+</span> <span class="mi">1</span> <span class="o">&gt;</span> <span class="nb">len</span><span class="p">(</span><span class="n">x</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span> <span class="o">*</span> <span class="nb">len</span><span class="p">(</span><span class="n">y</span><span class="p">):</span>
+        <span class="n">fig</span><span class="o">.</span><span class="n">canvas</span><span class="o">.</span><span class="n">set_window_title</span><span class="p">(</span><span class="s2">&quot;interrogation points map&quot;</span><span class="p">)</span>
+        <span class="n">plt</span><span class="o">.</span><span class="n">scatter</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="s2">&quot;g&quot;</span><span class="p">)</span>  <span class="c1"># plot interrogation locations</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">nb_windows</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">x</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span> <span class="o">*</span> <span class="nb">len</span><span class="p">(</span><span class="n">y</span><span class="p">)</span> <span class="o">/</span> <span class="p">(</span><span class="n">skip</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span>
+        <span class="c1"># standard method --&gt; display uniformly picked windows</span>
+        <span class="k">if</span> <span class="n">method</span> <span class="o">==</span> <span class="s2">&quot;standard&quot;</span><span class="p">:</span>
+            <span class="n">plt</span><span class="o">.</span><span class="n">scatter</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="s2">&quot;g&quot;</span><span class="p">)</span>  <span class="c1"># plot interrogation locations (green dots)</span>
+            <span class="n">fig</span><span class="o">.</span><span class="n">canvas</span><span class="o">.</span><span class="n">set_window_title</span><span class="p">(</span><span class="s2">&quot;interrogation window map&quot;</span><span class="p">)</span>
+            <span class="c1"># plot the windows as red squares</span>
+            <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">x</span><span class="p">[</span><span class="mi">0</span><span class="p">])):</span>
+                <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">y</span><span class="p">)):</span>
+                    <span class="k">if</span> <span class="n">j</span> <span class="o">%</span> <span class="mi">2</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+                        <span class="k">if</span> <span class="n">i</span> <span class="o">%</span> <span class="p">(</span><span class="n">skip</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+                            <span class="n">x1</span> <span class="o">=</span> <span class="n">x</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="n">i</span><span class="p">]</span> <span class="o">-</span> <span class="n">window_size</span> <span class="o">/</span> <span class="mi">2</span>
+                            <span class="n">y1</span> <span class="o">=</span> <span class="n">y</span><span class="p">[</span><span class="n">j</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span> <span class="o">-</span> <span class="n">window_size</span> <span class="o">/</span> <span class="mi">2</span>
+                            <span class="n">plt</span><span class="o">.</span><span class="n">gca</span><span class="p">()</span><span class="o">.</span><span class="n">add_patch</span><span class="p">(</span>
+                                <span class="n">pt</span><span class="o">.</span><span class="n">Rectangle</span><span class="p">(</span>
+                                    <span class="p">(</span><span class="n">x1</span><span class="p">,</span> <span class="n">y1</span><span class="p">),</span>
+                                    <span class="n">window_size</span><span class="p">,</span>
+                                    <span class="n">window_size</span><span class="p">,</span>
+                                    <span class="n">facecolor</span><span class="o">=</span><span class="s2">&quot;r&quot;</span><span class="p">,</span>
+                                    <span class="n">alpha</span><span class="o">=</span><span class="mf">0.5</span><span class="p">,</span>
+                                <span class="p">)</span>
+                            <span class="p">)</span>
+                    <span class="k">else</span><span class="p">:</span>
+                        <span class="k">if</span> <span class="n">i</span> <span class="o">%</span> <span class="p">(</span><span class="n">skip</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span> <span class="o">==</span> <span class="mi">1</span> <span class="ow">or</span> <span class="n">skip</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+                            <span class="n">x1</span> <span class="o">=</span> <span class="n">x</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="n">i</span><span class="p">]</span> <span class="o">-</span> <span class="n">window_size</span> <span class="o">/</span> <span class="mi">2</span>
+                            <span class="n">y1</span> <span class="o">=</span> <span class="n">y</span><span class="p">[</span><span class="n">j</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span> <span class="o">-</span> <span class="n">window_size</span> <span class="o">/</span> <span class="mi">2</span>
+                            <span class="n">plt</span><span class="o">.</span><span class="n">gca</span><span class="p">()</span><span class="o">.</span><span class="n">add_patch</span><span class="p">(</span>
+                                <span class="n">pt</span><span class="o">.</span><span class="n">Rectangle</span><span class="p">(</span>
+                                    <span class="p">(</span><span class="n">x1</span><span class="p">,</span> <span class="n">y1</span><span class="p">),</span>
+                                    <span class="n">window_size</span><span class="p">,</span>
+                                    <span class="n">window_size</span><span class="p">,</span>
+                                    <span class="n">facecolor</span><span class="o">=</span><span class="s2">&quot;r&quot;</span><span class="p">,</span>
+                                    <span class="n">alpha</span><span class="o">=</span><span class="mf">0.5</span><span class="p">,</span>
+                                <span class="p">)</span>
+                            <span class="p">)</span>
+        <span class="c1"># random method --&gt; display randomly picked windows</span>
+        <span class="k">elif</span> <span class="n">method</span> <span class="o">==</span> <span class="s2">&quot;random&quot;</span><span class="p">:</span>
+            <span class="n">plt</span><span class="o">.</span><span class="n">scatter</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="s2">&quot;g&quot;</span><span class="p">)</span>  <span class="c1"># plot interrogation locations</span>
+            <span class="n">fig</span><span class="o">.</span><span class="n">canvas</span><span class="o">.</span><span class="n">set_window_title</span><span class="p">(</span>
+                <span class="s2">&quot;interrogation window map, showing randomly &quot;</span>
+                <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">nb_windows</span><span class="p">)</span>
+                <span class="o">+</span> <span class="s2">&quot; windows&quot;</span>
+            <span class="p">)</span>
+            <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">nb_windows</span><span class="p">):</span>
+                <span class="n">k</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">randint</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">x</span><span class="p">[</span><span class="mi">0</span><span class="p">]))</span>  <span class="c1"># pick a row and column index</span>
+                <span class="n">l</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">randint</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">y</span><span class="p">))</span>
+                <span class="n">x1</span> <span class="o">=</span> <span class="n">x</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="n">k</span><span class="p">]</span> <span class="o">-</span> <span class="n">window_size</span> <span class="o">/</span> <span class="mi">2</span>
+                <span class="n">y1</span> <span class="o">=</span> <span class="n">y</span><span class="p">[</span><span class="n">l</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span> <span class="o">-</span> <span class="n">window_size</span> <span class="o">/</span> <span class="mi">2</span>
+                <span class="n">plt</span><span class="o">.</span><span class="n">gca</span><span class="p">()</span><span class="o">.</span><span class="n">add_patch</span><span class="p">(</span>
+                    <span class="n">pt</span><span class="o">.</span><span class="n">Rectangle</span><span class="p">(</span>
+                        <span class="p">(</span><span class="n">x1</span><span class="p">,</span> <span class="n">y1</span><span class="p">),</span> <span class="n">window_size</span><span class="p">,</span> <span class="n">window_size</span><span class="p">,</span> <span class="n">facecolor</span><span class="o">=</span><span class="s2">&quot;r&quot;</span><span class="p">,</span> <span class="n">alpha</span><span class="o">=</span><span class="mf">0.5</span>
+                    <span class="p">)</span>
+                <span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;method not valid: choose between standard and random&quot;</span><span class="p">)</span>
+    <span class="n">plt</span><span class="o">.</span><span class="n">draw</span><span class="p">()</span>
+    <span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span></div>
+
+
+<div class="viewcode-block" id="transform_coordinates"><a class="viewcode-back" href="../../src/openpiv.html#openpiv.tools.transform_coordinates">[docs]</a><span class="k">def</span> <span class="nf">transform_coordinates</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">u</span><span class="p">,</span> <span class="n">v</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot; Converts coordinate systems from/to the image based / physical based </span>
+<span class="sd">    </span>
+<span class="sd">    Input/Output: x,y,u,v</span>
+
+<span class="sd">        image based is 0,0 top left, x = columns to the right, y = rows downwards</span>
+<span class="sd">        and so u,v </span>
+
+<span class="sd">        physical or right hand one is that leads to the positive vorticity with </span>
+<span class="sd">        the 0,0 origin at bottom left to be counterclockwise</span>
+<span class="sd">    </span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">y</span> <span class="o">=</span> <span class="n">y</span><span class="p">[::</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="p">:]</span>
+    <span class="n">v</span> <span class="o">*=</span> <span class="o">-</span><span class="mi">1</span>
+    <span class="k">return</span> <span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">u</span><span class="p">,</span> <span class="n">v</span></div>
+        
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2014, OpenPIV group.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

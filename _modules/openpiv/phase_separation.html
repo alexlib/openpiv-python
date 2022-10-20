@@ -1,0 +1,565 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>openpiv.phase_separation &mdash; OpenPIV  documentation</title>
+      <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="../../_static/css/theme.css" type="text/css" />
+  <!--[if lt IE 9]>
+    <script src="../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script data-url_root="../../" id="documentation_options" src="../../_static/documentation_options.js"></script>
+        <script src="../../_static/jquery.js"></script>
+        <script src="../../_static/underscore.js"></script>
+        <script src="../../_static/_sphinx_javascript_frameworks_compat.js"></script>
+        <script src="../../_static/doctools.js"></script>
+        <script src="../../_static/sphinx_highlight.js"></script>
+        <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+    <script src="../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+            <a href="../../index.html" class="icon icon-home"> OpenPIV
+          </a>
+              <div class="version">
+                0.24.0
+              </div>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul>
+<li class="toctree-l1"><a class="reference internal" href="../../src/piv_basics.html">Basics of the PIV algorithms</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../src/installation_instruction.html">Installation instruction</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../src/tutorial1.html">OpenPIV tutorial</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../src/windef.html">Multi-grid window deformation algorithm tutorial</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../src/masking.html">OpenPIV masking tutorial</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../src/developers.html">Information for developers and contributors</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../src/api_reference.html">API reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../src/faq.html">Frequently Asked Questions about PIV parameters</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../index.html">OpenPIV</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../index.html" class="icon icon-home"></a> &raquo;</li>
+          <li><a href="../index.html">Module code</a> &raquo;</li>
+          <li><a href="../openpiv.html">openpiv</a> &raquo;</li>
+      <li>openpiv.phase_separation</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for openpiv.phase_separation</h1><div class="highlight"><pre>
+<span></span><span class="sd">&quot;&quot;&quot;A module for separating solid phase from liquid tracers using image processing techniques.&quot;&quot;&quot;</span>
+
+<span class="n">__licence__</span> <span class="o">=</span> <span class="s2">&quot;&quot;&quot;</span>
+<span class="s2">Copyright (C) 2011  www.openpiv.net</span>
+
+<span class="s2">This program is free software: you can redistribute it and/or modify</span>
+<span class="s2">it under the terms of the GNU General Public License as published by</span>
+<span class="s2">the Free Software Foundation, either version 3 of the License, or</span>
+<span class="s2">(at your option) any later version.</span>
+
+<span class="s2">This program is distributed in the hope that it will be useful,</span>
+<span class="s2">but WITHOUT ANY WARRANTY; without even the implied warranty of</span>
+<span class="s2">MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the</span>
+<span class="s2">GNU General Public License for more details.</span>
+
+<span class="s2">You should have received a copy of the GNU General Public License</span>
+<span class="s2">along with this program.  If not, see &lt;http://www.gnu.org/licenses/&gt;.</span>
+<span class="s2">&quot;&quot;&quot;</span>
+
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">import</span> <span class="nn">scipy.ndimage</span>
+<span class="kn">from</span> <span class="nn">skimage.morphology</span> <span class="kn">import</span> <span class="n">disk</span><span class="p">,</span> <span class="n">erosion</span><span class="p">,</span> <span class="n">dilation</span><span class="p">,</span> <span class="n">opening</span>
+<span class="kn">from</span> <span class="nn">skimage.measure</span> <span class="kn">import</span> <span class="n">label</span>
+
+
+<div class="viewcode-block" id="opening_method"><a class="viewcode-back" href="../../src/openpiv.html#openpiv.phase_separation.opening_method">[docs]</a><span class="k">def</span> <span class="nf">opening_method</span><span class="p">(</span><span class="n">original_image</span><span class="p">,</span> <span class="n">kernel_size</span><span class="p">,</span> <span class="n">iterations</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">thresh_factor</span><span class="o">=</span><span class="mf">1.1</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Extract separated images based on particle size.</span>
+
+<span class="sd">    This method uses an *erosion* filter followed by a *dilation* (aka *opening*), to remove</span>
+<span class="sd">    small particle traces, leaving only bigger particles in the image.</span>
+
+<span class="sd">    The image of small particles is also generated by using the big particles</span>
+<span class="sd">    image as a mask on the original image. A threshold process is used to </span>
+<span class="sd">    intensify the edges of particles in the mask.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    original_image : np.ndarray</span>
+<span class="sd">        Original two-phase input image</span>
+
+<span class="sd">    kernel_size : int</span>
+<span class="sd">        Erosion/dilation stencil width</span>
+
+<span class="sd">    iterations : int</span>
+<span class="sd">        Erosion iterations, default = 1</span>
+
+<span class="sd">    thresh_factor : float</span>
+<span class="sd">        Used to mask big particles, default = 1.1</span>
+<span class="sd">        Mask condition is defined as :</span>
+<span class="sd">            pixel value &gt; thresh_factor * local average intensity</span>
+
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    big_particles_img : np.ndarray</span>
+<span class="sd">        Extracted image of the phase with bigger particles (dispersed phase)</span>
+
+<span class="sd">    small_particles_img : np.ndarray</span>
+<span class="sd">        Extracted image of the phase with smaller particles (carrier phase)</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">kernel_size</span> <span class="o">%</span> <span class="mi">2</span> <span class="o">!=</span> <span class="mi">1</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">Exception</span><span class="p">(</span><span class="s2">&quot;kernel_size must be an odd number&quot;</span><span class="p">)</span>
+
+    <span class="c1"># Apply opening filter, resulting big particles image</span>
+    <span class="n">kernel</span> <span class="o">=</span> <span class="n">disk</span><span class="p">((</span><span class="n">kernel_size</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)</span> <span class="o">/</span> <span class="mi">2</span><span class="p">)</span>
+    <span class="n">temp_image</span> <span class="o">=</span> <span class="n">original_image</span>
+    <span class="k">for</span> <span class="n">_</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">iterations</span><span class="p">):</span>
+        <span class="n">temp_image</span> <span class="o">=</span> <span class="n">erosion</span><span class="p">(</span><span class="n">temp_image</span><span class="p">,</span> <span class="n">kernel</span><span class="p">)</span>
+    <span class="k">for</span> <span class="n">_</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">iterations</span><span class="p">):</span>
+        <span class="n">temp_image</span> <span class="o">=</span> <span class="n">dilation</span><span class="p">(</span><span class="n">temp_image</span><span class="p">,</span> <span class="n">kernel</span><span class="p">)</span>
+    <span class="n">big_particles_img</span> <span class="o">=</span> <span class="n">temp_image</span>
+
+    <span class="c1"># Find local average intensity</span>
+    <span class="n">averaging_kernel_size</span> <span class="o">=</span> <span class="mi">3</span> <span class="o">*</span> <span class="n">kernel_size</span>
+    <span class="n">local_average</span> <span class="o">=</span> <span class="n">scipy</span><span class="o">.</span><span class="n">ndimage</span><span class="o">.</span><span class="n">gaussian_filter</span><span class="p">(</span><span class="n">original_image</span><span class="p">,</span> <span class="n">averaging_kernel_size</span><span class="p">)</span>
+
+    <span class="c1"># Find big particles mask</span>
+    <span class="n">mask</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">big_particles_img</span> <span class="o">&gt;=</span> <span class="n">thresh_factor</span> <span class="o">*</span> <span class="n">local_average</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+
+    <span class="c1"># Estimate local background intensity (used to replace big particles)</span>
+    <span class="c1">## Normalized convolution is used to approximate local background intensity from the original image.</span>
+    <span class="c1">## Plain blur would return a high background intensity near big particles, which is not desired.</span>
+    <span class="c1">## See http://homepages.inf.ed.ac.uk/rbf/CVonline/LOCAL_COPIES/PIRODDI1/NormConv/NormConv.html</span>
+    <span class="c1">## Uniform filter is used for efficiency, due to the large kernel size.</span>
+    <span class="n">estimated_background_intensity</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">divide</span><span class="p">(</span>
+        <span class="n">scipy</span><span class="o">.</span><span class="n">ndimage</span><span class="o">.</span><span class="n">uniform_filter</span><span class="p">(</span><span class="n">mask</span> <span class="o">*</span> <span class="n">original_image</span><span class="p">,</span> <span class="n">averaging_kernel_size</span><span class="p">),</span>
+        <span class="n">scipy</span><span class="o">.</span><span class="n">ndimage</span><span class="o">.</span><span class="n">uniform_filter</span><span class="p">(</span><span class="n">mask</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">),</span> <span class="n">averaging_kernel_size</span><span class="p">),</span>
+        <span class="n">where</span><span class="o">=</span><span class="n">scipy</span><span class="o">.</span><span class="n">ndimage</span><span class="o">.</span><span class="n">uniform_filter</span><span class="p">(</span>
+            <span class="n">mask</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">),</span> <span class="n">averaging_kernel_size</span>
+        <span class="p">)</span>
+        <span class="o">!=</span> <span class="mi">0</span><span class="p">,</span>
+        <span class="n">out</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">zeros_like</span><span class="p">(</span><span class="n">original_image</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">),</span>
+    <span class="p">)</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">uint8</span><span class="p">)</span>
+
+    <span class="c1"># Generate small particles image</span>
+    <span class="n">small_particles_img</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">where</span><span class="p">(</span>
+        <span class="n">mask</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">,</span> <span class="n">original_image</span><span class="p">,</span> <span class="n">estimated_background_intensity</span>
+    <span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">big_particles_img</span><span class="p">,</span> <span class="n">small_particles_img</span></div>
+
+
+<div class="viewcode-block" id="median_filter_method"><a class="viewcode-back" href="../../src/openpiv.html#openpiv.phase_separation.median_filter_method">[docs]</a><span class="k">def</span> <span class="nf">median_filter_method</span><span class="p">(</span><span class="n">original_image</span><span class="p">,</span> <span class="n">kernel_size</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Extract separated images using a median filter</span>
+<span class="sd">    </span>
+<span class="sd">    Proposed by Kiger &amp; Pan. Original paper:</span>
+
+<span class="sd">    Kiger, K. T., &amp; Pan, C. (2000). PIV technique for the simultaneous measurement of dilute two-phase flows.</span>
+<span class="sd">    *Journal of Fluids Engineering, Transactions of the ASME,* 122(4), 811–818.</span>
+<span class="sd">    https://doi.org/10.1115/1.1314864</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    original_image : np.ndarray</span>
+<span class="sd">        Original two-phase input image</span>
+<span class="sd">    </span>
+<span class="sd">    kernel_size : int</span>
+<span class="sd">        Filter stencil width (must be an odd number). Denoted by *Nf* in Kiger &amp; Pan.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    big_particles_img : np.ndarray</span>
+<span class="sd">        Extracted image of the phase with bigger particles (dispersed phase)</span>
+
+<span class="sd">    small_particles_img: np.ndarray</span>
+<span class="sd">        Extracted image of the phase with smaller particles (carrier phase)</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">if</span> <span class="n">kernel_size</span> <span class="o">%</span> <span class="mi">2</span> <span class="o">!=</span> <span class="mi">1</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">Exception</span><span class="p">(</span><span class="s2">&quot;kernel_size must be an odd number.&quot;</span><span class="p">)</span>
+
+    <span class="n">big_particles_img</span> <span class="o">=</span> <span class="n">scipy</span><span class="o">.</span><span class="n">ndimage</span><span class="o">.</span><span class="n">median_filter</span><span class="p">(</span><span class="n">original_image</span><span class="p">,</span> <span class="n">kernel_size</span><span class="p">)</span>
+    <span class="n">small_particles_img</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">where</span><span class="p">(</span>
+        <span class="n">original_image</span> <span class="o">&gt;</span> <span class="n">big_particles_img</span><span class="p">,</span> <span class="n">original_image</span> <span class="o">-</span> <span class="n">big_particles_img</span><span class="p">,</span> <span class="mi">0</span>
+    <span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">big_particles_img</span><span class="p">,</span> <span class="n">small_particles_img</span></div>
+
+
+<div class="viewcode-block" id="khalitov_longmire"><a class="viewcode-back" href="../../src/openpiv.html#openpiv.phase_separation.khalitov_longmire">[docs]</a><span class="k">def</span> <span class="nf">khalitov_longmire</span><span class="p">(</span>
+    <span class="n">original_image</span><span class="p">,</span>
+    <span class="n">big_particles_criteria</span><span class="p">,</span>
+    <span class="n">small_particles_criteria</span><span class="p">,</span>
+    <span class="n">blur_kernel_size</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
+    <span class="n">I_sat</span><span class="o">=</span><span class="mi">230</span><span class="p">,</span>
+    <span class="n">opening_ksize</span><span class="o">=</span><span class="mi">3</span><span class="p">,</span>
+<span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Extract separated images using the method proposed by Khalitov &amp; Longmire, 2002.</span>
+<span class="sd">    </span>
+<span class="sd">    For detailed information see:</span>
+
+<span class="sd">    Khalitov, D., Longmire, E. Simultaneous two-phase PIV by two-parameter phase discrimination.</span>
+<span class="sd">    *Experiments in Fluids* 32, 252–268 (2002).</span>
+<span class="sd">    https://doi.org/10.1007/s003480100356</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    original_image : np.ndarray</span>
+<span class="sd">        Original two-phase input image</span>
+<span class="sd">    </span>
+<span class="sd">    big_particles_criteria : {</span>
+<span class="sd">        &#39;min_size&#39; : int,</span>
+<span class="sd">        [&#39;max_size&#39; : int,]</span>
+<span class="sd">        [&#39;min_brightness&#39; : int,]</span>
+<span class="sd">        [&#39;max_brightness&#39; : int]</span>
+<span class="sd">    }</span>
+<span class="sd">    A dictionary defining big particles criteria. &#39;min_size&#39; is mandatory.</span>
+
+<span class="sd">    small_particles_criteria : {</span>
+<span class="sd">        [&#39;min_size&#39; : int,]</span>
+<span class="sd">        &#39;max_size&#39; : int,</span>
+<span class="sd">        [&#39;min_brightness&#39; : int,]</span>
+<span class="sd">        [&#39;max_brightness&#39; : int]</span>
+<span class="sd">    }</span>
+<span class="sd">    A dictionary defining small particles criteria. &#39;max_size&#39; is mandatory.</span>
+
+<span class="sd">    blur_kernel_size : int</span>
+<span class="sd">        Stencil width for pre-processing blur. Must be an odd number.</span>
+
+<span class="sd">    I_sat : int</span>
+<span class="sd">        Saturation intensity for object pixels detection process.</span>
+
+<span class="sd">    opening_ksize : int</span>
+<span class="sd">        Stencil width for opening operation used to remove tiny regions from object pixels.</span>
+<span class="sd">        Set to -1 to skip opening.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    big_particles_img : np.ndarray</span>
+<span class="sd">        Extracted image of the phase with bigger particles (dispersed phase)</span>
+
+<span class="sd">    small_particles_img : np.ndarray</span>
+<span class="sd">        Extracted image of the phase with smaller particles (carrier phase)</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="c1"># Calculate object pixels using 2nd derivative criteria</span>
+    <span class="n">object_pixels</span> <span class="o">=</span> <span class="n">khalitov_longmire_get_object_pixels</span><span class="p">(</span>
+        <span class="n">original_image</span><span class="p">,</span> <span class="n">blur_kernel_size</span><span class="p">,</span> <span class="n">I_sat</span><span class="p">,</span> <span class="n">opening_ksize</span>
+    <span class="p">)</span>
+
+    <span class="c1"># Find connected components &amp; corresponding data</span>
+    <span class="p">(</span>
+        <span class="n">N</span><span class="p">,</span>
+        <span class="n">labels_image</span><span class="p">,</span>
+        <span class="n">regions_size_array</span><span class="p">,</span>
+        <span class="n">regions_brightness_array</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">=</span> <span class="n">khalitov_longmire_analyse_particle_segments</span><span class="p">(</span><span class="n">original_image</span><span class="p">,</span> <span class="n">object_pixels</span><span class="p">)</span>
+
+    <span class="c1"># Apply criteria to regions</span>
+
+    <span class="c1">## Big particles</span>
+    <span class="n">is_region_a_big_particle</span> <span class="o">=</span> <span class="n">regions_size_array</span> <span class="o">&gt;</span> <span class="n">big_particles_criteria</span><span class="p">[</span><span class="s2">&quot;min_size&quot;</span><span class="p">]</span>
+
+    <span class="k">if</span> <span class="s2">&quot;max_size&quot;</span> <span class="ow">in</span> <span class="n">big_particles_criteria</span><span class="p">:</span>
+        <span class="n">is_region_a_big_particle</span> <span class="o">&amp;=</span> <span class="p">(</span>
+            <span class="n">regions_size_array</span> <span class="o">&lt;</span> <span class="n">big_particles_criteria</span><span class="p">[</span><span class="s2">&quot;max_size&quot;</span><span class="p">]</span>
+        <span class="p">)</span>
+
+    <span class="k">if</span> <span class="s2">&quot;min_brightness&quot;</span> <span class="ow">in</span> <span class="n">big_particles_criteria</span><span class="p">:</span>
+        <span class="n">is_region_a_big_particle</span> <span class="o">&amp;=</span> <span class="p">(</span>
+            <span class="n">regions_brightness_array</span> <span class="o">&gt;</span> <span class="n">big_particles_criteria</span><span class="p">[</span><span class="s2">&quot;min_brightness&quot;</span><span class="p">]</span>
+        <span class="p">)</span>
+
+    <span class="k">if</span> <span class="s2">&quot;max_brightness&quot;</span> <span class="ow">in</span> <span class="n">big_particles_criteria</span><span class="p">:</span>
+        <span class="n">is_region_a_big_particle</span> <span class="o">&amp;=</span> <span class="p">(</span>
+            <span class="n">regions_brightness_array</span> <span class="o">&lt;</span> <span class="n">big_particles_criteria</span><span class="p">[</span><span class="s2">&quot;max_brightness&quot;</span><span class="p">]</span>
+        <span class="p">)</span>
+
+    <span class="c1">## Small particles</span>
+    <span class="n">is_region_a_small_particle</span> <span class="o">=</span> <span class="p">(</span>
+        <span class="n">regions_size_array</span> <span class="o">&lt;</span> <span class="n">small_particles_criteria</span><span class="p">[</span><span class="s2">&quot;max_size&quot;</span><span class="p">]</span>
+    <span class="p">)</span>
+
+    <span class="k">if</span> <span class="s2">&quot;min_size&quot;</span> <span class="ow">in</span> <span class="n">small_particles_criteria</span><span class="p">:</span>
+        <span class="n">is_region_a_small_particle</span> <span class="o">&amp;=</span> <span class="p">(</span>
+            <span class="n">regions_size_array</span> <span class="o">&gt;</span> <span class="n">small_particles_criteria</span><span class="p">[</span><span class="s2">&quot;min_size&quot;</span><span class="p">]</span>
+        <span class="p">)</span>
+
+    <span class="k">if</span> <span class="s2">&quot;min_brightness&quot;</span> <span class="ow">in</span> <span class="n">small_particles_criteria</span><span class="p">:</span>
+        <span class="n">is_region_a_small_particle</span> <span class="o">&amp;=</span> <span class="p">(</span>
+            <span class="n">regions_brightness_array</span> <span class="o">&gt;</span> <span class="n">small_particles_criteria</span><span class="p">[</span><span class="s2">&quot;min_brightness&quot;</span><span class="p">]</span>
+        <span class="p">)</span>
+
+    <span class="k">if</span> <span class="s2">&quot;max_brightness&quot;</span> <span class="ow">in</span> <span class="n">small_particles_criteria</span><span class="p">:</span>
+        <span class="n">is_region_a_small_particle</span> <span class="o">&amp;=</span> <span class="p">(</span>
+            <span class="n">regions_brightness_array</span> <span class="o">&lt;</span> <span class="n">small_particles_criteria</span><span class="p">[</span><span class="s2">&quot;max_brightness&quot;</span><span class="p">]</span>
+        <span class="p">)</span>
+
+    <span class="c1"># Generate big particles mask</span>
+    <span class="n">big_particles_mask</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">original_image</span><span class="o">.</span><span class="n">shape</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">uint8</span><span class="p">)</span>
+    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">N</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">is_region_a_big_particle</span><span class="p">[</span><span class="n">i</span><span class="p">]:</span>
+            <span class="n">big_particles_mask</span><span class="p">[</span><span class="n">labels_image</span> <span class="o">==</span> <span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="mi">1</span>
+
+    <span class="c1"># Generate unidentifed particles mask (for efficiency reasons)</span>
+    <span class="n">unindentified_particles_mask</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">original_image</span><span class="o">.</span><span class="n">shape</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">uint8</span><span class="p">)</span>
+    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">N</span><span class="p">):</span>
+        <span class="k">if</span> <span class="p">(</span><span class="ow">not</span> <span class="n">is_region_a_big_particle</span><span class="p">[</span><span class="n">i</span><span class="p">])</span> <span class="ow">and</span> <span class="p">(</span><span class="ow">not</span> <span class="n">is_region_a_small_particle</span><span class="p">[</span><span class="n">i</span><span class="p">]):</span>
+            <span class="n">unindentified_particles_mask</span><span class="p">[</span><span class="n">labels_image</span> <span class="o">==</span> <span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="mi">1</span>
+
+    <span class="c1"># Generate small particles mask</span>
+    <span class="n">small_particles_mask</span> <span class="o">=</span> <span class="p">(</span>
+        <span class="n">object_pixels</span> <span class="o">-</span> <span class="n">big_particles_mask</span> <span class="o">-</span> <span class="n">unindentified_particles_mask</span>
+    <span class="p">)</span>
+
+    <span class="c1"># Generate final grayscale images</span>
+    <span class="n">big_particles_img</span> <span class="o">=</span> <span class="n">big_particles_mask</span> <span class="o">*</span> <span class="n">original_image</span>
+    <span class="n">small_particles_img</span> <span class="o">=</span> <span class="n">small_particles_mask</span> <span class="o">*</span> <span class="n">original_image</span>
+
+    <span class="k">return</span> <span class="n">big_particles_img</span><span class="p">,</span> <span class="n">small_particles_img</span></div>
+
+
+<div class="viewcode-block" id="get_particles_size_array"><a class="viewcode-back" href="../../src/openpiv.html#openpiv.phase_separation.get_particles_size_array">[docs]</a><span class="k">def</span> <span class="nf">get_particles_size_array</span><span class="p">(</span>
+    <span class="n">original_image</span><span class="p">,</span> <span class="n">blur_kernel_size</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">I_sat</span><span class="o">=</span><span class="mi">230</span><span class="p">,</span> <span class="n">opening_ksize</span><span class="o">=</span><span class="mi">3</span>
+<span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Returns the array of particle image areas in pixels.</span>
+
+<span class="sd">    Used as a quick means to set size limits in Kalitov-Longmire method.</span>
+
+<span class="sd">    Usage Example:</span>
+
+<span class="sd">        plt.hist( get_particles_size_array(image) )</span>
+<span class="sd">        plt.title(&#39;Particle size distribution&#39;)</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    original_image : np.ndarray</span>
+<span class="sd">        Original two-phase input image</span>
+
+<span class="sd">    blur_kernel_size : int</span>
+<span class="sd">        Stencil width for pre-processing blur. Must be an odd number.</span>
+
+<span class="sd">    I_sat : int</span>
+<span class="sd">        Saturation intensity for object pixels detection process.</span>
+
+<span class="sd">    opening_ksize : int</span>
+<span class="sd">        Stencil width for opening operation used to remove tiny regions from object pixels.</span>
+<span class="sd">        Set to -1 to skip opening.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    size_array : np.array</span>
+<span class="sd">        Array of length N, containing areas of particle regions number 0 to N in pixels.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="c1"># Calculate object pixels using 2nd derivative criteria</span>
+    <span class="n">object_pixels</span> <span class="o">=</span> <span class="n">khalitov_longmire_get_object_pixels</span><span class="p">(</span>
+        <span class="n">original_image</span><span class="p">,</span> <span class="n">blur_kernel_size</span><span class="p">,</span> <span class="n">I_sat</span><span class="p">,</span> <span class="n">opening_ksize</span>
+    <span class="p">)</span>
+
+    <span class="c1"># Find connected components &amp; corresponding data</span>
+    <span class="n">_</span><span class="p">,</span> <span class="n">_</span><span class="p">,</span> <span class="n">size_array</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">khalitov_longmire_analyse_particle_segments</span><span class="p">(</span>
+        <span class="n">original_image</span><span class="p">,</span> <span class="n">object_pixels</span>
+    <span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">size_array</span></div>
+
+
+<div class="viewcode-block" id="get_size_brightness_map"><a class="viewcode-back" href="../../src/openpiv.html#openpiv.phase_separation.get_size_brightness_map">[docs]</a><span class="k">def</span> <span class="nf">get_size_brightness_map</span><span class="p">(</span>
+    <span class="n">original_image</span><span class="p">,</span>
+    <span class="n">blur_kernel_size</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
+    <span class="n">I_sat</span><span class="o">=</span><span class="mi">230</span><span class="p">,</span>
+    <span class="n">opening_ksize</span><span class="o">=</span><span class="mi">3</span><span class="p">,</span>
+    <span class="n">MAX_PARTICLE_SIZE</span><span class="o">=</span><span class="mi">400</span><span class="p">,</span>
+<span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Returns the size-brightness map.</span>
+
+<span class="sd">    Used as an advanced means to set size and brightness limits in Kalitov-Longmire method.</span>
+
+<span class="sd">    Usage Example:</span>
+
+<span class="sd">        plt.imshow(im, origin=&#39;lower&#39;)</span>
+<span class="sd">        plt.xlabel(&#39;Brightness&#39;)</span>
+<span class="sd">        plt.ylabel(&#39;Size (px)&#39;)</span>
+<span class="sd">        plt.title(&#39;Signal density&#39;)</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    original_image : np.ndarray</span>
+<span class="sd">        Original two-phase input image</span>
+
+<span class="sd">    blur_kernel_size : int</span>
+<span class="sd">        Stencil width for pre-processing blur. Must be an odd number.</span>
+
+<span class="sd">    I_sat : int</span>
+<span class="sd">        Saturation intensity for object pixels detection process.</span>
+
+<span class="sd">    opening_ksize : int</span>
+<span class="sd">        Stencil width for opening operation used to remove tiny regions from object pixels.</span>
+<span class="sd">        Set to -1 to skip opening.</span>
+
+<span class="sd">    MAX_PARTICLE_SIZE : int</span>
+<span class="sd">        Particle area upper limit (Y-axis max in the map) in pixels.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    density_map : np.ndarray</span>
+<span class="sd">        Density map (D) where D[i,j] is log10(size*brightness*number) at size=i &amp; brightness=j.</span>
+<span class="sd">        See Kalitov &amp; Longmire, 2002 for more information.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="c1"># n[i,j] = Number of particles with size of i and rounded brightness of j</span>
+    <span class="n">n</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="n">MAX_PARTICLE_SIZE</span> <span class="o">+</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">256</span><span class="p">),</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">uint8</span><span class="p">)</span>
+
+    <span class="c1"># Get Object Pixels</span>
+    <span class="n">object_pixels</span> <span class="o">=</span> <span class="n">khalitov_longmire_get_object_pixels</span><span class="p">(</span>
+        <span class="n">original_image</span><span class="p">,</span> <span class="n">blur_kernel_size</span><span class="p">,</span> <span class="n">I_sat</span><span class="p">,</span> <span class="n">opening_ksize</span>
+    <span class="p">)</span>
+
+    <span class="c1"># Find connected components &amp; corresponding data</span>
+    <span class="n">N</span><span class="p">,</span> <span class="n">_</span><span class="p">,</span> <span class="n">size_array</span><span class="p">,</span> <span class="n">brightness_array</span> <span class="o">=</span> <span class="n">khalitov_longmire_analyse_particle_segments</span><span class="p">(</span>
+        <span class="n">original_image</span><span class="p">,</span> <span class="n">object_pixels</span>
+    <span class="p">)</span>
+
+    <span class="c1"># Round brightness</span>
+    <span class="n">rounded_brightness</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">uint8</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">round</span><span class="p">(</span><span class="n">brightness_array</span><span class="p">))</span>
+
+    <span class="c1"># Count size-brightness</span>
+    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">N</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">size_array</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">&gt;=</span> <span class="n">MAX_PARTICLE_SIZE</span><span class="p">:</span>
+            <span class="k">continue</span>
+        <span class="n">n</span><span class="p">[</span><span class="n">size_array</span><span class="p">[</span><span class="n">i</span><span class="p">],</span> <span class="n">rounded_brightness</span><span class="p">[</span><span class="n">i</span><span class="p">]]</span> <span class="o">+=</span> <span class="mi">1</span>
+
+    <span class="c1"># Calculate total signal density map:</span>
+    <span class="n">SIZE</span><span class="p">,</span> <span class="n">BRIGHTNESS</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">meshgrid</span><span class="p">(</span><span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">256</span><span class="p">),</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">MAX_PARTICLE_SIZE</span> <span class="o">+</span> <span class="mi">1</span><span class="p">))</span>
+    <span class="k">with</span> <span class="n">np</span><span class="o">.</span><span class="n">errstate</span><span class="p">(</span><span class="n">divide</span><span class="o">=</span><span class="s2">&quot;ignore&quot;</span><span class="p">):</span>
+        <span class="n">density_map</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">log10</span><span class="p">(</span><span class="n">SIZE</span> <span class="o">*</span> <span class="n">BRIGHTNESS</span> <span class="o">*</span> <span class="n">n</span><span class="p">)</span>
+    <span class="n">density_map</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">isneginf</span><span class="p">(</span><span class="n">density_map</span><span class="p">)]</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="k">return</span> <span class="n">density_map</span></div>
+
+
+<div class="viewcode-block" id="khalitov_longmire_analyse_particle_segments"><a class="viewcode-back" href="../../src/openpiv.html#openpiv.phase_separation.khalitov_longmire_analyse_particle_segments">[docs]</a><span class="k">def</span> <span class="nf">khalitov_longmire_analyse_particle_segments</span><span class="p">(</span><span class="n">original_image</span><span class="p">,</span> <span class="n">object_pixels</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Private function&quot;&quot;&quot;</span>
+    <span class="c1"># Find connected components</span>
+    <span class="n">label_image</span><span class="p">,</span> <span class="n">N</span> <span class="o">=</span> <span class="n">label</span><span class="p">(</span><span class="n">object_pixels</span><span class="p">,</span> <span class="n">connectivity</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">return_num</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+
+    <span class="c1"># Integrate 1 over regions</span>
+    <span class="n">size_array</span> <span class="o">=</span> <span class="n">scipy</span><span class="o">.</span><span class="n">ndimage</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">label_image</span><span class="p">,</span> <span class="n">index</span><span class="o">=</span><span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">N</span> <span class="o">+</span> <span class="mi">1</span><span class="p">))</span>
+    <span class="n">size_array</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">uint16</span><span class="p">(</span><span class="n">size_array</span><span class="p">)</span>
+
+    <span class="c1"># Integrate intensity over regions</span>
+    <span class="n">total_light_array</span> <span class="o">=</span> <span class="n">scipy</span><span class="o">.</span><span class="n">ndimage</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span>
+        <span class="n">original_image</span><span class="p">,</span> <span class="n">label_image</span><span class="p">,</span> <span class="n">index</span><span class="o">=</span><span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">N</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span>
+    <span class="p">)</span>
+    <span class="n">total_light_array</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">(</span><span class="n">total_light_array</span><span class="p">)</span>
+
+    <span class="n">brightness_array</span> <span class="o">=</span> <span class="n">total_light_array</span> <span class="o">/</span> <span class="n">size_array</span>
+
+    <span class="c1"># Drop background region (index 0)</span>
+    <span class="k">return</span> <span class="n">N</span><span class="p">,</span> <span class="n">label_image</span> <span class="o">-</span> <span class="mi">1</span><span class="p">,</span> <span class="n">size_array</span><span class="p">[</span><span class="mi">1</span><span class="p">:],</span> <span class="n">brightness_array</span><span class="p">[</span><span class="mi">1</span><span class="p">:]</span></div>
+
+
+<div class="viewcode-block" id="khalitov_longmire_get_object_pixels"><a class="viewcode-back" href="../../src/openpiv.html#openpiv.phase_separation.khalitov_longmire_get_object_pixels">[docs]</a><span class="k">def</span> <span class="nf">khalitov_longmire_get_object_pixels</span><span class="p">(</span>
+    <span class="n">original_image</span><span class="p">,</span> <span class="n">blur_kernel_size</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">I_sat</span><span class="o">=</span><span class="mi">230</span><span class="p">,</span> <span class="n">opening_ksize</span><span class="o">=</span><span class="mi">3</span>
+<span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Private function&quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">blur_kernel_size</span> <span class="o">%</span> <span class="mi">2</span> <span class="o">!=</span> <span class="mi">1</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">Exception</span><span class="p">(</span><span class="s2">&quot;Blur kernel size must be an odd number.&quot;</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="p">(</span><span class="n">opening_ksize</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">)</span> <span class="ow">and</span> <span class="p">(</span><span class="n">opening_ksize</span> <span class="o">%</span> <span class="mi">2</span> <span class="o">!=</span> <span class="mi">1</span><span class="p">):</span>
+        <span class="k">raise</span> <span class="ne">Exception</span><span class="p">(</span><span class="s2">&quot;Opening kernel size must be an odd number.&quot;</span><span class="p">)</span>
+
+    <span class="c1"># Pre-processing box blur</span>
+    <span class="k">if</span> <span class="n">blur_kernel_size</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="n">original_image</span> <span class="o">=</span> <span class="n">scipy</span><span class="o">.</span><span class="n">ndimage</span><span class="o">.</span><span class="n">uniform_filter</span><span class="p">(</span><span class="n">original_image</span><span class="p">,</span> <span class="n">blur_kernel_size</span><span class="p">)</span>
+
+    <span class="c1"># Transform to log space</span>
+    <span class="n">I</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">float32</span><span class="p">(</span><span class="n">original_image</span><span class="p">)</span>
+    <span class="k">with</span> <span class="n">np</span><span class="o">.</span><span class="n">errstate</span><span class="p">(</span><span class="n">divide</span><span class="o">=</span><span class="s2">&quot;ignore&quot;</span><span class="p">):</span>
+        <span class="n">Ln_I</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="n">I</span><span class="p">)</span>
+    <span class="n">Ln_I</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">isneginf</span><span class="p">(</span><span class="n">Ln_I</span><span class="p">)]</span> <span class="o">=</span> <span class="mi">0</span>
+
+    <span class="c1"># Calculate second directional derivatives</span>
+    <span class="n">X_deriv2</span> <span class="o">=</span> <span class="n">scipy</span><span class="o">.</span><span class="n">ndimage</span><span class="o">.</span><span class="n">convolve</span><span class="p">(</span>
+        <span class="n">Ln_I</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">([[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">],</span> <span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="o">-</span><span class="mi">2</span><span class="p">,</span> <span class="mi">1</span><span class="p">],</span> <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">]])</span>
+    <span class="p">)</span>
+    <span class="n">Y_deriv2</span> <span class="o">=</span> <span class="n">scipy</span><span class="o">.</span><span class="n">ndimage</span><span class="o">.</span><span class="n">convolve</span><span class="p">(</span>
+        <span class="n">Ln_I</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">([[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">],</span> <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="o">-</span><span class="mi">2</span><span class="p">,</span> <span class="mi">0</span><span class="p">],</span> <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">]])</span>
+    <span class="p">)</span>
+    <span class="n">D45_deriv2</span> <span class="o">=</span> <span class="n">scipy</span><span class="o">.</span><span class="n">ndimage</span><span class="o">.</span><span class="n">convolve</span><span class="p">(</span>
+        <span class="n">Ln_I</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">([[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">],</span> <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="o">-</span><span class="mi">2</span><span class="p">,</span> <span class="mi">0</span><span class="p">],</span> <span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">]])</span>
+    <span class="p">)</span>  <span class="c1"># 0.707 coeff is ignored as we&#39;re only interested in sign of the result.</span>
+    <span class="n">D135_deriv2</span> <span class="o">=</span> <span class="n">scipy</span><span class="o">.</span><span class="n">ndimage</span><span class="o">.</span><span class="n">convolve</span><span class="p">(</span>
+        <span class="n">Ln_I</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">([[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">],</span> <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="o">-</span><span class="mi">2</span><span class="p">,</span> <span class="mi">0</span><span class="p">],</span> <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">]])</span>
+    <span class="p">)</span>  <span class="c1"># 0.707 coeff is ignored as we&#39;re only interested in sign of the result.</span>
+
+    <span class="c1"># Apply conditions for object pixels</span>
+    <span class="n">object_pixels</span> <span class="o">=</span> <span class="p">(</span>
+        <span class="p">(</span><span class="n">X_deriv2</span> <span class="o">&lt;</span> <span class="mi">0</span><span class="p">)</span> <span class="o">&amp;</span> <span class="p">(</span><span class="n">Y_deriv2</span> <span class="o">&lt;</span> <span class="mi">0</span><span class="p">)</span> <span class="o">&amp;</span> <span class="p">(</span><span class="n">D45_deriv2</span> <span class="o">&lt;</span> <span class="mi">0</span><span class="p">)</span> <span class="o">&amp;</span> <span class="p">(</span><span class="n">D135_deriv2</span> <span class="o">&lt;</span> <span class="mi">0</span><span class="p">)</span>
+    <span class="p">)</span> <span class="o">|</span> <span class="p">(</span><span class="n">I</span> <span class="o">&gt;</span> <span class="n">I_sat</span><span class="p">)</span>
+    <span class="n">object_pixels_uint8</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">uint8</span><span class="p">(</span><span class="n">object_pixels</span><span class="p">)</span>
+
+    <span class="c1"># Apply opening filter to remove noisy dots</span>
+    <span class="k">if</span> <span class="n">opening_ksize</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">:</span>
+        <span class="n">kernel</span> <span class="o">=</span> <span class="n">disk</span><span class="p">((</span><span class="n">opening_ksize</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)</span> <span class="o">/</span> <span class="mi">2</span><span class="p">)</span>
+        <span class="n">object_pixels_uint8</span> <span class="o">=</span> <span class="n">opening</span><span class="p">(</span><span class="n">object_pixels_uint8</span><span class="p">,</span> <span class="n">kernel</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">object_pixels_uint8</span></div>
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2014, OpenPIV group.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

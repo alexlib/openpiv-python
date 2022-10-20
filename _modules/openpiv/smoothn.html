@@ -1,0 +1,931 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>openpiv.smoothn &mdash; OpenPIV  documentation</title>
+      <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="../../_static/css/theme.css" type="text/css" />
+  <!--[if lt IE 9]>
+    <script src="../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script data-url_root="../../" id="documentation_options" src="../../_static/documentation_options.js"></script>
+        <script src="../../_static/jquery.js"></script>
+        <script src="../../_static/underscore.js"></script>
+        <script src="../../_static/_sphinx_javascript_frameworks_compat.js"></script>
+        <script src="../../_static/doctools.js"></script>
+        <script src="../../_static/sphinx_highlight.js"></script>
+        <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+    <script src="../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+            <a href="../../index.html" class="icon icon-home"> OpenPIV
+          </a>
+              <div class="version">
+                0.24.0
+              </div>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul>
+<li class="toctree-l1"><a class="reference internal" href="../../src/piv_basics.html">Basics of the PIV algorithms</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../src/installation_instruction.html">Installation instruction</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../src/tutorial1.html">OpenPIV tutorial</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../src/windef.html">Multi-grid window deformation algorithm tutorial</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../src/masking.html">OpenPIV masking tutorial</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../src/developers.html">Information for developers and contributors</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../src/api_reference.html">API reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../src/faq.html">Frequently Asked Questions about PIV parameters</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../index.html">OpenPIV</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../index.html" class="icon icon-home"></a> &raquo;</li>
+          <li><a href="../index.html">Module code</a> &raquo;</li>
+          <li><a href="../openpiv.html">openpiv</a> &raquo;</li>
+      <li>openpiv.smoothn</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for openpiv.smoothn</h1><div class="highlight"><pre>
+<span></span><span class="kn">from</span> <span class="nn">numpy</span> <span class="kn">import</span> <span class="o">*</span>
+<span class="kn">from</span> <span class="nn">pylab</span> <span class="kn">import</span> <span class="o">*</span>
+<span class="kn">import</span> <span class="nn">scipy.optimize.lbfgsb</span> <span class="k">as</span> <span class="nn">lbfgsb</span>
+<span class="kn">import</span> <span class="nn">numpy.linalg</span>
+<span class="kn">from</span> <span class="nn">scipy.fftpack</span> <span class="kn">import</span> <span class="n">dct</span><span class="p">,</span> <span class="n">idct</span>
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">import</span> <span class="nn">numpy.ma</span> <span class="k">as</span> <span class="nn">ma</span>
+
+
+<div class="viewcode-block" id="smoothn"><a class="viewcode-back" href="../../src/openpiv.html#openpiv.smoothn.smoothn">[docs]</a><span class="k">def</span> <span class="nf">smoothn</span><span class="p">(</span>
+    <span class="n">y</span><span class="p">,</span>
+    <span class="n">nS0</span><span class="o">=</span><span class="mi">10</span><span class="p">,</span>
+    <span class="n">axis</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+    <span class="n">smoothOrder</span><span class="o">=</span><span class="mf">2.0</span><span class="p">,</span>
+    <span class="n">sd</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+    <span class="n">verbose</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+    <span class="n">s0</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+    <span class="n">z0</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+    <span class="n">isrobust</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+    <span class="n">W</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+    <span class="n">s</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+    <span class="n">MaxIter</span><span class="o">=</span><span class="mi">100</span><span class="p">,</span>
+    <span class="n">TolZ</span><span class="o">=</span><span class="mf">1e-3</span><span class="p">,</span>
+    <span class="n">weightstr</span><span class="o">=</span><span class="s2">&quot;bisquare&quot;</span><span class="p">,</span>
+<span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">   function [z,s,exitflag,Wtot] = smoothn(varargin)</span>
+<span class="sd">   SMOOTHN Robust spline smoothing for 1-D to N-D data.</span>
+<span class="sd">   SMOOTHN provides a fast, automatized and robust discretized smoothing</span>
+<span class="sd">   spline for data of any dimension.</span>
+<span class="sd">   Z = SMOOTHN(Y) automatically smoothes the uniformly-sampled array Y. Y</span>
+<span class="sd">   can be any N-D noisy array (time series, images, 3D data,...). Non</span>
+<span class="sd">   finite data (NaN or Inf) are treated as missing values.</span>
+<span class="sd">   Z = SMOOTHN(Y,S) smoothes the array Y using the smoothing parameter S.</span>
+<span class="sd">   S must be a real positive scalar. The larger S is, the smoother the</span>
+<span class="sd">   output will be. If the smoothing parameter S is omitted (see previous</span>
+<span class="sd">   option) or empty (i.e. S = []), it is automatically determined using</span>
+<span class="sd">   the generalized cross-validation (GCV) method.</span>
+<span class="sd">   Z = SMOOTHN(Y,W) or Z = SMOOTHN(Y,W,S) specifies a weighting array W of</span>
+<span class="sd">   real positive values, that must have the same size as Y. Note that a</span>
+<span class="sd">   nil weight corresponds to a missing value.</span>
+<span class="sd">   Robust smoothing</span>
+<span class="sd">   ----------------</span>
+<span class="sd">   Z = SMOOTHN(...,&#39;robust&#39;) carries out a robust smoothing that minimizes</span>
+<span class="sd">   the influence of outlying data.</span>
+<span class="sd">   [Z,S] = SMOOTHN(...) also returns the calculated value for S so that</span>
+<span class="sd">   you can fine-tune the smoothing subsequently if needed.</span>
+<span class="sd">   An iteration process is used in the presence of weighted and/or missing</span>
+<span class="sd">   values. Z = SMOOTHN(...,OPTION_NAME,OPTION_VALUE) smoothes with the</span>
+<span class="sd">   termination parameters specified by OPTION_NAME and OPTION_VALUE. They</span>
+<span class="sd">   can contain the following criteria:</span>
+<span class="sd">       -----------------</span>
+<span class="sd">       TolZ:       Termination tolerance on Z (default = 1e-3)</span>
+<span class="sd">                   TolZ must be in ]0,1[</span>
+<span class="sd">       MaxIter:    Maximum number of iterations allowed (default = 100)</span>
+<span class="sd">       Initial:    Initial value for the iterative process (default =</span>
+<span class="sd">                   original data)</span>
+<span class="sd">       -----------------</span>
+<span class="sd">   Syntax: [Z,...] = SMOOTHN(...,&#39;MaxIter&#39;,500,&#39;TolZ&#39;,1e-4,&#39;Initial&#39;,Z0);</span>
+<span class="sd">   [Z,S,EXITFLAG] = SMOOTHN(...) returns a boolean value EXITFLAG that</span>
+<span class="sd">   describes the exit condition of SMOOTHN:</span>
+<span class="sd">       1       SMOOTHN converged.</span>
+<span class="sd">       0       Maximum number of iterations was reached.</span>
+<span class="sd">   Class Support</span>
+<span class="sd">   -------------</span>
+<span class="sd">   Input array can be numeric or logical. The returned array is of class</span>
+<span class="sd">   double.</span>
+<span class="sd">   Notes</span>
+<span class="sd">   -----</span>
+<span class="sd">   The N-D (inverse) discrete cosine transform functions &lt;a</span>
+<span class="sd">   href=&quot;matlab:web(&#39;http://www.biomecardio.com/matlab/dctn.html&#39;)&quot;</span>
+<span class="sd">   &gt;DCTN&lt;/a&gt; and &lt;a</span>
+<span class="sd">   href=&quot;matlab:web(&#39;http://www.biomecardio.com/matlab/idctn.html&#39;)&quot;</span>
+<span class="sd">   &gt;IDCTN&lt;/a&gt; are required.</span>
+<span class="sd">   To be made</span>
+<span class="sd">   ----------</span>
+<span class="sd">   Estimate the confidence bands (see Wahba 1983, Nychka 1988).</span>
+<span class="sd">   Reference</span>
+<span class="sd">   --------- </span>
+<span class="sd">   Garcia D, Robust smoothing of gridded data in one and higher dimensions</span>
+<span class="sd">   with missing values. Computational Statistics &amp; Data Analysis, 2010. </span>
+<span class="sd">   &lt;a</span>
+<span class="sd">   href=&quot;matlab:web(&#39;http://www.biomecardio.com/pageshtm/publi/csda10.pdf&#39;)&quot;&gt;PDF download&lt;/a&gt;</span>
+<span class="sd">   Examples:</span>
+<span class="sd">   --------</span>
+<span class="sd">   # 1-D example</span>
+<span class="sd">   x = linspace(0,100,2**8);</span>
+<span class="sd">   y = cos(x/10)+(x/50)**2 + randn(size(x))/10;</span>
+<span class="sd">   y[[70, 75, 80]] = [5.5, 5, 6];</span>
+<span class="sd">   z = smoothn(y); # Regular smoothing</span>
+<span class="sd">   zr = smoothn(y,&#39;robust&#39;); # Robust smoothing</span>
+<span class="sd">   subplot(121), plot(x,y,&#39;r.&#39;,x,z,&#39;k&#39;,&#39;LineWidth&#39;,2)</span>
+<span class="sd">   axis square, title(&#39;Regular smoothing&#39;)</span>
+<span class="sd">   subplot(122), plot(x,y,&#39;r.&#39;,x,zr,&#39;k&#39;,&#39;LineWidth&#39;,2)</span>
+<span class="sd">   axis square, title(&#39;Robust smoothing&#39;)</span>
+<span class="sd">   # 2-D example</span>
+<span class="sd">   xp = 0:.02:1;</span>
+<span class="sd">   [x,y] = meshgrid(xp);</span>
+<span class="sd">   f = exp(x+y) + sin((x-2*y)*3);</span>
+<span class="sd">   fn = f + randn(size(f))*0.5;</span>
+<span class="sd">   fs = smoothn(fn);</span>
+<span class="sd">   subplot(121), surf(xp,xp,fn), zlim([0 8]), axis square</span>
+<span class="sd">   subplot(122), surf(xp,xp,fs), zlim([0 8]), axis square</span>
+<span class="sd">   # 2-D example with missing data</span>
+<span class="sd">   n = 256;</span>
+<span class="sd">   y0 = peaks(n);</span>
+<span class="sd">   y = y0 + rand(size(y0))*2;</span>
+<span class="sd">   I = randperm(n^2);</span>
+<span class="sd">   y(I(1:n^2*0.5)) = NaN; # lose 1/2 of data</span>
+<span class="sd">   y(40:90,140:190) = NaN; # create a hole</span>
+<span class="sd">   z = smoothn(y); # smooth data</span>
+<span class="sd">   subplot(2,2,1:2), imagesc(y), axis equal off</span>
+<span class="sd">   title(&#39;Noisy corrupt data&#39;)</span>
+<span class="sd">   subplot(223), imagesc(z), axis equal off</span>
+<span class="sd">   title(&#39;Recovered data ...&#39;)</span>
+<span class="sd">   subplot(224), imagesc(y0), axis equal off</span>
+<span class="sd">   title(&#39;... compared with original data&#39;)</span>
+<span class="sd">   # 3-D example</span>
+<span class="sd">   [x,y,z] = meshgrid(-2:.2:2);</span>
+<span class="sd">   xslice = [-0.8,1]; yslice = 2; zslice = [-2,0];</span>
+<span class="sd">   vn = x.*exp(-x.^2-y.^2-z.^2) + randn(size(x))*0.06;</span>
+<span class="sd">   subplot(121), slice(x,y,z,vn,xslice,yslice,zslice,&#39;cubic&#39;)</span>
+<span class="sd">   title(&#39;Noisy data&#39;)</span>
+<span class="sd">   v = smoothn(vn);</span>
+<span class="sd">   subplot(122), slice(x,y,z,v,xslice,yslice,zslice,&#39;cubic&#39;)</span>
+<span class="sd">   title(&#39;Smoothed data&#39;)</span>
+<span class="sd">   # Cardioid</span>
+<span class="sd">   t = linspace(0,2*pi,1000);</span>
+<span class="sd">   x = 2*cos(t).*(1-cos(t)) + randn(size(t))*0.1;</span>
+<span class="sd">   y = 2*sin(t).*(1-cos(t)) + randn(size(t))*0.1;</span>
+<span class="sd">   z = smoothn(complex(x,y));</span>
+<span class="sd">   plot(x,y,&#39;r.&#39;,real(z),imag(z),&#39;k&#39;,&#39;linewidth&#39;,2)</span>
+<span class="sd">   axis equal tight</span>
+<span class="sd">   # Cellular vortical flow</span>
+<span class="sd">   [x,y] = meshgrid(linspace(0,1,24));</span>
+<span class="sd">   Vx = cos(2*pi*x+pi/2).*cos(2*pi*y);</span>
+<span class="sd">   Vy = sin(2*pi*x+pi/2).*sin(2*pi*y);</span>
+<span class="sd">   Vx = Vx + sqrt(0.05)*randn(24,24); # adding Gaussian noise</span>
+<span class="sd">   Vy = Vy + sqrt(0.05)*randn(24,24); # adding Gaussian noise</span>
+<span class="sd">   I = randperm(numel(Vx));</span>
+<span class="sd">   Vx(I(1:30)) = (rand(30,1)-0.5)*5; # adding outliers</span>
+<span class="sd">   Vy(I(1:30)) = (rand(30,1)-0.5)*5; # adding outliers</span>
+<span class="sd">   Vx(I(31:60)) = NaN; # missing values</span>
+<span class="sd">   Vy(I(31:60)) = NaN; # missing values</span>
+<span class="sd">   Vs = smoothn(complex(Vx,Vy),&#39;robust&#39;); # automatic smoothing</span>
+<span class="sd">   subplot(121), quiver(x,y,Vx,Vy,2.5), axis square</span>
+<span class="sd">   title(&#39;Noisy velocity field&#39;)</span>
+<span class="sd">   subplot(122), quiver(x,y,real(Vs),imag(Vs)), axis square</span>
+<span class="sd">   title(&#39;Smoothed velocity field&#39;)</span>
+<span class="sd">   See also SMOOTH, SMOOTH3, DCTN, IDCTN.</span>
+<span class="sd">   -- Damien Garcia -- 2009/03, revised 2010/11</span>
+<span class="sd">   Visit my &lt;a</span>
+<span class="sd">   href=&quot;matlab:web(&#39;http://www.biomecardio.com/matlab/smoothn.html&#39;)&quot;&gt;website&lt;/a&gt; for more details about SMOOTHN </span>
+<span class="sd">  # Check input arguments</span>
+<span class="sd">  error(nargchk(1,12,nargin));</span>
+<span class="sd">  z0=None,W=None,s=None,MaxIter=100,TolZ=1e-3</span>
+<span class="sd">  &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="nb">type</span><span class="p">(</span><span class="n">y</span><span class="p">)</span> <span class="o">==</span> <span class="n">ma</span><span class="o">.</span><span class="n">core</span><span class="o">.</span><span class="n">MaskedArray</span><span class="p">:</span>  <span class="c1"># masked array</span>
+        <span class="n">is_masked</span> <span class="o">=</span> <span class="kc">True</span>
+        <span class="n">mask</span> <span class="o">=</span> <span class="n">y</span><span class="o">.</span><span class="n">mask</span>
+        <span class="n">y</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">y</span><span class="p">)</span>
+        <span class="n">y</span><span class="p">[</span><span class="n">mask</span><span class="p">]</span> <span class="o">=</span> <span class="mf">0.0</span>
+        <span class="k">if</span> <span class="n">W</span> <span class="o">!=</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">W</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">W</span><span class="p">)</span>
+            <span class="n">W</span><span class="p">[</span><span class="n">mask</span><span class="p">]</span> <span class="o">=</span> <span class="mf">0.0</span>
+        <span class="k">if</span> <span class="n">sd</span> <span class="o">!=</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">W</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="mf">1.0</span> <span class="o">/</span> <span class="n">sd</span> <span class="o">**</span> <span class="mi">2</span><span class="p">)</span>
+            <span class="n">W</span><span class="p">[</span><span class="n">mask</span><span class="p">]</span> <span class="o">=</span> <span class="mf">0.0</span>
+            <span class="n">sd</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="n">y</span><span class="p">[</span><span class="n">mask</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">nan</span>
+
+    <span class="k">if</span> <span class="n">sd</span> <span class="o">!=</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">sd_</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">sd</span><span class="p">)</span>
+        <span class="n">mask</span> <span class="o">=</span> <span class="n">sd</span> <span class="o">&gt;</span> <span class="mf">0.0</span>
+        <span class="n">W</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros_like</span><span class="p">(</span><span class="n">sd_</span><span class="p">)</span>
+        <span class="n">W</span><span class="p">[</span><span class="n">mask</span><span class="p">]</span> <span class="o">=</span> <span class="mf">1.0</span> <span class="o">/</span> <span class="n">sd_</span><span class="p">[</span><span class="n">mask</span><span class="p">]</span> <span class="o">**</span> <span class="mi">2</span>
+        <span class="n">sd</span> <span class="o">=</span> <span class="kc">None</span>
+
+    <span class="k">if</span> <span class="n">W</span> <span class="o">!=</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">W</span> <span class="o">=</span> <span class="n">W</span> <span class="o">/</span> <span class="n">W</span><span class="o">.</span><span class="n">max</span><span class="p">()</span>
+
+    <span class="n">sizy</span> <span class="o">=</span> <span class="n">y</span><span class="o">.</span><span class="n">shape</span>
+
+    <span class="c1"># sort axis</span>
+    <span class="k">if</span> <span class="n">axis</span> <span class="o">==</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">axis</span> <span class="o">=</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="n">y</span><span class="o">.</span><span class="n">ndim</span><span class="p">))</span>
+
+    <span class="n">noe</span> <span class="o">=</span> <span class="n">y</span><span class="o">.</span><span class="n">size</span>  <span class="c1"># number of elements</span>
+    <span class="k">if</span> <span class="n">noe</span> <span class="o">&lt;</span> <span class="mi">2</span><span class="p">:</span>
+        <span class="n">z</span> <span class="o">=</span> <span class="n">y</span>
+        <span class="n">exitflag</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="n">Wtot</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="k">return</span> <span class="n">z</span><span class="p">,</span> <span class="n">s</span><span class="p">,</span> <span class="n">exitflag</span><span class="p">,</span> <span class="n">Wtot</span>
+    <span class="c1"># ---</span>
+    <span class="c1"># Smoothness parameter and weights</span>
+    <span class="c1"># if s != None:</span>
+    <span class="c1">#  s = []</span>
+    <span class="k">if</span> <span class="n">W</span> <span class="o">==</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">W</span> <span class="o">=</span> <span class="n">ones</span><span class="p">(</span><span class="n">sizy</span><span class="p">)</span>
+
+    <span class="c1"># if z0 == None:</span>
+    <span class="c1">#  z0 = y.copy()</span>
+
+    <span class="c1"># ---</span>
+    <span class="c1"># &quot;Weighting function&quot; criterion</span>
+    <span class="n">weightstr</span> <span class="o">=</span> <span class="n">weightstr</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span>
+    <span class="c1"># ---</span>
+    <span class="c1"># Weights. Zero weights are assigned to not finite values (Inf or NaN),</span>
+    <span class="c1"># (Inf/NaN values = missing data).</span>
+    <span class="n">IsFinite</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">isfinite</span><span class="p">(</span><span class="n">y</span><span class="p">))</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="nb">bool</span><span class="p">)</span>
+    <span class="n">nof</span> <span class="o">=</span> <span class="n">IsFinite</span><span class="o">.</span><span class="n">sum</span><span class="p">()</span>  <span class="c1"># number of finite elements</span>
+    <span class="n">W</span> <span class="o">=</span> <span class="n">W</span> <span class="o">*</span> <span class="n">IsFinite</span>
+    <span class="k">if</span> <span class="nb">any</span><span class="p">(</span><span class="n">W</span> <span class="o">&lt;</span> <span class="mi">0</span><span class="p">):</span>
+        <span class="n">error</span><span class="p">(</span><span class="s2">&quot;smoothn:NegativeWeights&quot;</span><span class="p">,</span> <span class="s2">&quot;Weights must all be &gt;=0&quot;</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="c1"># W = W/np.max(W)</span>
+        <span class="k">pass</span>
+    <span class="c1"># ---</span>
+    <span class="c1"># Weighted or missing data?</span>
+    <span class="n">isweighted</span> <span class="o">=</span> <span class="nb">any</span><span class="p">(</span><span class="n">W</span> <span class="o">!=</span> <span class="mi">1</span><span class="p">)</span>
+    <span class="c1"># ---</span>
+    <span class="c1"># Robust smoothing?</span>
+    <span class="c1"># isrobust</span>
+    <span class="c1"># ---</span>
+    <span class="c1"># Automatic smoothing?</span>
+    <span class="n">isauto</span> <span class="o">=</span> <span class="ow">not</span> <span class="n">s</span>
+    <span class="c1"># ---</span>
+    <span class="c1"># DCTN and IDCTN are required</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="kn">from</span> <span class="nn">scipy.fftpack.realtransforms</span> <span class="kn">import</span> <span class="n">dct</span><span class="p">,</span> <span class="n">idct</span>
+    <span class="k">except</span><span class="p">:</span>
+        <span class="n">z</span> <span class="o">=</span> <span class="n">y</span>
+        <span class="n">exitflag</span> <span class="o">=</span> <span class="o">-</span><span class="mi">1</span>
+        <span class="n">Wtot</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="k">return</span> <span class="n">z</span><span class="p">,</span> <span class="n">s</span><span class="p">,</span> <span class="n">exitflag</span><span class="p">,</span> <span class="n">Wtot</span>
+
+    <span class="c1">## Creation of the Lambda tensor</span>
+    <span class="c1"># ---</span>
+    <span class="c1"># Lambda contains the eingenvalues of the difference matrix used in this</span>
+    <span class="c1"># penalized least squares process.</span>
+    <span class="n">axis</span> <span class="o">=</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">axis</span><span class="p">)</span><span class="o">.</span><span class="n">flatten</span><span class="p">())</span>
+    <span class="n">d</span> <span class="o">=</span> <span class="n">y</span><span class="o">.</span><span class="n">ndim</span>
+    <span class="n">Lambda</span> <span class="o">=</span> <span class="n">zeros</span><span class="p">(</span><span class="n">sizy</span><span class="p">)</span>
+    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">axis</span><span class="p">:</span>
+        <span class="c1"># create a 1 x d array (so e.g. [1,1] for a 2D case</span>
+        <span class="n">siz0</span> <span class="o">=</span> <span class="n">ones</span><span class="p">((</span><span class="mi">1</span><span class="p">,</span> <span class="n">y</span><span class="o">.</span><span class="n">ndim</span><span class="p">),</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">int</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="n">siz0</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="n">sizy</span><span class="p">[</span><span class="n">i</span><span class="p">]</span>
+        <span class="c1"># cos(pi*(reshape(1:sizy(i),siz0)-1)/sizy(i)))</span>
+        <span class="c1"># (arange(1,sizy[i]+1).reshape(siz0) - 1.)/sizy[i]</span>
+        <span class="n">Lambda</span> <span class="o">=</span> <span class="n">Lambda</span> <span class="o">+</span> <span class="p">(</span>
+            <span class="n">cos</span><span class="p">(</span><span class="n">pi</span> <span class="o">*</span> <span class="p">(</span><span class="n">arange</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">sizy</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span> <span class="o">-</span> <span class="mf">1.0</span><span class="p">)</span> <span class="o">/</span> <span class="n">sizy</span><span class="p">[</span><span class="n">i</span><span class="p">])</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="n">siz0</span><span class="p">)</span>
+        <span class="p">)</span>
+        <span class="c1"># else:</span>
+        <span class="c1">#  Lambda = Lambda + siz0</span>
+    <span class="n">Lambda</span> <span class="o">=</span> <span class="o">-</span><span class="mf">2.0</span> <span class="o">*</span> <span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">axis</span><span class="p">)</span> <span class="o">-</span> <span class="n">Lambda</span><span class="p">)</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">isauto</span><span class="p">:</span>
+        <span class="n">Gamma</span> <span class="o">=</span> <span class="mf">1.0</span> <span class="o">/</span> <span class="p">(</span><span class="mi">1</span> <span class="o">+</span> <span class="p">(</span><span class="n">s</span> <span class="o">*</span> <span class="nb">abs</span><span class="p">(</span><span class="n">Lambda</span><span class="p">))</span> <span class="o">**</span> <span class="n">smoothOrder</span><span class="p">)</span>
+
+    <span class="c1">## Upper and lower bound for the smoothness parameter</span>
+    <span class="c1"># The average leverage (h) is by definition in [0 1]. Weak smoothing occurs</span>
+    <span class="c1"># if h is close to 1, while over-smoothing appears when h is near 0. Upper</span>
+    <span class="c1"># and lower bounds for h are given to avoid under- or over-smoothing. See</span>
+    <span class="c1"># equation relating h to the smoothness parameter (Equation #12 in the</span>
+    <span class="c1"># referenced CSDA paper).</span>
+    <span class="n">N</span> <span class="o">=</span> <span class="nb">sum</span><span class="p">(</span><span class="n">array</span><span class="p">(</span><span class="n">sizy</span><span class="p">)</span> <span class="o">!=</span> <span class="mi">1</span><span class="p">)</span>
+    <span class="c1"># tensor rank of the y-array</span>
+    <span class="n">hMin</span> <span class="o">=</span> <span class="mf">1e-6</span>
+    <span class="n">hMax</span> <span class="o">=</span> <span class="mf">0.99</span>
+    <span class="c1"># (h/n)**2 = (1 + a)/( 2 a)</span>
+    <span class="c1"># a = 1/(2 (h/n)**2 -1)</span>
+    <span class="c1"># where a = sqrt(1 + 16 s)</span>
+    <span class="c1"># (a**2 -1)/16</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">sMinBnd</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span>
+            <span class="p">(((</span><span class="mi">1</span> <span class="o">+</span> <span class="n">sqrt</span><span class="p">(</span><span class="mi">1</span> <span class="o">+</span> <span class="mi">8</span> <span class="o">*</span> <span class="n">hMax</span> <span class="o">**</span> <span class="p">(</span><span class="mf">2.0</span> <span class="o">/</span> <span class="n">N</span><span class="p">)))</span> <span class="o">/</span> <span class="mf">4.0</span> <span class="o">/</span> <span class="n">hMax</span> <span class="o">**</span> <span class="p">(</span><span class="mf">2.0</span> <span class="o">/</span> <span class="n">N</span><span class="p">))</span> <span class="o">**</span> <span class="mi">2</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)</span>
+            <span class="o">/</span> <span class="mf">16.0</span>
+        <span class="p">)</span>
+        <span class="n">sMaxBnd</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span>
+            <span class="p">(((</span><span class="mi">1</span> <span class="o">+</span> <span class="n">sqrt</span><span class="p">(</span><span class="mi">1</span> <span class="o">+</span> <span class="mi">8</span> <span class="o">*</span> <span class="n">hMin</span> <span class="o">**</span> <span class="p">(</span><span class="mf">2.0</span> <span class="o">/</span> <span class="n">N</span><span class="p">)))</span> <span class="o">/</span> <span class="mf">4.0</span> <span class="o">/</span> <span class="n">hMin</span> <span class="o">**</span> <span class="p">(</span><span class="mf">2.0</span> <span class="o">/</span> <span class="n">N</span><span class="p">))</span> <span class="o">**</span> <span class="mi">2</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)</span>
+            <span class="o">/</span> <span class="mf">16.0</span>
+        <span class="p">)</span>
+    <span class="k">except</span><span class="p">:</span>
+        <span class="n">sMinBnd</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="n">sMaxBnd</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="c1">## Initialize before iterating</span>
+    <span class="c1"># ---</span>
+    <span class="n">Wtot</span> <span class="o">=</span> <span class="n">W</span>
+    <span class="c1"># --- Initial conditions for z</span>
+    <span class="k">if</span> <span class="n">isweighted</span><span class="p">:</span>
+        <span class="c1"># --- With weighted/missing data</span>
+        <span class="c1"># An initial guess is provided to ensure faster convergence. For that</span>
+        <span class="c1"># purpose, a nearest neighbor interpolation followed by a coarse</span>
+        <span class="c1"># smoothing are performed.</span>
+        <span class="c1"># ---</span>
+        <span class="k">if</span> <span class="n">z0</span> <span class="o">!=</span> <span class="kc">None</span><span class="p">:</span>  <span class="c1"># an initial guess (z0) has been provided</span>
+            <span class="n">z</span> <span class="o">=</span> <span class="n">z0</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">z</span> <span class="o">=</span> <span class="n">y</span>  <span class="c1"># InitialGuess(y,IsFinite);</span>
+            <span class="n">z</span><span class="p">[</span><span class="o">~</span><span class="n">IsFinite</span><span class="p">]</span> <span class="o">=</span> <span class="mf">0.0</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">z</span> <span class="o">=</span> <span class="n">zeros</span><span class="p">(</span><span class="n">sizy</span><span class="p">)</span>
+    <span class="c1"># ---</span>
+    <span class="n">z0</span> <span class="o">=</span> <span class="n">z</span>
+    <span class="n">y</span><span class="p">[</span><span class="o">~</span><span class="n">IsFinite</span><span class="p">]</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="c1"># arbitrary values for missing y-data</span>
+    <span class="c1"># ---</span>
+    <span class="n">tol</span> <span class="o">=</span> <span class="mf">1.0</span>
+    <span class="n">RobustIterativeProcess</span> <span class="o">=</span> <span class="kc">True</span>
+    <span class="n">RobustStep</span> <span class="o">=</span> <span class="mi">1</span>
+    <span class="n">nit</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="c1"># --- Error on p. Smoothness parameter s = 10^p</span>
+    <span class="n">errp</span> <span class="o">=</span> <span class="mf">0.1</span>
+    <span class="c1"># opt = optimset(&#39;TolX&#39;,errp);</span>
+    <span class="c1"># --- Relaxation factor RF: to speedup convergence</span>
+    <span class="n">RF</span> <span class="o">=</span> <span class="mi">1</span> <span class="o">+</span> <span class="mf">0.75</span> <span class="o">*</span> <span class="n">isweighted</span>
+    <span class="c1"># ??</span>
+    <span class="c1">## Main iterative process</span>
+    <span class="c1"># ---</span>
+    <span class="k">if</span> <span class="n">isauto</span><span class="p">:</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">xpost</span> <span class="o">=</span> <span class="n">array</span><span class="p">([(</span><span class="mf">0.9</span> <span class="o">*</span> <span class="n">log10</span><span class="p">(</span><span class="n">sMinBnd</span><span class="p">)</span> <span class="o">+</span> <span class="n">log10</span><span class="p">(</span><span class="n">sMaxBnd</span><span class="p">)</span> <span class="o">*</span> <span class="mf">0.1</span><span class="p">)])</span>
+        <span class="k">except</span><span class="p">:</span>
+            <span class="n">array</span><span class="p">([</span><span class="mf">100.0</span><span class="p">])</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">xpost</span> <span class="o">=</span> <span class="n">array</span><span class="p">([</span><span class="n">log10</span><span class="p">(</span><span class="n">s</span><span class="p">)])</span>
+    <span class="k">while</span> <span class="n">RobustIterativeProcess</span><span class="p">:</span>
+        <span class="c1"># --- &quot;amount&quot; of weights (see the function GCVscore)</span>
+        <span class="n">aow</span> <span class="o">=</span> <span class="nb">sum</span><span class="p">(</span><span class="n">Wtot</span><span class="p">)</span> <span class="o">/</span> <span class="n">noe</span>
+        <span class="c1"># 0 &lt; aow &lt;= 1</span>
+        <span class="c1"># ---</span>
+        <span class="k">while</span> <span class="n">tol</span> <span class="o">&gt;</span> <span class="n">TolZ</span> <span class="ow">and</span> <span class="n">nit</span> <span class="o">&lt;</span> <span class="n">MaxIter</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">verbose</span><span class="p">:</span>
+                <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;tol&quot;</span><span class="p">,</span> <span class="n">tol</span><span class="p">,</span> <span class="s2">&quot;nit&quot;</span><span class="p">,</span> <span class="n">nit</span><span class="p">)</span>
+            <span class="n">nit</span> <span class="o">=</span> <span class="n">nit</span> <span class="o">+</span> <span class="mi">1</span>
+            <span class="n">DCTy</span> <span class="o">=</span> <span class="n">dctND</span><span class="p">(</span><span class="n">Wtot</span> <span class="o">*</span> <span class="p">(</span><span class="n">y</span> <span class="o">-</span> <span class="n">z</span><span class="p">)</span> <span class="o">+</span> <span class="n">z</span><span class="p">,</span> <span class="n">f</span><span class="o">=</span><span class="n">dct</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">isauto</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">remainder</span><span class="p">(</span><span class="n">log2</span><span class="p">(</span><span class="n">nit</span><span class="p">),</span> <span class="mi">1</span><span class="p">):</span>
+                <span class="c1"># ---</span>
+                <span class="c1"># The generalized cross-validation (GCV) method is used.</span>
+                <span class="c1"># We seek the smoothing parameter s that minimizes the GCV</span>
+                <span class="c1"># score i.e. s = Argmin(GCVscore).</span>
+                <span class="c1"># Because this process is time-consuming, it is performed from</span>
+                <span class="c1"># time to time (when nit is a power of 2)</span>
+                <span class="c1"># ---</span>
+                <span class="c1"># errp in here somewhere</span>
+
+                <span class="c1"># xpost,f,d = lbfgsb.fmin_l_bfgs_b(gcv,xpost,fprime=None,factr=10.,\</span>
+                <span class="c1">#   approx_grad=True,bounds=[(log10(sMinBnd),log10(sMaxBnd))],\</span>
+                <span class="c1">#   args=(Lambda,aow,DCTy,IsFinite,Wtot,y,nof,noe))</span>
+
+                <span class="c1"># if we have no clue what value of s to use, better span the</span>
+                <span class="c1"># possible range to get a reasonable starting point ...</span>
+                <span class="c1"># only need to do it once though. nS0 is teh number of samples used</span>
+                <span class="k">if</span> <span class="ow">not</span> <span class="n">s0</span><span class="p">:</span>
+                    <span class="n">ss</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="n">nS0</span><span class="p">)</span> <span class="o">*</span> <span class="p">(</span><span class="mf">1.0</span> <span class="o">/</span> <span class="p">(</span><span class="n">nS0</span> <span class="o">-</span> <span class="mf">1.0</span><span class="p">))</span> <span class="o">*</span> <span class="p">(</span>
+                        <span class="n">log10</span><span class="p">(</span><span class="n">sMaxBnd</span><span class="p">)</span> <span class="o">-</span> <span class="n">log10</span><span class="p">(</span><span class="n">sMinBnd</span><span class="p">)</span>
+                    <span class="p">)</span> <span class="o">+</span> <span class="n">log10</span><span class="p">(</span><span class="n">sMinBnd</span><span class="p">)</span>
+                    <span class="n">g</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros_like</span><span class="p">(</span><span class="n">ss</span><span class="p">)</span>
+                    <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">p</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">ss</span><span class="p">):</span>
+                        <span class="n">g</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="n">gcv</span><span class="p">(</span>
+                            <span class="n">p</span><span class="p">,</span>
+                            <span class="n">Lambda</span><span class="p">,</span>
+                            <span class="n">aow</span><span class="p">,</span>
+                            <span class="n">DCTy</span><span class="p">,</span>
+                            <span class="n">IsFinite</span><span class="p">,</span>
+                            <span class="n">Wtot</span><span class="p">,</span>
+                            <span class="n">y</span><span class="p">,</span>
+                            <span class="n">nof</span><span class="p">,</span>
+                            <span class="n">noe</span><span class="p">,</span>
+                            <span class="n">smoothOrder</span><span class="p">,</span>
+                        <span class="p">)</span>
+                        <span class="c1"># print 10**p,g[i]</span>
+                    <span class="n">xpost</span> <span class="o">=</span> <span class="p">[</span><span class="n">ss</span><span class="p">[</span><span class="n">g</span> <span class="o">==</span> <span class="n">g</span><span class="o">.</span><span class="n">min</span><span class="p">()]]</span>
+                    <span class="c1"># print &#39;===============&#39;</span>
+                    <span class="c1"># print nit,tol,g.min(),xpost[0],s</span>
+                    <span class="c1"># print &#39;===============&#39;</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="n">xpost</span> <span class="o">=</span> <span class="p">[</span><span class="n">s0</span><span class="p">]</span>
+                <span class="n">xpost</span><span class="p">,</span> <span class="n">f</span><span class="p">,</span> <span class="n">d</span> <span class="o">=</span> <span class="n">lbfgsb</span><span class="o">.</span><span class="n">fmin_l_bfgs_b</span><span class="p">(</span>
+                    <span class="n">gcv</span><span class="p">,</span>
+                    <span class="n">xpost</span><span class="p">,</span>
+                    <span class="n">fprime</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+                    <span class="n">factr</span><span class="o">=</span><span class="mf">10.0</span><span class="p">,</span>
+                    <span class="n">approx_grad</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+                    <span class="n">bounds</span><span class="o">=</span><span class="p">[(</span><span class="n">log10</span><span class="p">(</span><span class="n">sMinBnd</span><span class="p">),</span> <span class="n">log10</span><span class="p">(</span><span class="n">sMaxBnd</span><span class="p">))],</span>
+                    <span class="n">args</span><span class="o">=</span><span class="p">(</span><span class="n">Lambda</span><span class="p">,</span> <span class="n">aow</span><span class="p">,</span> <span class="n">DCTy</span><span class="p">,</span> <span class="n">IsFinite</span><span class="p">,</span> <span class="n">Wtot</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">nof</span><span class="p">,</span> <span class="n">noe</span><span class="p">,</span> <span class="n">smoothOrder</span><span class="p">),</span>
+                <span class="p">)</span>
+            <span class="n">s</span> <span class="o">=</span> <span class="mi">10</span> <span class="o">**</span> <span class="n">xpost</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+            <span class="c1"># update the value we use for the initial s estimate</span>
+            <span class="n">s0</span> <span class="o">=</span> <span class="n">xpost</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+
+            <span class="n">Gamma</span> <span class="o">=</span> <span class="mf">1.0</span> <span class="o">/</span> <span class="p">(</span><span class="mi">1</span> <span class="o">+</span> <span class="p">(</span><span class="n">s</span> <span class="o">*</span> <span class="nb">abs</span><span class="p">(</span><span class="n">Lambda</span><span class="p">))</span> <span class="o">**</span> <span class="n">smoothOrder</span><span class="p">)</span>
+
+            <span class="n">z</span> <span class="o">=</span> <span class="n">RF</span> <span class="o">*</span> <span class="n">dctND</span><span class="p">(</span><span class="n">Gamma</span> <span class="o">*</span> <span class="n">DCTy</span><span class="p">,</span> <span class="n">f</span><span class="o">=</span><span class="n">idct</span><span class="p">)</span> <span class="o">+</span> <span class="p">(</span><span class="mi">1</span> <span class="o">-</span> <span class="n">RF</span><span class="p">)</span> <span class="o">*</span> <span class="n">z</span>
+            <span class="c1"># if no weighted/missing data =&gt; tol=0 (no iteration)</span>
+            <span class="n">tol</span> <span class="o">=</span> <span class="n">isweighted</span> <span class="o">*</span> <span class="n">norm</span><span class="p">(</span><span class="n">z0</span> <span class="o">-</span> <span class="n">z</span><span class="p">)</span> <span class="o">/</span> <span class="n">norm</span><span class="p">(</span><span class="n">z</span><span class="p">)</span>
+
+            <span class="n">z0</span> <span class="o">=</span> <span class="n">z</span>
+            <span class="c1"># re-initialization</span>
+        <span class="n">exitflag</span> <span class="o">=</span> <span class="n">nit</span> <span class="o">&lt;</span> <span class="n">MaxIter</span>
+
+        <span class="k">if</span> <span class="n">isrobust</span><span class="p">:</span>  <span class="c1"># -- Robust Smoothing: iteratively re-weighted process</span>
+            <span class="c1"># --- average leverage</span>
+            <span class="n">h</span> <span class="o">=</span> <span class="n">sqrt</span><span class="p">(</span><span class="mi">1</span> <span class="o">+</span> <span class="mf">16.0</span> <span class="o">*</span> <span class="n">s</span><span class="p">)</span>
+            <span class="n">h</span> <span class="o">=</span> <span class="n">sqrt</span><span class="p">(</span><span class="mi">1</span> <span class="o">+</span> <span class="n">h</span><span class="p">)</span> <span class="o">/</span> <span class="n">sqrt</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span> <span class="o">/</span> <span class="n">h</span>
+            <span class="n">h</span> <span class="o">=</span> <span class="n">h</span> <span class="o">**</span> <span class="n">N</span>
+            <span class="c1"># --- take robust weights into account</span>
+            <span class="n">Wtot</span> <span class="o">=</span> <span class="n">W</span> <span class="o">*</span> <span class="n">RobustWeights</span><span class="p">(</span><span class="n">y</span> <span class="o">-</span> <span class="n">z</span><span class="p">,</span> <span class="n">IsFinite</span><span class="p">,</span> <span class="n">h</span><span class="p">,</span> <span class="n">weightstr</span><span class="p">)</span>
+            <span class="c1"># --- re-initialize for another iterative weighted process</span>
+            <span class="n">isweighted</span> <span class="o">=</span> <span class="kc">True</span>
+            <span class="n">tol</span> <span class="o">=</span> <span class="mi">1</span>
+            <span class="n">nit</span> <span class="o">=</span> <span class="mi">0</span>
+            <span class="c1"># ---</span>
+            <span class="n">RobustStep</span> <span class="o">=</span> <span class="n">RobustStep</span> <span class="o">+</span> <span class="mi">1</span>
+            <span class="n">RobustIterativeProcess</span> <span class="o">=</span> <span class="n">RobustStep</span> <span class="o">&lt;</span> <span class="mi">3</span>
+            <span class="c1"># 3 robust steps are enough.</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">RobustIterativeProcess</span> <span class="o">=</span> <span class="kc">False</span>
+            <span class="c1"># stop the whole process</span>
+
+    <span class="c1">## Warning messages</span>
+    <span class="c1"># ---</span>
+    <span class="k">if</span> <span class="n">isauto</span><span class="p">:</span>
+        <span class="k">if</span> <span class="nb">abs</span><span class="p">(</span><span class="n">log10</span><span class="p">(</span><span class="n">s</span><span class="p">)</span> <span class="o">-</span> <span class="n">log10</span><span class="p">(</span><span class="n">sMinBnd</span><span class="p">))</span> <span class="o">&lt;</span> <span class="n">errp</span><span class="p">:</span>
+            <span class="n">warning</span><span class="p">(</span>
+                <span class="s2">&quot;MATLAB:smoothn:SLowerBound&quot;</span><span class="p">,</span>
+                <span class="p">[</span>
+                    <span class="s2">&quot;s = </span><span class="si">%.3f</span><span class="s2"> &quot;</span> <span class="o">%</span> <span class="p">(</span><span class="n">s</span><span class="p">)</span>
+                    <span class="o">+</span> <span class="s2">&quot;: the lower bound for s &quot;</span>
+                    <span class="o">+</span> <span class="s2">&quot;has been reached. Put s as an input variable if required.&quot;</span>
+                <span class="p">],</span>
+            <span class="p">)</span>
+        <span class="k">elif</span> <span class="nb">abs</span><span class="p">(</span><span class="n">log10</span><span class="p">(</span><span class="n">s</span><span class="p">)</span> <span class="o">-</span> <span class="n">log10</span><span class="p">(</span><span class="n">sMaxBnd</span><span class="p">))</span> <span class="o">&lt;</span> <span class="n">errp</span><span class="p">:</span>
+            <span class="n">warning</span><span class="p">(</span>
+                <span class="s2">&quot;MATLAB:smoothn:SUpperBound&quot;</span><span class="p">,</span>
+                <span class="p">[</span>
+                    <span class="s2">&quot;s = </span><span class="si">%.3f</span><span class="s2"> &quot;</span> <span class="o">%</span> <span class="p">(</span><span class="n">s</span><span class="p">)</span>
+                    <span class="o">+</span> <span class="s2">&quot;: the upper bound for s &quot;</span>
+                    <span class="o">+</span> <span class="s2">&quot;has been reached. Put s as an input variable if required.&quot;</span>
+                <span class="p">],</span>
+            <span class="p">)</span>
+        <span class="c1"># warning(&#39;MATLAB:smoothn:MaxIter&#39;,\</span>
+        <span class="c1">#    [&#39;Maximum number of iterations (%d&#39;%(MaxIter) + &#39;) has &#39;\</span>
+        <span class="c1">#    + &#39;been exceeded. Increase MaxIter option or decrease TolZ value.&#39;])</span>
+
+    <span class="k">if</span> <span class="n">is_masked</span><span class="p">:</span>
+        <span class="n">z</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">ma</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">z</span><span class="p">,</span> <span class="n">mask</span><span class="o">=</span><span class="n">mask</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">z</span><span class="p">,</span> <span class="n">s</span><span class="p">,</span> <span class="n">exitflag</span><span class="p">,</span> <span class="n">Wtot</span></div>
+
+
+<div class="viewcode-block" id="warning"><a class="viewcode-back" href="../../src/openpiv.html#openpiv.smoothn.warning">[docs]</a><span class="k">def</span> <span class="nf">warning</span><span class="p">(</span><span class="n">s1</span><span class="p">,</span> <span class="n">s2</span><span class="p">):</span>
+    <span class="nb">print</span><span class="p">(</span><span class="n">s1</span><span class="p">)</span>
+    <span class="nb">print</span><span class="p">(</span><span class="n">s2</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span></div>
+
+
+<span class="c1">## GCV score</span>
+<span class="c1"># ---</span>
+<span class="c1"># function GCVscore = gcv(p)</span>
+<div class="viewcode-block" id="gcv"><a class="viewcode-back" href="../../src/openpiv.html#openpiv.smoothn.gcv">[docs]</a><span class="k">def</span> <span class="nf">gcv</span><span class="p">(</span><span class="n">p</span><span class="p">,</span> <span class="n">Lambda</span><span class="p">,</span> <span class="n">aow</span><span class="p">,</span> <span class="n">DCTy</span><span class="p">,</span> <span class="n">IsFinite</span><span class="p">,</span> <span class="n">Wtot</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">nof</span><span class="p">,</span> <span class="n">noe</span><span class="p">,</span> <span class="n">smoothOrder</span><span class="p">):</span>
+    <span class="c1"># Search the smoothing parameter s that minimizes the GCV score</span>
+    <span class="c1"># ---</span>
+    <span class="n">s</span> <span class="o">=</span> <span class="mi">10</span> <span class="o">**</span> <span class="n">p</span>
+    <span class="n">Gamma</span> <span class="o">=</span> <span class="mf">1.0</span> <span class="o">/</span> <span class="p">(</span><span class="mi">1</span> <span class="o">+</span> <span class="p">(</span><span class="n">s</span> <span class="o">*</span> <span class="nb">abs</span><span class="p">(</span><span class="n">Lambda</span><span class="p">))</span> <span class="o">**</span> <span class="n">smoothOrder</span><span class="p">)</span>
+    <span class="c1"># --- RSS = Residual sum-of-squares</span>
+    <span class="k">if</span> <span class="n">aow</span> <span class="o">&gt;</span> <span class="mf">0.9</span><span class="p">:</span>  <span class="c1"># aow = 1 means that all of the data are equally weighted</span>
+        <span class="c1"># very much faster: does not require any inverse DCT</span>
+        <span class="n">RSS</span> <span class="o">=</span> <span class="n">norm</span><span class="p">(</span><span class="n">DCTy</span> <span class="o">*</span> <span class="p">(</span><span class="n">Gamma</span> <span class="o">-</span> <span class="mf">1.0</span><span class="p">))</span> <span class="o">**</span> <span class="mi">2</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="c1"># take account of the weights to calculate RSS:</span>
+        <span class="n">yhat</span> <span class="o">=</span> <span class="n">dctND</span><span class="p">(</span><span class="n">Gamma</span> <span class="o">*</span> <span class="n">DCTy</span><span class="p">,</span> <span class="n">f</span><span class="o">=</span><span class="n">idct</span><span class="p">)</span>
+        <span class="n">RSS</span> <span class="o">=</span> <span class="n">norm</span><span class="p">(</span><span class="n">sqrt</span><span class="p">(</span><span class="n">Wtot</span><span class="p">[</span><span class="n">IsFinite</span><span class="p">])</span> <span class="o">*</span> <span class="p">(</span><span class="n">y</span><span class="p">[</span><span class="n">IsFinite</span><span class="p">]</span> <span class="o">-</span> <span class="n">yhat</span><span class="p">[</span><span class="n">IsFinite</span><span class="p">]))</span> <span class="o">**</span> <span class="mi">2</span>
+    <span class="c1"># ---</span>
+    <span class="n">TrH</span> <span class="o">=</span> <span class="nb">sum</span><span class="p">(</span><span class="n">Gamma</span><span class="p">)</span>
+    <span class="n">GCVscore</span> <span class="o">=</span> <span class="n">RSS</span> <span class="o">/</span> <span class="nb">float</span><span class="p">(</span><span class="n">nof</span><span class="p">)</span> <span class="o">/</span> <span class="p">(</span><span class="mf">1.0</span> <span class="o">-</span> <span class="n">TrH</span> <span class="o">/</span> <span class="nb">float</span><span class="p">(</span><span class="n">noe</span><span class="p">))</span> <span class="o">**</span> <span class="mi">2</span>
+    <span class="k">return</span> <span class="n">GCVscore</span></div>
+
+
+<span class="c1">## Robust weights</span>
+<span class="c1"># function W = RobustWeights(r,I,h,wstr)</span>
+<div class="viewcode-block" id="RobustWeights"><a class="viewcode-back" href="../../src/openpiv.html#openpiv.smoothn.RobustWeights">[docs]</a><span class="k">def</span> <span class="nf">RobustWeights</span><span class="p">(</span><span class="n">r</span><span class="p">,</span> <span class="n">I</span><span class="p">,</span> <span class="n">h</span><span class="p">,</span> <span class="n">wstr</span><span class="p">):</span>
+    <span class="c1"># weights for robust smoothing.</span>
+    <span class="n">MAD</span> <span class="o">=</span> <span class="n">median</span><span class="p">(</span><span class="nb">abs</span><span class="p">(</span><span class="n">r</span><span class="p">[</span><span class="n">I</span><span class="p">]</span> <span class="o">-</span> <span class="n">median</span><span class="p">(</span><span class="n">r</span><span class="p">[</span><span class="n">I</span><span class="p">])))</span>
+    <span class="c1"># median absolute deviation</span>
+    <span class="n">u</span> <span class="o">=</span> <span class="nb">abs</span><span class="p">(</span><span class="n">r</span> <span class="o">/</span> <span class="p">(</span><span class="mf">1.4826</span> <span class="o">*</span> <span class="n">MAD</span><span class="p">)</span> <span class="o">/</span> <span class="n">sqrt</span><span class="p">(</span><span class="mi">1</span> <span class="o">-</span> <span class="n">h</span><span class="p">))</span>
+    <span class="c1"># studentized residuals</span>
+    <span class="k">if</span> <span class="n">wstr</span> <span class="o">==</span> <span class="s2">&quot;cauchy&quot;</span><span class="p">:</span>
+        <span class="n">c</span> <span class="o">=</span> <span class="mf">2.385</span>
+        <span class="n">W</span> <span class="o">=</span> <span class="mf">1.0</span> <span class="o">/</span> <span class="p">(</span><span class="mi">1</span> <span class="o">+</span> <span class="p">(</span><span class="n">u</span> <span class="o">/</span> <span class="n">c</span><span class="p">)</span> <span class="o">**</span> <span class="mi">2</span><span class="p">)</span>
+        <span class="c1"># Cauchy weights</span>
+    <span class="k">elif</span> <span class="n">wstr</span> <span class="o">==</span> <span class="s2">&quot;talworth&quot;</span><span class="p">:</span>
+        <span class="n">c</span> <span class="o">=</span> <span class="mf">2.795</span>
+        <span class="n">W</span> <span class="o">=</span> <span class="n">u</span> <span class="o">&lt;</span> <span class="n">c</span>
+        <span class="c1"># Talworth weights</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">c</span> <span class="o">=</span> <span class="mf">4.685</span>
+        <span class="n">W</span> <span class="o">=</span> <span class="p">(</span><span class="mi">1</span> <span class="o">-</span> <span class="p">(</span><span class="n">u</span> <span class="o">/</span> <span class="n">c</span><span class="p">)</span> <span class="o">**</span> <span class="mi">2</span><span class="p">)</span> <span class="o">**</span> <span class="mf">2.0</span> <span class="o">*</span> <span class="p">((</span><span class="n">u</span> <span class="o">/</span> <span class="n">c</span><span class="p">)</span> <span class="o">&lt;</span> <span class="mi">1</span><span class="p">)</span>
+        <span class="c1"># bisquare weights</span>
+
+    <span class="n">W</span><span class="p">[</span><span class="n">isnan</span><span class="p">(</span><span class="n">W</span><span class="p">)]</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="k">return</span> <span class="n">W</span></div>
+
+
+<span class="c1">## Initial Guess with weighted/missing data</span>
+<span class="c1"># function z = InitialGuess(y,I)</span>
+<div class="viewcode-block" id="InitialGuess"><a class="viewcode-back" href="../../src/openpiv.html#openpiv.smoothn.InitialGuess">[docs]</a><span class="k">def</span> <span class="nf">InitialGuess</span><span class="p">(</span><span class="n">y</span><span class="p">,</span> <span class="n">I</span><span class="p">):</span>
+    <span class="c1"># -- nearest neighbor interpolation (in case of missing values)</span>
+    <span class="k">if</span> <span class="nb">any</span><span class="p">(</span><span class="o">~</span><span class="n">I</span><span class="p">):</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="kn">from</span> <span class="nn">scipy.ndimage.morphology</span> <span class="kn">import</span> <span class="n">distance_transform_edt</span>
+
+            <span class="c1"># if license(&#39;test&#39;,&#39;image_toolbox&#39;)</span>
+            <span class="c1"># [z,L] = bwdist(I);</span>
+            <span class="n">L</span> <span class="o">=</span> <span class="n">distance_transform_edt</span><span class="p">(</span><span class="mi">1</span> <span class="o">-</span> <span class="n">I</span><span class="p">)</span>
+            <span class="n">z</span> <span class="o">=</span> <span class="n">y</span>
+            <span class="n">z</span><span class="p">[</span><span class="o">~</span><span class="n">I</span><span class="p">]</span> <span class="o">=</span> <span class="n">y</span><span class="p">[</span><span class="n">L</span><span class="p">[</span><span class="o">~</span><span class="n">I</span><span class="p">]]</span>
+        <span class="k">except</span><span class="p">:</span>
+            <span class="c1"># If BWDIST does not exist, NaN values are all replaced with the</span>
+            <span class="c1"># same scalar. The initial guess is not optimal and a warning</span>
+            <span class="c1"># message thus appears.</span>
+            <span class="n">z</span> <span class="o">=</span> <span class="n">y</span>
+            <span class="n">z</span><span class="p">[</span><span class="o">~</span><span class="n">I</span><span class="p">]</span> <span class="o">=</span> <span class="n">mean</span><span class="p">(</span><span class="n">y</span><span class="p">[</span><span class="n">I</span><span class="p">])</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">z</span> <span class="o">=</span> <span class="n">y</span>
+    <span class="c1"># coarse fast smoothing</span>
+    <span class="n">z</span> <span class="o">=</span> <span class="n">dctND</span><span class="p">(</span><span class="n">z</span><span class="p">,</span> <span class="n">f</span><span class="o">=</span><span class="n">dct</span><span class="p">)</span>
+    <span class="n">k</span> <span class="o">=</span> <span class="n">array</span><span class="p">(</span><span class="n">z</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span>
+    <span class="n">m</span> <span class="o">=</span> <span class="n">ceil</span><span class="p">(</span><span class="n">k</span> <span class="o">/</span> <span class="mi">10</span><span class="p">)</span> <span class="o">+</span> <span class="mi">1</span>
+    <span class="n">d</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">xrange</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">k</span><span class="p">)):</span>
+        <span class="n">d</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">arange</span><span class="p">(</span><span class="n">m</span><span class="p">[</span><span class="n">i</span><span class="p">],</span> <span class="n">k</span><span class="p">[</span><span class="n">i</span><span class="p">]))</span>
+    <span class="n">d</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">d</span><span class="p">)</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="nb">int</span><span class="p">)</span>
+    <span class="n">z</span><span class="p">[</span><span class="n">d</span><span class="p">]</span> <span class="o">=</span> <span class="mf">0.0</span>
+    <span class="n">z</span> <span class="o">=</span> <span class="n">dctND</span><span class="p">(</span><span class="n">z</span><span class="p">,</span> <span class="n">f</span><span class="o">=</span><span class="n">idct</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">z</span></div>
+    <span class="c1"># -- coarse fast smoothing using one-tenth of the DCT coefficients</span>
+    <span class="c1"># siz = z.shape;</span>
+    <span class="c1"># z = dct(z,norm=&#39;ortho&#39;,type=2);</span>
+    <span class="c1"># for k in np.arange(len(z.shape)):</span>
+    <span class="c1">#    z[ceil(siz[k]/10)+1:-1] = 0;</span>
+    <span class="c1">#    ss = tuple(roll(array(siz),1-k))</span>
+    <span class="c1">#    z = z.reshape(ss)</span>
+    <span class="c1">#    z = np.roll(z.T,1)</span>
+    <span class="c1"># z = idct(z,norm=&#39;ortho&#39;,type=2);</span>
+
+
+<span class="c1"># NB: filter is 2*I - (np.roll(I,-1) + np.roll(I,1))</span>
+
+
+<div class="viewcode-block" id="dctND"><a class="viewcode-back" href="../../src/openpiv.html#openpiv.smoothn.dctND">[docs]</a><span class="k">def</span> <span class="nf">dctND</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="n">f</span><span class="o">=</span><span class="n">dct</span><span class="p">):</span>
+    <span class="n">nd</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">data</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">nd</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">f</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="n">norm</span><span class="o">=</span><span class="s2">&quot;ortho&quot;</span><span class="p">,</span> <span class="nb">type</span><span class="o">=</span><span class="mi">2</span><span class="p">)</span>
+    <span class="k">elif</span> <span class="n">nd</span> <span class="o">==</span> <span class="mi">2</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">f</span><span class="p">(</span><span class="n">f</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="n">norm</span><span class="o">=</span><span class="s2">&quot;ortho&quot;</span><span class="p">,</span> <span class="nb">type</span><span class="o">=</span><span class="mi">2</span><span class="p">)</span><span class="o">.</span><span class="n">T</span><span class="p">,</span> <span class="n">norm</span><span class="o">=</span><span class="s2">&quot;ortho&quot;</span><span class="p">,</span> <span class="nb">type</span><span class="o">=</span><span class="mi">2</span><span class="p">)</span><span class="o">.</span><span class="n">T</span>
+    <span class="k">elif</span> <span class="n">nd</span> <span class="o">==</span> <span class="mi">3</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">f</span><span class="p">(</span>
+            <span class="n">f</span><span class="p">(</span><span class="n">f</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="n">norm</span><span class="o">=</span><span class="s2">&quot;ortho&quot;</span><span class="p">,</span> <span class="nb">type</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">),</span> <span class="n">norm</span><span class="o">=</span><span class="s2">&quot;ortho&quot;</span><span class="p">,</span> <span class="nb">type</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">),</span>
+            <span class="n">norm</span><span class="o">=</span><span class="s2">&quot;ortho&quot;</span><span class="p">,</span>
+            <span class="nb">type</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span>
+            <span class="n">axis</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span>
+        <span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="peaks"><a class="viewcode-back" href="../../src/openpiv.html#openpiv.smoothn.peaks">[docs]</a><span class="k">def</span> <span class="nf">peaks</span><span class="p">(</span><span class="n">n</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">  Mimic basic of matlab peaks fn</span>
+<span class="sd">  &quot;&quot;&quot;</span>
+    <span class="n">xp</span> <span class="o">=</span> <span class="n">arange</span><span class="p">(</span><span class="n">n</span><span class="p">)</span>
+    <span class="p">[</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">]</span> <span class="o">=</span> <span class="n">meshgrid</span><span class="p">(</span><span class="n">xp</span><span class="p">,</span> <span class="n">xp</span><span class="p">)</span>
+    <span class="n">z</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros_like</span><span class="p">(</span><span class="n">x</span><span class="p">)</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="nb">float</span><span class="p">)</span>
+    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">xrange</span><span class="p">(</span><span class="n">n</span> <span class="o">/</span> <span class="mi">5</span><span class="p">):</span>
+        <span class="n">x0</span> <span class="o">=</span> <span class="n">random</span><span class="p">()</span> <span class="o">*</span> <span class="n">n</span>
+        <span class="n">y0</span> <span class="o">=</span> <span class="n">random</span><span class="p">()</span> <span class="o">*</span> <span class="n">n</span>
+        <span class="n">sdx</span> <span class="o">=</span> <span class="n">random</span><span class="p">()</span> <span class="o">*</span> <span class="n">n</span> <span class="o">/</span> <span class="mf">4.0</span>
+        <span class="n">sdy</span> <span class="o">=</span> <span class="n">sdx</span>
+        <span class="n">c</span> <span class="o">=</span> <span class="n">random</span><span class="p">()</span> <span class="o">*</span> <span class="mi">2</span> <span class="o">-</span> <span class="mf">1.0</span>
+        <span class="n">f</span> <span class="o">=</span> <span class="n">exp</span><span class="p">(</span>
+            <span class="o">-</span><span class="p">(((</span><span class="n">x</span> <span class="o">-</span> <span class="n">x0</span><span class="p">)</span> <span class="o">/</span> <span class="n">sdx</span><span class="p">)</span> <span class="o">**</span> <span class="mi">2</span><span class="p">)</span>
+            <span class="o">-</span> <span class="p">((</span><span class="n">y</span> <span class="o">-</span> <span class="n">y0</span><span class="p">)</span> <span class="o">/</span> <span class="n">sdy</span><span class="p">)</span> <span class="o">**</span> <span class="mi">2</span>
+            <span class="o">-</span> <span class="p">(((</span><span class="n">x</span> <span class="o">-</span> <span class="n">x0</span><span class="p">)</span> <span class="o">/</span> <span class="n">sdx</span><span class="p">))</span> <span class="o">*</span> <span class="p">((</span><span class="n">y</span> <span class="o">-</span> <span class="n">y0</span><span class="p">)</span> <span class="o">/</span> <span class="n">sdy</span><span class="p">)</span> <span class="o">*</span> <span class="n">c</span>
+        <span class="p">)</span>
+        <span class="c1"># f /= f.sum()</span>
+        <span class="n">f</span> <span class="o">*=</span> <span class="n">random</span><span class="p">()</span>
+        <span class="n">z</span> <span class="o">+=</span> <span class="n">f</span>
+    <span class="k">return</span> <span class="n">z</span></div>
+
+
+<div class="viewcode-block" id="test1"><a class="viewcode-back" href="../../src/openpiv.html#openpiv.smoothn.test1">[docs]</a><span class="k">def</span> <span class="nf">test1</span><span class="p">():</span>
+    <span class="n">plt</span><span class="o">.</span><span class="n">figure</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
+    <span class="n">plt</span><span class="o">.</span><span class="n">clf</span><span class="p">()</span>
+    <span class="c1"># 1-D example</span>
+    <span class="n">x</span> <span class="o">=</span> <span class="n">linspace</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">100</span><span class="p">,</span> <span class="mi">2</span> <span class="o">**</span> <span class="mi">8</span><span class="p">)</span>
+    <span class="n">y</span> <span class="o">=</span> <span class="n">cos</span><span class="p">(</span><span class="n">x</span> <span class="o">/</span> <span class="mi">10</span><span class="p">)</span> <span class="o">+</span> <span class="p">(</span><span class="n">x</span> <span class="o">/</span> <span class="mi">50</span><span class="p">)</span> <span class="o">**</span> <span class="mi">2</span> <span class="o">+</span> <span class="n">randn</span><span class="p">(</span><span class="n">size</span><span class="p">(</span><span class="n">x</span><span class="p">))</span> <span class="o">/</span> <span class="mi">10</span>
+    <span class="n">y</span><span class="p">[[</span><span class="mi">70</span><span class="p">,</span> <span class="mi">75</span><span class="p">,</span> <span class="mi">80</span><span class="p">]]</span> <span class="o">=</span> <span class="p">[</span><span class="mf">5.5</span><span class="p">,</span> <span class="mi">5</span><span class="p">,</span> <span class="mi">6</span><span class="p">]</span>
+    <span class="n">z</span> <span class="o">=</span> <span class="n">smoothn</span><span class="p">(</span><span class="n">y</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+    <span class="c1"># Regular smoothing</span>
+    <span class="n">zr</span> <span class="o">=</span> <span class="n">smoothn</span><span class="p">(</span><span class="n">y</span><span class="p">,</span> <span class="n">isrobust</span><span class="o">=</span><span class="kc">True</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+    <span class="c1"># Robust smoothing</span>
+    <span class="n">subplot</span><span class="p">(</span><span class="mi">121</span><span class="p">)</span>
+    <span class="n">plot</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="s2">&quot;r.&quot;</span><span class="p">)</span>
+    <span class="n">plot</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">z</span><span class="p">,</span> <span class="s2">&quot;k&quot;</span><span class="p">)</span>
+    <span class="n">title</span><span class="p">(</span><span class="s2">&quot;Regular smoothing&quot;</span><span class="p">)</span>
+    <span class="n">subplot</span><span class="p">(</span><span class="mi">122</span><span class="p">)</span>
+    <span class="n">plot</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="s2">&quot;r.&quot;</span><span class="p">)</span>
+    <span class="n">plot</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">zr</span><span class="p">,</span> <span class="s2">&quot;k&quot;</span><span class="p">)</span>
+    <span class="n">title</span><span class="p">(</span><span class="s2">&quot;Robust smoothing&quot;</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="test2"><a class="viewcode-back" href="../../src/openpiv.html#openpiv.smoothn.test2">[docs]</a><span class="k">def</span> <span class="nf">test2</span><span class="p">(</span><span class="n">axis</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+    <span class="c1"># 2-D example</span>
+    <span class="n">plt</span><span class="o">.</span><span class="n">figure</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span>
+    <span class="n">plt</span><span class="o">.</span><span class="n">clf</span><span class="p">()</span>
+    <span class="n">xp</span> <span class="o">=</span> <span class="n">arange</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mf">0.02</span><span class="p">)</span>
+    <span class="p">[</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">]</span> <span class="o">=</span> <span class="n">meshgrid</span><span class="p">(</span><span class="n">xp</span><span class="p">,</span> <span class="n">xp</span><span class="p">)</span>
+    <span class="n">f</span> <span class="o">=</span> <span class="n">exp</span><span class="p">(</span><span class="n">x</span> <span class="o">+</span> <span class="n">y</span><span class="p">)</span> <span class="o">+</span> <span class="n">sin</span><span class="p">((</span><span class="n">x</span> <span class="o">-</span> <span class="mi">2</span> <span class="o">*</span> <span class="n">y</span><span class="p">)</span> <span class="o">*</span> <span class="mi">3</span><span class="p">)</span>
+    <span class="n">fn</span> <span class="o">=</span> <span class="n">f</span> <span class="o">+</span> <span class="p">(</span><span class="n">randn</span><span class="p">(</span><span class="n">f</span><span class="o">.</span><span class="n">size</span><span class="p">)</span> <span class="o">*</span> <span class="mf">0.5</span><span class="p">)</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="n">f</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span>
+    <span class="n">fs</span> <span class="o">=</span> <span class="n">smoothn</span><span class="p">(</span><span class="n">fn</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="n">axis</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+    <span class="n">subplot</span><span class="p">(</span><span class="mi">121</span><span class="p">)</span>
+    <span class="n">plt</span><span class="o">.</span><span class="n">imshow</span><span class="p">(</span><span class="n">fn</span><span class="p">,</span> <span class="n">interpolation</span><span class="o">=</span><span class="s2">&quot;Nearest&quot;</span><span class="p">)</span>
+    <span class="c1"># axis square</span>
+    <span class="n">subplot</span><span class="p">(</span><span class="mi">122</span><span class="p">)</span>
+    <span class="n">plt</span><span class="o">.</span><span class="n">imshow</span><span class="p">(</span><span class="n">fs</span><span class="p">,</span> <span class="n">interpolation</span><span class="o">=</span><span class="s2">&quot;Nearest&quot;</span><span class="p">)</span></div>
+    <span class="c1"># axis square</span>
+
+
+<div class="viewcode-block" id="test3"><a class="viewcode-back" href="../../src/openpiv.html#openpiv.smoothn.test3">[docs]</a><span class="k">def</span> <span class="nf">test3</span><span class="p">(</span><span class="n">axis</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+    <span class="c1"># 2-D example with missing data</span>
+    <span class="n">plt</span><span class="o">.</span><span class="n">figure</span><span class="p">(</span><span class="mi">3</span><span class="p">)</span>
+    <span class="n">plt</span><span class="o">.</span><span class="n">clf</span><span class="p">()</span>
+    <span class="n">n</span> <span class="o">=</span> <span class="mi">256</span>
+    <span class="n">y0</span> <span class="o">=</span> <span class="n">peaks</span><span class="p">(</span><span class="n">n</span><span class="p">)</span>
+    <span class="n">y</span> <span class="o">=</span> <span class="p">(</span><span class="n">y0</span> <span class="o">+</span> <span class="n">random</span><span class="p">(</span><span class="n">shape</span><span class="p">(</span><span class="n">y0</span><span class="p">))</span> <span class="o">*</span> <span class="mi">2</span> <span class="o">-</span> <span class="mf">1.0</span><span class="p">)</span><span class="o">.</span><span class="n">flatten</span><span class="p">()</span>
+    <span class="n">I</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">permutation</span><span class="p">(</span><span class="nb">range</span><span class="p">(</span><span class="n">n</span> <span class="o">**</span> <span class="mi">2</span><span class="p">))</span>
+    <span class="n">y</span><span class="p">[</span><span class="n">I</span><span class="p">[</span><span class="mi">1</span> <span class="p">:</span> <span class="n">n</span> <span class="o">**</span> <span class="mi">2</span> <span class="o">*</span> <span class="mf">0.5</span><span class="p">]]</span> <span class="o">=</span> <span class="n">nan</span>
+    <span class="c1"># lose 50% of data</span>
+    <span class="n">y</span> <span class="o">=</span> <span class="n">y</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="n">y0</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span>
+    <span class="n">y</span><span class="p">[</span><span class="mi">40</span><span class="p">:</span><span class="mi">90</span><span class="p">,</span> <span class="mi">140</span><span class="p">:</span><span class="mi">190</span><span class="p">]</span> <span class="o">=</span> <span class="n">nan</span>
+    <span class="c1"># create a hole</span>
+    <span class="n">yData</span> <span class="o">=</span> <span class="n">y</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+    <span class="n">z0</span><span class="p">,</span> <span class="n">s</span><span class="p">,</span> <span class="n">exitflag</span><span class="p">,</span> <span class="n">Wtot</span> <span class="o">=</span> <span class="n">smoothn</span><span class="p">(</span><span class="n">yData</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="n">axis</span><span class="p">)</span>
+    <span class="c1"># smooth data</span>
+    <span class="n">yData</span> <span class="o">=</span> <span class="n">y</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+    <span class="n">z</span><span class="p">,</span> <span class="n">s</span><span class="p">,</span> <span class="n">exitflag</span><span class="p">,</span> <span class="n">Wtot</span> <span class="o">=</span> <span class="n">smoothn</span><span class="p">(</span><span class="n">yData</span><span class="p">,</span> <span class="n">isrobust</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="n">axis</span><span class="p">)</span>
+    <span class="c1"># smooth data</span>
+    <span class="n">y</span> <span class="o">=</span> <span class="n">yData</span>
+    <span class="n">vmin</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">min</span><span class="p">([</span><span class="n">np</span><span class="o">.</span><span class="n">min</span><span class="p">(</span><span class="n">z</span><span class="p">),</span> <span class="n">np</span><span class="o">.</span><span class="n">min</span><span class="p">(</span><span class="n">z0</span><span class="p">),</span> <span class="n">np</span><span class="o">.</span><span class="n">min</span><span class="p">(</span><span class="n">y</span><span class="p">),</span> <span class="n">np</span><span class="o">.</span><span class="n">min</span><span class="p">(</span><span class="n">y0</span><span class="p">)])</span>
+    <span class="n">vmax</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">max</span><span class="p">([</span><span class="n">np</span><span class="o">.</span><span class="n">max</span><span class="p">(</span><span class="n">z</span><span class="p">),</span> <span class="n">np</span><span class="o">.</span><span class="n">max</span><span class="p">(</span><span class="n">z0</span><span class="p">),</span> <span class="n">np</span><span class="o">.</span><span class="n">max</span><span class="p">(</span><span class="n">y</span><span class="p">),</span> <span class="n">np</span><span class="o">.</span><span class="n">max</span><span class="p">(</span><span class="n">y0</span><span class="p">)])</span>
+    <span class="n">subplot</span><span class="p">(</span><span class="mi">221</span><span class="p">)</span>
+    <span class="n">plt</span><span class="o">.</span><span class="n">imshow</span><span class="p">(</span><span class="n">y</span><span class="p">,</span> <span class="n">interpolation</span><span class="o">=</span><span class="s2">&quot;Nearest&quot;</span><span class="p">,</span> <span class="n">vmin</span><span class="o">=</span><span class="n">vmin</span><span class="p">,</span> <span class="n">vmax</span><span class="o">=</span><span class="n">vmax</span><span class="p">)</span>
+    <span class="n">title</span><span class="p">(</span><span class="s2">&quot;Noisy corrupt data&quot;</span><span class="p">)</span>
+    <span class="n">subplot</span><span class="p">(</span><span class="mi">222</span><span class="p">)</span>
+    <span class="n">plt</span><span class="o">.</span><span class="n">imshow</span><span class="p">(</span><span class="n">z0</span><span class="p">,</span> <span class="n">interpolation</span><span class="o">=</span><span class="s2">&quot;Nearest&quot;</span><span class="p">,</span> <span class="n">vmin</span><span class="o">=</span><span class="n">vmin</span><span class="p">,</span> <span class="n">vmax</span><span class="o">=</span><span class="n">vmax</span><span class="p">)</span>
+    <span class="n">title</span><span class="p">(</span><span class="s2">&quot;Recovered data #1&quot;</span><span class="p">)</span>
+    <span class="n">subplot</span><span class="p">(</span><span class="mi">223</span><span class="p">)</span>
+    <span class="n">plt</span><span class="o">.</span><span class="n">imshow</span><span class="p">(</span><span class="n">z</span><span class="p">,</span> <span class="n">interpolation</span><span class="o">=</span><span class="s2">&quot;Nearest&quot;</span><span class="p">,</span> <span class="n">vmin</span><span class="o">=</span><span class="n">vmin</span><span class="p">,</span> <span class="n">vmax</span><span class="o">=</span><span class="n">vmax</span><span class="p">)</span>
+    <span class="n">title</span><span class="p">(</span><span class="s2">&quot;Recovered data #2&quot;</span><span class="p">)</span>
+    <span class="n">subplot</span><span class="p">(</span><span class="mi">224</span><span class="p">)</span>
+    <span class="n">plt</span><span class="o">.</span><span class="n">imshow</span><span class="p">(</span><span class="n">y0</span><span class="p">,</span> <span class="n">interpolation</span><span class="o">=</span><span class="s2">&quot;Nearest&quot;</span><span class="p">,</span> <span class="n">vmin</span><span class="o">=</span><span class="n">vmin</span><span class="p">,</span> <span class="n">vmax</span><span class="o">=</span><span class="n">vmax</span><span class="p">)</span>
+    <span class="n">title</span><span class="p">(</span><span class="s2">&quot;... compared with original data&quot;</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="test4"><a class="viewcode-back" href="../../src/openpiv.html#openpiv.smoothn.test4">[docs]</a><span class="k">def</span> <span class="nf">test4</span><span class="p">(</span><span class="n">i</span><span class="o">=</span><span class="mi">10</span><span class="p">,</span> <span class="n">step</span><span class="o">=</span><span class="mf">0.2</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+    <span class="p">[</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">z</span><span class="p">]</span> <span class="o">=</span> <span class="n">mgrid</span><span class="p">[</span><span class="o">-</span><span class="mi">2</span><span class="p">:</span><span class="mi">2</span><span class="p">:</span><span class="n">step</span><span class="p">,</span> <span class="o">-</span><span class="mi">2</span><span class="p">:</span><span class="mi">2</span><span class="p">:</span><span class="n">step</span><span class="p">,</span> <span class="o">-</span><span class="mi">2</span><span class="p">:</span><span class="mi">2</span><span class="p">:</span><span class="n">step</span><span class="p">]</span>
+    <span class="n">x</span> <span class="o">=</span> <span class="n">array</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
+    <span class="n">y</span> <span class="o">=</span> <span class="n">array</span><span class="p">(</span><span class="n">y</span><span class="p">)</span>
+    <span class="n">z</span> <span class="o">=</span> <span class="n">array</span><span class="p">(</span><span class="n">z</span><span class="p">)</span>
+    <span class="n">xslice</span> <span class="o">=</span> <span class="p">[</span><span class="o">-</span><span class="mf">0.8</span><span class="p">,</span> <span class="mi">1</span><span class="p">]</span>
+    <span class="n">yslice</span> <span class="o">=</span> <span class="mi">2</span>
+    <span class="n">zslice</span> <span class="o">=</span> <span class="p">[</span><span class="o">-</span><span class="mi">2</span><span class="p">,</span> <span class="mi">0</span><span class="p">]</span>
+    <span class="n">v0</span> <span class="o">=</span> <span class="n">x</span> <span class="o">*</span> <span class="n">exp</span><span class="p">(</span><span class="o">-</span><span class="p">(</span><span class="n">x</span> <span class="o">**</span> <span class="mi">2</span><span class="p">)</span> <span class="o">-</span> <span class="n">y</span> <span class="o">**</span> <span class="mi">2</span> <span class="o">-</span> <span class="n">z</span> <span class="o">**</span> <span class="mi">2</span><span class="p">)</span>
+    <span class="n">vn</span> <span class="o">=</span> <span class="n">v0</span> <span class="o">+</span> <span class="n">randn</span><span class="p">(</span><span class="n">x</span><span class="o">.</span><span class="n">size</span><span class="p">)</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="n">x</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span> <span class="o">*</span> <span class="mf">0.06</span>
+    <span class="n">v</span> <span class="o">=</span> <span class="n">smoothn</span><span class="p">(</span><span class="n">vn</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+    <span class="n">plt</span><span class="o">.</span><span class="n">figure</span><span class="p">(</span><span class="mi">4</span><span class="p">)</span>
+    <span class="n">plt</span><span class="o">.</span><span class="n">clf</span><span class="p">()</span>
+    <span class="n">vmin</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">min</span><span class="p">([</span><span class="n">np</span><span class="o">.</span><span class="n">min</span><span class="p">(</span><span class="n">v</span><span class="p">[:,</span> <span class="p">:,</span> <span class="n">i</span><span class="p">]),</span> <span class="n">np</span><span class="o">.</span><span class="n">min</span><span class="p">(</span><span class="n">v0</span><span class="p">[:,</span> <span class="p">:,</span> <span class="n">i</span><span class="p">]),</span> <span class="n">np</span><span class="o">.</span><span class="n">min</span><span class="p">(</span><span class="n">vn</span><span class="p">[:,</span> <span class="p">:,</span> <span class="n">i</span><span class="p">])])</span>
+    <span class="n">vmax</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">max</span><span class="p">([</span><span class="n">np</span><span class="o">.</span><span class="n">max</span><span class="p">(</span><span class="n">v</span><span class="p">[:,</span> <span class="p">:,</span> <span class="n">i</span><span class="p">]),</span> <span class="n">np</span><span class="o">.</span><span class="n">max</span><span class="p">(</span><span class="n">v0</span><span class="p">[:,</span> <span class="p">:,</span> <span class="n">i</span><span class="p">]),</span> <span class="n">np</span><span class="o">.</span><span class="n">max</span><span class="p">(</span><span class="n">vn</span><span class="p">[:,</span> <span class="p">:,</span> <span class="n">i</span><span class="p">])])</span>
+    <span class="n">subplot</span><span class="p">(</span><span class="mi">221</span><span class="p">)</span>
+    <span class="n">plt</span><span class="o">.</span><span class="n">imshow</span><span class="p">(</span><span class="n">v0</span><span class="p">[:,</span> <span class="p">:,</span> <span class="n">i</span><span class="p">],</span> <span class="n">interpolation</span><span class="o">=</span><span class="s2">&quot;Nearest&quot;</span><span class="p">,</span> <span class="n">vmin</span><span class="o">=</span><span class="n">vmin</span><span class="p">,</span> <span class="n">vmax</span><span class="o">=</span><span class="n">vmax</span><span class="p">)</span>
+    <span class="n">title</span><span class="p">(</span><span class="s2">&quot;clean z=</span><span class="si">%d</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="n">i</span><span class="p">)</span>
+    <span class="n">subplot</span><span class="p">(</span><span class="mi">223</span><span class="p">)</span>
+    <span class="n">plt</span><span class="o">.</span><span class="n">imshow</span><span class="p">(</span><span class="n">vn</span><span class="p">[:,</span> <span class="p">:,</span> <span class="n">i</span><span class="p">],</span> <span class="n">interpolation</span><span class="o">=</span><span class="s2">&quot;Nearest&quot;</span><span class="p">,</span> <span class="n">vmin</span><span class="o">=</span><span class="n">vmin</span><span class="p">,</span> <span class="n">vmax</span><span class="o">=</span><span class="n">vmax</span><span class="p">)</span>
+    <span class="n">title</span><span class="p">(</span><span class="s2">&quot;noisy&quot;</span><span class="p">)</span>
+    <span class="n">subplot</span><span class="p">(</span><span class="mi">224</span><span class="p">)</span>
+    <span class="n">plt</span><span class="o">.</span><span class="n">imshow</span><span class="p">(</span><span class="n">v</span><span class="p">[:,</span> <span class="p">:,</span> <span class="n">i</span><span class="p">],</span> <span class="n">interpolation</span><span class="o">=</span><span class="s2">&quot;Nearest&quot;</span><span class="p">,</span> <span class="n">vmin</span><span class="o">=</span><span class="n">vmin</span><span class="p">,</span> <span class="n">vmax</span><span class="o">=</span><span class="n">vmax</span><span class="p">)</span>
+    <span class="n">title</span><span class="p">(</span><span class="s2">&quot;cleaned&quot;</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="test5"><a class="viewcode-back" href="../../src/openpiv.html#openpiv.smoothn.test5">[docs]</a><span class="k">def</span> <span class="nf">test5</span><span class="p">():</span>
+    <span class="n">t</span> <span class="o">=</span> <span class="n">linspace</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">2</span> <span class="o">*</span> <span class="n">pi</span><span class="p">,</span> <span class="mi">1000</span><span class="p">)</span>
+    <span class="n">x</span> <span class="o">=</span> <span class="mi">2</span> <span class="o">*</span> <span class="n">cos</span><span class="p">(</span><span class="n">t</span><span class="p">)</span> <span class="o">*</span> <span class="p">(</span><span class="mi">1</span> <span class="o">-</span> <span class="n">cos</span><span class="p">(</span><span class="n">t</span><span class="p">))</span> <span class="o">+</span> <span class="n">randn</span><span class="p">(</span><span class="n">size</span><span class="p">(</span><span class="n">t</span><span class="p">))</span> <span class="o">*</span> <span class="mf">0.1</span>
+    <span class="n">y</span> <span class="o">=</span> <span class="mi">2</span> <span class="o">*</span> <span class="n">sin</span><span class="p">(</span><span class="n">t</span><span class="p">)</span> <span class="o">*</span> <span class="p">(</span><span class="mi">1</span> <span class="o">-</span> <span class="n">cos</span><span class="p">(</span><span class="n">t</span><span class="p">))</span> <span class="o">+</span> <span class="n">randn</span><span class="p">(</span><span class="n">size</span><span class="p">(</span><span class="n">t</span><span class="p">))</span> <span class="o">*</span> <span class="mf">0.1</span>
+    <span class="n">zx</span> <span class="o">=</span> <span class="n">smoothn</span><span class="p">(</span><span class="n">x</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+    <span class="n">zy</span> <span class="o">=</span> <span class="n">smoothn</span><span class="p">(</span><span class="n">y</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+    <span class="n">plt</span><span class="o">.</span><span class="n">figure</span><span class="p">(</span><span class="mi">5</span><span class="p">)</span>
+    <span class="n">plt</span><span class="o">.</span><span class="n">clf</span><span class="p">()</span>
+    <span class="n">plt</span><span class="o">.</span><span class="n">title</span><span class="p">(</span><span class="s2">&quot;Cardioid&quot;</span><span class="p">)</span>
+    <span class="n">plot</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="s2">&quot;r.&quot;</span><span class="p">)</span>
+    <span class="n">plot</span><span class="p">(</span><span class="n">zx</span><span class="p">,</span> <span class="n">zy</span><span class="p">,</span> <span class="s2">&quot;k&quot;</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="test6"><a class="viewcode-back" href="../../src/openpiv.html#openpiv.smoothn.test6">[docs]</a><span class="k">def</span> <span class="nf">test6</span><span class="p">(</span><span class="n">noise</span><span class="o">=</span><span class="mf">0.05</span><span class="p">,</span> <span class="n">nout</span><span class="o">=</span><span class="mi">30</span><span class="p">):</span>
+    <span class="n">plt</span><span class="o">.</span><span class="n">figure</span><span class="p">(</span><span class="mi">6</span><span class="p">)</span>
+    <span class="n">plt</span><span class="o">.</span><span class="n">clf</span><span class="p">()</span>
+    <span class="p">[</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">]</span> <span class="o">=</span> <span class="n">meshgrid</span><span class="p">(</span><span class="n">linspace</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">24</span><span class="p">),</span> <span class="n">linspace</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">24</span><span class="p">))</span>
+    <span class="n">Vx0</span> <span class="o">=</span> <span class="n">cos</span><span class="p">(</span><span class="mi">2</span> <span class="o">*</span> <span class="n">pi</span> <span class="o">*</span> <span class="n">x</span> <span class="o">+</span> <span class="n">pi</span> <span class="o">/</span> <span class="mi">2</span><span class="p">)</span> <span class="o">*</span> <span class="n">cos</span><span class="p">(</span><span class="mi">2</span> <span class="o">*</span> <span class="n">pi</span> <span class="o">*</span> <span class="n">y</span><span class="p">)</span>
+    <span class="n">Vy0</span> <span class="o">=</span> <span class="n">sin</span><span class="p">(</span><span class="mi">2</span> <span class="o">*</span> <span class="n">pi</span> <span class="o">*</span> <span class="n">x</span> <span class="o">+</span> <span class="n">pi</span> <span class="o">/</span> <span class="mi">2</span><span class="p">)</span> <span class="o">*</span> <span class="n">sin</span><span class="p">(</span><span class="mi">2</span> <span class="o">*</span> <span class="n">pi</span> <span class="o">*</span> <span class="n">y</span><span class="p">)</span>
+    <span class="n">Vx</span> <span class="o">=</span> <span class="n">Vx0</span> <span class="o">+</span> <span class="n">noise</span> <span class="o">*</span> <span class="n">randn</span><span class="p">(</span><span class="mi">24</span><span class="p">,</span> <span class="mi">24</span><span class="p">)</span>
+    <span class="c1"># adding Gaussian noise</span>
+    <span class="n">Vy</span> <span class="o">=</span> <span class="n">Vy0</span> <span class="o">+</span> <span class="n">noise</span> <span class="o">*</span> <span class="n">randn</span><span class="p">(</span><span class="mi">24</span><span class="p">,</span> <span class="mi">24</span><span class="p">)</span>
+    <span class="c1"># adding Gaussian noise</span>
+    <span class="n">I</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">permutation</span><span class="p">(</span><span class="nb">range</span><span class="p">(</span><span class="n">Vx</span><span class="o">.</span><span class="n">size</span><span class="p">))</span>
+    <span class="n">Vx</span> <span class="o">=</span> <span class="n">Vx</span><span class="o">.</span><span class="n">flatten</span><span class="p">()</span>
+    <span class="n">Vx</span><span class="p">[</span><span class="n">I</span><span class="p">[</span><span class="mi">0</span><span class="p">:</span><span class="n">nout</span><span class="p">]]</span> <span class="o">=</span> <span class="p">(</span><span class="n">rand</span><span class="p">(</span><span class="n">nout</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span> <span class="o">-</span> <span class="mf">0.5</span><span class="p">)</span> <span class="o">*</span> <span class="mi">5</span>
+    <span class="c1"># adding outliers</span>
+    <span class="n">Vx</span> <span class="o">=</span> <span class="n">Vx</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="n">Vy</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span>
+    <span class="n">Vy</span> <span class="o">=</span> <span class="n">Vy</span><span class="o">.</span><span class="n">flatten</span><span class="p">()</span>
+    <span class="n">Vy</span><span class="p">[</span><span class="n">I</span><span class="p">[</span><span class="mi">0</span><span class="p">:</span><span class="n">nout</span><span class="p">]]</span> <span class="o">=</span> <span class="p">(</span><span class="n">rand</span><span class="p">(</span><span class="n">nout</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span> <span class="o">-</span> <span class="mf">0.5</span><span class="p">)</span> <span class="o">*</span> <span class="mi">5</span>
+    <span class="c1"># adding outliers</span>
+    <span class="n">Vy</span> <span class="o">=</span> <span class="n">Vy</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="n">Vx</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span>
+    <span class="n">Vsx</span> <span class="o">=</span> <span class="n">smoothn</span><span class="p">(</span><span class="n">Vx</span><span class="p">,</span> <span class="n">isrobust</span><span class="o">=</span><span class="kc">True</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+    <span class="n">Vsy</span> <span class="o">=</span> <span class="n">smoothn</span><span class="p">(</span><span class="n">Vy</span><span class="p">,</span> <span class="n">isrobust</span><span class="o">=</span><span class="kc">True</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+    <span class="n">subplot</span><span class="p">(</span><span class="mi">131</span><span class="p">)</span>
+    <span class="n">quiver</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">Vx</span><span class="p">,</span> <span class="n">Vy</span><span class="p">,</span> <span class="mf">2.5</span><span class="p">)</span>
+    <span class="n">title</span><span class="p">(</span><span class="s2">&quot;Noisy&quot;</span><span class="p">)</span>
+    <span class="n">subplot</span><span class="p">(</span><span class="mi">132</span><span class="p">)</span>
+    <span class="n">quiver</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">Vsx</span><span class="p">,</span> <span class="n">Vsy</span><span class="p">)</span>
+    <span class="n">title</span><span class="p">(</span><span class="s2">&quot;Recovered&quot;</span><span class="p">)</span>
+    <span class="n">subplot</span><span class="p">(</span><span class="mi">133</span><span class="p">)</span>
+    <span class="n">quiver</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">Vx0</span><span class="p">,</span> <span class="n">Vy0</span><span class="p">)</span>
+    <span class="n">title</span><span class="p">(</span><span class="s2">&quot;Original&quot;</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="sparseSVD"><a class="viewcode-back" href="../../src/openpiv.html#openpiv.smoothn.sparseSVD">[docs]</a><span class="k">def</span> <span class="nf">sparseSVD</span><span class="p">(</span><span class="n">D</span><span class="p">):</span>
+    <span class="kn">import</span> <span class="nn">scipy.sparse</span>
+
+    <span class="k">try</span><span class="p">:</span>
+        <span class="kn">import</span> <span class="nn">sparsesvd</span>
+    <span class="k">except</span><span class="p">:</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;bummer ... better get sparsesvd&quot;</span><span class="p">)</span>
+        <span class="n">exit</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+    <span class="n">Ds</span> <span class="o">=</span> <span class="n">scipy</span><span class="o">.</span><span class="n">sparse</span><span class="o">.</span><span class="n">csc_matrix</span><span class="p">(</span><span class="n">D</span><span class="p">)</span>
+    <span class="n">a</span> <span class="o">=</span> <span class="n">sparsesvd</span><span class="o">.</span><span class="n">sparsesvd</span><span class="p">(</span><span class="n">Ds</span><span class="p">,</span> <span class="n">Ds</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+    <span class="k">return</span> <span class="n">a</span></div>
+
+
+<div class="viewcode-block" id="sparseTest"><a class="viewcode-back" href="../../src/openpiv.html#openpiv.smoothn.sparseTest">[docs]</a><span class="k">def</span> <span class="nf">sparseTest</span><span class="p">(</span><span class="n">n</span><span class="o">=</span><span class="mi">1000</span><span class="p">):</span>
+    <span class="n">I</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">identity</span><span class="p">(</span><span class="n">n</span><span class="p">)</span>
+
+    <span class="c1"># define a &#39;traditional&#39; D1 matrix</span>
+    <span class="c1"># which is a right-side difference</span>
+    <span class="c1"># and which is *not* symmetric :-(</span>
+    <span class="n">D1</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">matrix</span><span class="p">(</span><span class="n">I</span> <span class="o">-</span> <span class="n">np</span><span class="o">.</span><span class="n">roll</span><span class="p">(</span><span class="n">I</span><span class="p">,</span> <span class="mi">1</span><span class="p">))</span>
+    <span class="c1"># so define a symemtric version</span>
+    <span class="n">D1a</span> <span class="o">=</span> <span class="n">D1</span><span class="o">.</span><span class="n">T</span> <span class="o">-</span> <span class="n">D1</span>
+
+    <span class="n">U</span><span class="p">,</span> <span class="n">s</span><span class="p">,</span> <span class="n">Vh</span> <span class="o">=</span> <span class="n">scipy</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">svd</span><span class="p">(</span><span class="n">D1a</span><span class="p">)</span>
+
+    <span class="c1"># now, get eigenvectors for D1a</span>
+    <span class="n">Ut</span><span class="p">,</span> <span class="n">eigenvalues</span><span class="p">,</span> <span class="n">Vt</span> <span class="o">=</span> <span class="n">sparseSVD</span><span class="p">(</span><span class="n">D1a</span><span class="p">)</span>
+    <span class="n">Ut</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">matrix</span><span class="p">(</span><span class="n">Ut</span><span class="p">)</span>
+
+    <span class="c1"># then, an equivalent 2nd O term would be</span>
+    <span class="n">D2a</span> <span class="o">=</span> <span class="n">D1a</span> <span class="o">**</span> <span class="mi">2</span>
+
+    <span class="c1"># show we can recover D1a</span>
+    <span class="n">D1a_est</span> <span class="o">=</span> <span class="n">Ut</span><span class="o">.</span><span class="n">T</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">diag</span><span class="p">(</span><span class="n">eigenvalues</span><span class="p">)</span> <span class="o">*</span> <span class="n">Ut</span>
+
+    <span class="c1"># Now, because D2a (&amp; the target D1a) are symmetric:</span>
+    <span class="n">D1a_est</span> <span class="o">=</span> <span class="n">Ut</span><span class="o">.</span><span class="n">T</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">diag</span><span class="p">(</span><span class="n">eigenvalues</span> <span class="o">**</span> <span class="mf">0.5</span><span class="p">)</span> <span class="o">*</span> <span class="n">Ut</span>
+
+    <span class="n">D</span> <span class="o">=</span> <span class="mi">2</span> <span class="o">*</span> <span class="n">I</span> <span class="o">-</span> <span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">roll</span><span class="p">(</span><span class="n">I</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">)</span> <span class="o">+</span> <span class="n">np</span><span class="o">.</span><span class="n">roll</span><span class="p">(</span><span class="n">I</span><span class="p">,</span> <span class="mi">1</span><span class="p">))</span>
+    <span class="n">a</span> <span class="o">=</span> <span class="n">sparseSVD</span><span class="p">(</span><span class="o">-</span><span class="n">D</span><span class="p">)</span>
+    <span class="n">eigenvalues</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">matrix</span><span class="p">(</span><span class="n">a</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span>
+    <span class="n">Ut</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">matrix</span><span class="p">(</span><span class="n">a</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+    <span class="n">Vt</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">matrix</span><span class="p">(</span><span class="n">a</span><span class="p">[</span><span class="mi">2</span><span class="p">])</span>
+    <span class="n">orig</span> <span class="o">=</span> <span class="n">Ut</span><span class="o">.</span><span class="n">T</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">diag</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">eigenvalues</span><span class="p">)</span><span class="o">.</span><span class="n">flatten</span><span class="p">())</span> <span class="o">*</span> <span class="n">Vt</span>
+
+    <span class="n">Feigenvalues</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">diag</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">c_</span><span class="p">[</span><span class="n">eigenvalues</span><span class="p">,</span> <span class="mi">0</span><span class="p">])</span><span class="o">.</span><span class="n">flatten</span><span class="p">())</span>
+    <span class="n">FUt</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">c_</span><span class="p">[</span><span class="n">Ut</span><span class="o">.</span><span class="n">T</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">Ut</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">])]</span>
+    <span class="c1"># confirm: FUt * Feigenvalues * FUt.T ~= D</span>
+
+    <span class="c1"># m is a 1st O difference matrix</span>
+    <span class="c1"># with careful edge conditions</span>
+    <span class="c1"># such that m.T * m = D2</span>
+    <span class="c1"># D2 being a 2nd O difference matrix</span>
+    <span class="n">m</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">matrix</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">identity</span><span class="p">(</span><span class="mi">100</span><span class="p">)</span> <span class="o">-</span> <span class="n">np</span><span class="o">.</span><span class="n">roll</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">identity</span><span class="p">(</span><span class="mi">100</span><span class="p">),</span> <span class="mi">1</span><span class="p">))</span>
+    <span class="n">m</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="n">m</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="mi">1</span>
+    <span class="n">a</span> <span class="o">=</span> <span class="n">sparseSVD</span><span class="p">(</span><span class="n">m</span><span class="p">)</span>
+    <span class="n">eigenvalues</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">matrix</span><span class="p">(</span><span class="n">a</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span>
+    <span class="n">Ut</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">matrix</span><span class="p">(</span><span class="n">a</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+    <span class="n">Vt</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">matrix</span><span class="p">(</span><span class="n">a</span><span class="p">[</span><span class="mi">2</span><span class="p">])</span>
+    <span class="n">orig</span> <span class="o">=</span> <span class="n">Ut</span><span class="o">.</span><span class="n">T</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">diag</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">eigenvalues</span><span class="p">)</span><span class="o">.</span><span class="n">flatten</span><span class="p">())</span> <span class="o">*</span> <span class="n">Vt</span></div>
+    <span class="c1"># Vt* Vt.T = I</span>
+    <span class="c1"># Ut.T * Ut = I</span>
+    <span class="c1"># ((Vt.T * (np.diag(np.array(eigenvalues).flatten())**2)) * Vt)</span>
+    <span class="c1"># we see you get the same as m.T * m by squaring the eigenvalues</span>
+
+
+<span class="c1"># from StackOverflow</span>
+<span class="c1"># https://stackoverflow.com/questions/17115030/want-to-smooth-a-contour-from-a-masked-array</span>
+
+<div class="viewcode-block" id="smooth"><a class="viewcode-back" href="../../src/openpiv.html#openpiv.smoothn.smooth">[docs]</a><span class="k">def</span> <span class="nf">smooth</span><span class="p">(</span><span class="n">u</span><span class="p">,</span> <span class="n">mask</span><span class="p">):</span>
+    <span class="n">r</span> <span class="o">=</span> <span class="n">u</span><span class="o">.</span><span class="n">filled</span><span class="p">(</span><span class="mf">0.</span><span class="p">)</span>  <span class="c1"># set all &#39;masked&#39; points to 0. so they aren&#39;t used in the smoothing</span>
+    <span class="n">a</span> <span class="o">=</span> <span class="mi">4</span><span class="o">*</span><span class="n">r</span><span class="p">[</span><span class="mi">1</span><span class="p">:</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span><span class="mi">1</span><span class="p">:</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">+</span> <span class="n">r</span><span class="p">[</span><span class="mi">2</span><span class="p">:,</span><span class="mi">1</span><span class="p">:</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">+</span> <span class="n">r</span><span class="p">[:</span><span class="o">-</span><span class="mi">2</span><span class="p">,</span><span class="mi">1</span><span class="p">:</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">+</span> <span class="n">r</span><span class="p">[</span><span class="mi">1</span><span class="p">:</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span><span class="mi">2</span><span class="p">:]</span> <span class="o">+</span> <span class="n">r</span><span class="p">[</span><span class="mi">1</span><span class="p">:</span><span class="o">-</span><span class="mi">1</span><span class="p">,:</span><span class="o">-</span><span class="mi">2</span><span class="p">]</span>
+    <span class="n">b</span> <span class="o">=</span> <span class="mi">4</span><span class="o">*</span><span class="n">m</span><span class="p">[</span><span class="mi">1</span><span class="p">:</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span><span class="mi">1</span><span class="p">:</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">+</span> <span class="n">m</span><span class="p">[</span><span class="mi">2</span><span class="p">:,</span><span class="mi">1</span><span class="p">:</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">+</span> <span class="n">m</span><span class="p">[:</span><span class="o">-</span><span class="mi">2</span><span class="p">,</span><span class="mi">1</span><span class="p">:</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">+</span> <span class="n">m</span><span class="p">[</span><span class="mi">1</span><span class="p">:</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span><span class="mi">2</span><span class="p">:]</span> <span class="o">+</span> <span class="n">m</span><span class="p">[</span><span class="mi">1</span><span class="p">:</span><span class="o">-</span><span class="mi">1</span><span class="p">,:</span><span class="o">-</span><span class="mi">2</span><span class="p">]</span>  <span class="c1"># a divisor that accounts for masked points</span>
+    <span class="n">b</span><span class="p">[</span><span class="n">b</span><span class="o">==</span><span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="mf">1.</span>  <span class="c1"># for avoiding divide by 0 error (region is masked so value doesn&#39;t matter)</span>
+    <span class="n">u</span><span class="p">[</span><span class="mi">1</span><span class="p">:</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span><span class="mi">1</span><span class="p">:</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">=</span> <span class="n">a</span><span class="o">/</span><span class="n">b</span></div>
+
+<div class="viewcode-block" id="smooth_masked_array"><a class="viewcode-back" href="../../src/openpiv.html#openpiv.smoothn.smooth_masked_array">[docs]</a><span class="k">def</span> <span class="nf">smooth_masked_array</span><span class="p">(</span><span class="n">u</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot; Use smooth() on the masked array &quot;&quot;&quot;</span>
+    
+    <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">u</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">ma</span><span class="o">.</span><span class="n">MaskedArray</span><span class="p">):</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Expected masked array&quot;</span><span class="p">)</span>
+
+    <span class="n">m</span> <span class="o">=</span> <span class="n">u</span><span class="o">.</span><span class="n">mask</span>
+
+    <span class="c1"># run the data through the smoothing filter a few times</span>
+    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">10</span><span class="p">):</span>   
+        <span class="n">smooth</span><span class="p">(</span><span class="n">u</span><span class="p">,</span> <span class="n">m</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">ma</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">u</span><span class="p">,</span> <span class="n">mask</span><span class="o">=</span><span class="n">m</span><span class="p">)</span>  <span class="c1"># put together the mask and the data</span></div>
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2014, OpenPIV group.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

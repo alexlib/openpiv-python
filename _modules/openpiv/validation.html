@@ -1,0 +1,424 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>openpiv.validation &mdash; OpenPIV  documentation</title>
+      <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="../../_static/css/theme.css" type="text/css" />
+  <!--[if lt IE 9]>
+    <script src="../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script data-url_root="../../" id="documentation_options" src="../../_static/documentation_options.js"></script>
+        <script src="../../_static/jquery.js"></script>
+        <script src="../../_static/underscore.js"></script>
+        <script src="../../_static/_sphinx_javascript_frameworks_compat.js"></script>
+        <script src="../../_static/doctools.js"></script>
+        <script src="../../_static/sphinx_highlight.js"></script>
+        <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+    <script src="../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+            <a href="../../index.html" class="icon icon-home"> OpenPIV
+          </a>
+              <div class="version">
+                0.24.0
+              </div>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul>
+<li class="toctree-l1"><a class="reference internal" href="../../src/piv_basics.html">Basics of the PIV algorithms</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../src/installation_instruction.html">Installation instruction</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../src/tutorial1.html">OpenPIV tutorial</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../src/windef.html">Multi-grid window deformation algorithm tutorial</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../src/masking.html">OpenPIV masking tutorial</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../src/developers.html">Information for developers and contributors</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../src/api_reference.html">API reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../src/faq.html">Frequently Asked Questions about PIV parameters</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../index.html">OpenPIV</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../index.html" class="icon icon-home"></a> &raquo;</li>
+          <li><a href="../index.html">Module code</a> &raquo;</li>
+          <li><a href="../openpiv.html">openpiv</a> &raquo;</li>
+      <li>openpiv.validation</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for openpiv.validation</h1><div class="highlight"><pre>
+<span></span><span class="sd">&quot;&quot;&quot;A module for spurious vector detection.&quot;&quot;&quot;</span>
+
+<span class="n">__licence__</span> <span class="o">=</span> <span class="s2">&quot;&quot;&quot;</span>
+<span class="s2">Copyright (C) 2011  www.openpiv.net</span>
+
+<span class="s2">This program is free software: you can redistribute it and/or modify</span>
+<span class="s2">it under the terms of the GNU General Public License as published by</span>
+<span class="s2">the Free Software Foundation, either version 3 of the License, or</span>
+<span class="s2">(at your option) any later version.</span>
+
+<span class="s2">This program is distributed in the hope that it will be useful,</span>
+<span class="s2">but WITHOUT ANY WARRANTY; without even the implied warranty of</span>
+<span class="s2">MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the</span>
+<span class="s2">GNU General Public License for more details.</span>
+
+<span class="s2">You should have received a copy of the GNU General Public License</span>
+<span class="s2">along with this program.  If not, see &lt;http://www.gnu.org/licenses/&gt;.</span>
+<span class="s2">&quot;&quot;&quot;</span>
+
+
+<span class="kn">import</span> <span class="nn">warnings</span>
+<span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Tuple</span>
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">from</span> <span class="nn">scipy.ndimage</span> <span class="kn">import</span> <span class="n">generic_filter</span>
+<span class="kn">import</span> <span class="nn">matplotlib.pyplot</span> <span class="k">as</span> <span class="nn">plt</span>
+
+
+
+<div class="viewcode-block" id="global_val"><a class="viewcode-back" href="../../src/openpiv.html#openpiv.validation.global_val">[docs]</a><span class="k">def</span> <span class="nf">global_val</span><span class="p">(</span>
+    <span class="n">u</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span>
+    <span class="n">v</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span>
+    <span class="n">u_thresholds</span><span class="p">:</span> <span class="n">Tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">int</span><span class="p">],</span>
+    <span class="n">v_thresholds</span><span class="p">:</span> <span class="n">Tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">int</span><span class="p">],</span>
+    <span class="p">)</span><span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
+    <span class="sd">&quot;&quot;&quot;Eliminate spurious vectors with a global threshold.</span>
+
+<span class="sd">    This validation method tests for the spatial consistency of the data</span>
+<span class="sd">    and outliers vector are replaced with Nan (Not a Number) if at</span>
+<span class="sd">    least one of the two velocity components is out of a specified global</span>
+<span class="sd">    range.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    u : 2d np.ndarray</span>
+<span class="sd">        a two dimensional array containing the u velocity component.</span>
+
+<span class="sd">    v : 2d np.ndarray</span>
+<span class="sd">        a two dimensional array containing the v velocity component.</span>
+
+<span class="sd">    u_thresholds: two elements tuple</span>
+<span class="sd">        u_thresholds = (u_min, u_max). If ``u&lt;u_min`` or ``u&gt;u_max``</span>
+<span class="sd">        the vector is treated as an outlier.</span>
+
+<span class="sd">    v_thresholds: two elements tuple</span>
+<span class="sd">        ``v_thresholds = (v_min, v_max)``. If ``v&lt;v_min`` or ``v&gt;v_max``</span>
+<span class="sd">        the vector is treated as an outlier.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    mask : boolean 2d np.ndarray</span>
+<span class="sd">        a boolean array. True elements corresponds to outliers.</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">warnings</span><span class="o">.</span><span class="n">filterwarnings</span><span class="p">(</span><span class="s2">&quot;ignore&quot;</span><span class="p">)</span>
+
+    <span class="n">ind</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">logical_or</span><span class="p">(</span>
+        <span class="n">np</span><span class="o">.</span><span class="n">logical_or</span><span class="p">(</span><span class="n">u</span> <span class="o">&lt;</span> <span class="n">u_thresholds</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">u</span> <span class="o">&gt;</span> <span class="n">u_thresholds</span><span class="p">[</span><span class="mi">1</span><span class="p">]),</span>
+        <span class="n">np</span><span class="o">.</span><span class="n">logical_or</span><span class="p">(</span><span class="n">v</span> <span class="o">&lt;</span> <span class="n">v_thresholds</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">v</span> <span class="o">&gt;</span> <span class="n">v_thresholds</span><span class="p">[</span><span class="mi">1</span><span class="p">]),</span>
+    <span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">ind</span></div>
+
+
+<div class="viewcode-block" id="global_std"><a class="viewcode-back" href="../../src/openpiv.html#openpiv.validation.global_std">[docs]</a><span class="k">def</span> <span class="nf">global_std</span><span class="p">(</span>
+    <span class="n">u</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span>
+    <span class="n">v</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span>
+    <span class="n">std_threshold</span><span class="p">:</span> <span class="nb">int</span><span class="o">=</span><span class="mi">5</span><span class="p">,</span>
+    <span class="p">)</span><span class="o">-&gt;</span><span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
+    <span class="sd">&quot;&quot;&quot;Eliminate spurious vectors with a global threshold defined by the</span>
+<span class="sd">    standard deviation</span>
+
+<span class="sd">    This validation method tests for the spatial consistency of the data</span>
+<span class="sd">    and outliers vector are replaced with NaN (Not a Number) if at least</span>
+<span class="sd">    one of the two velocity components is out of a specified global range.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    u : 2d masked np.ndarray</span>
+<span class="sd">        a two dimensional array containing the u velocity component.</span>
+
+<span class="sd">    v : 2d masked np.ndarray</span>
+<span class="sd">        a two dimensional array containing the v velocity component.</span>
+
+<span class="sd">    std_threshold: float</span>
+<span class="sd">        If the length of the vector (actually the sum of squared components) is</span>
+<span class="sd">        larger than std_threshold times standard deviation of the flow field,</span>
+<span class="sd">        then the vector is treated as an outlier. [default = 3]</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    mask : boolean 2d np.ndarray</span>
+<span class="sd">        a boolean array. True elements corresponds to outliers.</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="c1"># both previous nans and masked regions are not </span>
+    <span class="c1"># participating in the magnitude comparison</span>
+
+    <span class="c1"># def reject_outliers(data, m=2):</span>
+    <span class="c1">#     return data[abs(data - np.mean(data)) &lt; m * np.std(data)]    </span>
+
+    <span class="c1"># create nan filled arrays where masks</span>
+    <span class="c1"># if u,v, are non-masked, ma.copy() adds false masks</span>
+    <span class="n">tmpu</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">ma</span><span class="o">.</span><span class="n">copy</span><span class="p">(</span><span class="n">u</span><span class="p">)</span><span class="o">.</span><span class="n">filled</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">nan</span><span class="p">)</span>
+    <span class="n">tmpv</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">ma</span><span class="o">.</span><span class="n">copy</span><span class="p">(</span><span class="n">v</span><span class="p">)</span><span class="o">.</span><span class="n">filled</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">nan</span><span class="p">)</span>
+
+    <span class="n">ind</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">logical_or</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">tmpu</span> <span class="o">-</span> <span class="n">np</span><span class="o">.</span><span class="n">nanmean</span><span class="p">(</span><span class="n">tmpu</span><span class="p">))</span> <span class="o">&gt;</span> <span class="n">std_threshold</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">nanstd</span><span class="p">(</span><span class="n">tmpu</span><span class="p">),</span> 
+                        <span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">tmpv</span> <span class="o">-</span> <span class="n">np</span><span class="o">.</span><span class="n">nanmean</span><span class="p">(</span><span class="n">tmpv</span><span class="p">))</span> <span class="o">&gt;</span> <span class="n">std_threshold</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">nanstd</span><span class="p">(</span><span class="n">tmpv</span><span class="p">))</span>
+
+    <span class="k">if</span> <span class="n">np</span><span class="o">.</span><span class="n">all</span><span class="p">(</span><span class="n">ind</span><span class="p">):</span> <span class="c1"># if all is True, something is really wrong</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;Warning! probably a uniform shift data, do not use this filter&#39;</span><span class="p">)</span>
+        <span class="n">ind</span> <span class="o">=</span> <span class="o">~</span><span class="n">ind</span>
+
+    <span class="k">return</span> <span class="n">ind</span></div>
+
+
+<div class="viewcode-block" id="sig2noise_val"><a class="viewcode-back" href="../../src/openpiv.html#openpiv.validation.sig2noise_val">[docs]</a><span class="k">def</span> <span class="nf">sig2noise_val</span><span class="p">(</span>
+    <span class="n">s2n</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span>
+    <span class="n">threshold</span><span class="p">:</span> <span class="nb">float</span><span class="o">=</span><span class="mf">1.05</span><span class="p">,</span>
+    <span class="p">)</span><span class="o">-&gt;</span><span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
+    <span class="sd">&quot;&quot;&quot; Marks spurious vectors if signal to noise ratio is below a specified threshold.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    u : 2d or 3d np.ndarray</span>
+<span class="sd">        a two or three dimensional array containing the u velocity component.</span>
+
+<span class="sd">    v : 2d or 3d np.ndarray</span>
+<span class="sd">        a two or three dimensional array containing the v velocity component.</span>
+
+<span class="sd">    s2n : 2d np.ndarray</span>
+<span class="sd">        a two or three dimensional array containing the value  of the signal to</span>
+<span class="sd">        noise ratio from cross-correlation function.</span>
+<span class="sd">    w : 2d or 3d np.ndarray</span>
+<span class="sd">        a two or three dimensional array containing the w (in z-direction)</span>
+<span class="sd">        velocity component.</span>
+
+<span class="sd">    threshold: float</span>
+<span class="sd">        the signal to noise ratio threshold value.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+
+<span class="sd">    mask : boolean 2d np.ndarray</span>
+<span class="sd">        a boolean array. True elements corresponds to outliers.</span>
+
+<span class="sd">    References</span>
+<span class="sd">    ----------</span>
+<span class="sd">    R. D. Keane and R. J. Adrian, Measurement Science &amp; Technology, 1990,</span>
+<span class="sd">        1, 1202-1215.</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">mask_s2n</span> <span class="o">=</span> <span class="n">s2n</span> <span class="o">&lt;</span> <span class="n">threshold</span>
+
+    <span class="k">return</span> <span class="n">mask_s2n</span> </div>
+
+
+<div class="viewcode-block" id="local_median_val"><a class="viewcode-back" href="../../src/openpiv.html#openpiv.validation.local_median_val">[docs]</a><span class="k">def</span> <span class="nf">local_median_val</span><span class="p">(</span><span class="n">u</span><span class="p">,</span> <span class="n">v</span><span class="p">,</span> <span class="n">u_threshold</span><span class="p">,</span> <span class="n">v_threshold</span><span class="p">,</span> <span class="n">size</span><span class="o">=</span><span class="mi">1</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Eliminate spurious vectors with a local median threshold.</span>
+
+<span class="sd">    This validation method tests for the spatial consistency of the data.</span>
+<span class="sd">    Vectors are classified as outliers and replaced with Nan (Not a Number) if</span>
+<span class="sd">    the absolute difference with the local median is greater than a user</span>
+<span class="sd">    specified threshold. The median is computed for both velocity components.</span>
+
+<span class="sd">    The image masked areas (obstacles, reflections) are marked as masked array:</span>
+<span class="sd">       u = np.ma.masked(u, mask = image_mask)</span>
+<span class="sd">    and it should not be replaced by the local median, but remain masked. </span>
+
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    u : 2d np.ndarray</span>
+<span class="sd">        a two dimensional array containing the u velocity component.</span>
+
+<span class="sd">    v : 2d np.ndarray</span>
+<span class="sd">        a two dimensional array containing the v velocity component.</span>
+
+<span class="sd">    u_threshold : float</span>
+<span class="sd">        the threshold value for component u</span>
+
+<span class="sd">    v_threshold : float</span>
+<span class="sd">        the threshold value for component v</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+
+<span class="sd">    mask : boolean 2d np.ndarray</span>
+<span class="sd">        a boolean array. True elements corresponds to outliers.</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="c1"># kernel footprint</span>
+    <span class="n">f</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">ones</span><span class="p">((</span><span class="mi">2</span><span class="o">*</span><span class="n">size</span><span class="o">+</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="o">*</span><span class="n">size</span><span class="o">+</span><span class="mi">1</span><span class="p">))</span>
+    <span class="n">f</span><span class="p">[</span><span class="n">size</span><span class="p">,</span><span class="n">size</span><span class="p">]</span> <span class="o">=</span> <span class="mi">0</span>
+
+    <span class="n">masked_u</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="o">~</span><span class="n">u</span><span class="o">.</span><span class="n">mask</span><span class="p">,</span> <span class="n">u</span><span class="o">.</span><span class="n">data</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">nan</span><span class="p">)</span>
+    <span class="n">masked_v</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="o">~</span><span class="n">v</span><span class="o">.</span><span class="n">mask</span><span class="p">,</span> <span class="n">v</span><span class="o">.</span><span class="n">data</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">nan</span><span class="p">)</span>
+
+    <span class="n">um</span> <span class="o">=</span> <span class="n">generic_filter</span><span class="p">(</span><span class="n">masked_u</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">nanmedian</span><span class="p">,</span> <span class="n">mode</span><span class="o">=</span><span class="s1">&#39;constant&#39;</span><span class="p">,</span>
+                        <span class="n">cval</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">nan</span><span class="p">,</span> <span class="n">footprint</span><span class="o">=</span><span class="n">f</span><span class="p">)</span>
+    <span class="n">vm</span> <span class="o">=</span> <span class="n">generic_filter</span><span class="p">(</span><span class="n">masked_v</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">nanmedian</span><span class="p">,</span> <span class="n">mode</span><span class="o">=</span><span class="s1">&#39;constant&#39;</span><span class="p">,</span>
+                        <span class="n">cval</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">nan</span><span class="p">,</span> <span class="n">footprint</span><span class="o">=</span><span class="n">f</span><span class="p">)</span>
+
+    <span class="n">ind</span> <span class="o">=</span> <span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">((</span><span class="n">u</span> <span class="o">-</span> <span class="n">um</span><span class="p">))</span> <span class="o">&gt;</span> <span class="n">u_threshold</span><span class="p">)</span> <span class="o">|</span> <span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">((</span><span class="n">v</span> <span class="o">-</span> <span class="n">vm</span><span class="p">))</span> <span class="o">&gt;</span> <span class="n">v_threshold</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">ind</span></div>
+
+
+<div class="viewcode-block" id="typical_validation"><a class="viewcode-back" href="../../src/openpiv.html#openpiv.validation.typical_validation">[docs]</a><span class="k">def</span> <span class="nf">typical_validation</span><span class="p">(</span>
+    <span class="n">u</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span>
+    <span class="n">v</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span>
+    <span class="n">s2n</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span>
+    <span class="n">settings</span><span class="p">:</span> <span class="s2">&quot;PIVSettings&quot;</span>
+    <span class="p">)</span><span class="o">-&gt;</span><span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    validation using gloabl limits and std and local median, </span>
+
+<span class="sd">    with a special option of &#39;no_std&#39; for the case of completely</span>
+<span class="sd">    uniform shift, e.g. in tests.</span>
+
+<span class="sd">    see windef.PIVSettings() for the parameters:</span>
+
+<span class="sd">        MinMaxU : two elements tuple</span>
+<span class="sd">            sets the limits of the u displacment component</span>
+<span class="sd">            Used for validation.</span>
+
+<span class="sd">        MinMaxV : two elements tuple</span>
+<span class="sd">            sets the limits of the v displacment component</span>
+<span class="sd">            Used for validation.</span>
+
+<span class="sd">        std_threshold : float</span>
+<span class="sd">            sets the  threshold for the std validation</span>
+
+<span class="sd">        median_threshold : float</span>
+<span class="sd">            sets the threshold for the median validation</span>
+
+<span class="sd">    </span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">if</span> <span class="n">settings</span><span class="o">.</span><span class="n">show_all_plots</span><span class="p">:</span>
+        <span class="n">plt</span><span class="o">.</span><span class="n">figure</span><span class="p">()</span>
+        <span class="n">plt</span><span class="o">.</span><span class="n">quiver</span><span class="p">(</span><span class="n">u</span><span class="p">,</span><span class="n">v</span><span class="p">,</span><span class="n">color</span><span class="o">=</span><span class="s1">&#39;b&#39;</span><span class="p">)</span>
+        <span class="n">plt</span><span class="o">.</span><span class="n">title</span><span class="p">(</span><span class="s1">&#39;Before (b) and global (m) local (k)&#39;</span><span class="p">)</span>
+
+    <span class="c1"># mask = np.zeros(u.shape, dtype=bool)</span>
+
+    <span class="c1"># Global validation</span>
+    <span class="n">mask_g</span> <span class="o">=</span> <span class="n">global_val</span><span class="p">(</span><span class="n">u</span><span class="p">,</span> <span class="n">v</span><span class="p">,</span> <span class="n">settings</span><span class="o">.</span><span class="n">min_max_u_disp</span><span class="p">,</span> <span class="n">settings</span><span class="o">.</span><span class="n">min_max_v_disp</span><span class="p">)</span>
+
+    <span class="c1"># u[mask_g] = np.ma.masked</span>
+    <span class="c1"># v[mask_g] = np.ma.masked</span>
+
+    <span class="c1"># if settings.show_all_plots:</span>
+    <span class="c1">#     plt.quiver(u, v, color=&#39;m&#39;)</span>
+
+    <span class="n">mask_s</span> <span class="o">=</span> <span class="n">global_std</span><span class="p">(</span>
+        <span class="n">u</span><span class="p">,</span> <span class="n">v</span><span class="p">,</span> <span class="n">std_threshold</span><span class="o">=</span><span class="n">settings</span><span class="o">.</span><span class="n">std_threshold</span>
+    <span class="p">)</span>
+
+    <span class="c1"># u[mask_s] = np.ma.masked</span>
+    <span class="c1"># v[mask_s] = np.ma.masked</span>
+
+    <span class="c1"># print(f&quot;std filter invalidated {sum(mask_s.flatten())} vectors&quot;)</span>
+    <span class="c1"># if settings.show_all_plots:</span>
+    <span class="c1">#     plt.quiver(u,v,color=&#39;k&#39;)</span>
+    
+
+    <span class="n">mask_m</span> <span class="o">=</span> <span class="n">local_median_val</span><span class="p">(</span>
+        <span class="n">u</span><span class="p">,</span>
+        <span class="n">v</span><span class="p">,</span>
+        <span class="n">u_threshold</span><span class="o">=</span><span class="n">settings</span><span class="o">.</span><span class="n">median_threshold</span><span class="p">,</span>
+        <span class="n">v_threshold</span><span class="o">=</span><span class="n">settings</span><span class="o">.</span><span class="n">median_threshold</span><span class="p">,</span>
+        <span class="n">size</span><span class="o">=</span><span class="n">settings</span><span class="o">.</span><span class="n">median_size</span><span class="p">,</span>
+    <span class="p">)</span>
+    
+    <span class="c1"># u[mask_m] = np.ma.masked</span>
+    <span class="c1"># v[mask_m] = np.ma.masked</span>
+    
+    <span class="c1"># if settings.show_all_plots:</span>
+    <span class="c1">#     plt.quiver(u,v,color=&#39;r&#39;)</span>
+
+    <span class="c1"># print(f&quot;median filter invalidated {sum(mask_m.flatten())} vectors&quot;)</span>
+    <span class="n">mask</span> <span class="o">=</span> <span class="n">mask_g</span> <span class="o">|</span> <span class="n">mask_m</span> <span class="o">|</span> <span class="n">mask_s</span>
+
+
+    <span class="k">if</span> <span class="n">settings</span><span class="o">.</span><span class="n">sig2noise_validate</span><span class="p">:</span>
+        <span class="n">mask_s2n</span> <span class="o">=</span> <span class="n">sig2noise_val</span><span class="p">(</span><span class="n">s2n</span><span class="p">,</span> <span class="n">settings</span><span class="o">.</span><span class="n">sig2noise_threshold</span><span class="p">)</span>
+        
+        <span class="c1"># u[mask_s2n] = np.ma.masked</span>
+        <span class="c1"># v[mask_s2n] = np.ma.masked</span>
+
+        <span class="c1"># print(f&quot;s2n filter invalidated {sum(mask_s2n.flatten())} vectors&quot;)</span>
+        <span class="c1"># if settings.show_all_plots:</span>
+        <span class="c1">#     plt.quiver(u,v,color=&#39;g&#39;)</span>
+        <span class="c1">#     plt.show()</span>
+
+        <span class="k">if</span> <span class="n">settings</span><span class="o">.</span><span class="n">show_all_plots</span> <span class="ow">and</span> <span class="nb">sum</span><span class="p">(</span><span class="n">mask_s2n</span><span class="o">.</span><span class="n">flatten</span><span class="p">()):</span> <span class="c1"># if not all NaN</span>
+            <span class="n">plt</span><span class="o">.</span><span class="n">figure</span><span class="p">()</span>
+            <span class="n">plt</span><span class="o">.</span><span class="n">hist</span><span class="p">(</span> <span class="n">s2n</span><span class="p">[</span><span class="n">s2n</span><span class="o">&gt;</span><span class="mi">0</span><span class="p">],</span> <span class="mi">31</span><span class="p">)</span>
+            <span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
+
+        <span class="n">mask</span> <span class="o">+=</span> <span class="n">mask_s2n</span>
+
+    <span class="k">return</span> <span class="n">mask</span></div>
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2014, OpenPIV group.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

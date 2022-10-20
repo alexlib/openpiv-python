@@ -1,0 +1,394 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>openpiv &mdash; OpenPIV  documentation</title>
+      <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
+  <!--[if lt IE 9]>
+    <script src="../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js"></script>
+        <script src="../_static/jquery.js"></script>
+        <script src="../_static/underscore.js"></script>
+        <script src="../_static/_sphinx_javascript_frameworks_compat.js"></script>
+        <script src="../_static/doctools.js"></script>
+        <script src="../_static/sphinx_highlight.js"></script>
+        <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+    <script src="../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+            <a href="../index.html" class="icon icon-home"> OpenPIV
+          </a>
+              <div class="version">
+                0.24.4a
+              </div>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul>
+<li class="toctree-l1"><a class="reference internal" href="piv_basics.html">Basics of the PIV algorithms</a></li>
+<li class="toctree-l1"><a class="reference internal" href="installation_instruction.html">Installation instruction</a></li>
+<li class="toctree-l1"><a class="reference internal" href="tutorial1.html">OpenPIV tutorial</a></li>
+<li class="toctree-l1"><a class="reference internal" href="windef.html">Multi-grid window deformation algorithm tutorial</a></li>
+<li class="toctree-l1"><a class="reference internal" href="masking.html">OpenPIV masking tutorial</a></li>
+<li class="toctree-l1"><a class="reference internal" href="developers.html">Information for developers and contributors</a></li>
+<li class="toctree-l1"><a class="reference internal" href="api_reference.html">API reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="faq.html">Frequently Asked Questions about PIV parameters</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">OpenPIV</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../index.html" class="icon icon-home"></a> &raquo;</li>
+      <li>openpiv</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="../_sources/src/modules.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  
+<style>
+/* CSS overrides for sphinx_rtd_theme */
+
+/* 24px margin */
+.nbinput.nblast.container,
+.nboutput.nblast.container {
+    margin-bottom: 19px;  /* padding has already 5px */
+}
+
+/* ... except between code cells! */
+.nblast.container + .nbinput.container {
+    margin-top: -19px;
+}
+
+.admonition > p:before {
+    margin-right: 4px;  /* make room for the exclamation icon */
+}
+
+/* Fix math alignment, see https://github.com/rtfd/sphinx_rtd_theme/pull/686 */
+.math {
+    text-align: unset;
+}
+</style>
+<section id="openpiv">
+<h1>openpiv<a class="headerlink" href="#openpiv" title="Permalink to this heading"></a></h1>
+<div class="toctree-wrapper compound">
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="openpiv.html">openpiv package</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="openpiv.html#submodules">Submodules</a></li>
+<li class="toctree-l2"><a class="reference internal" href="openpiv.html#module-openpiv.PIV_3D_plotting">openpiv.PIV_3D_plotting module</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="openpiv.html#openpiv.PIV_3D_plotting.explode"><code class="docutils literal notranslate"><span class="pre">explode()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="openpiv.html#openpiv.PIV_3D_plotting.plot_3D_alpha"><code class="docutils literal notranslate"><span class="pre">plot_3D_alpha()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="openpiv.html#openpiv.PIV_3D_plotting.quiver_3D"><code class="docutils literal notranslate"><span class="pre">quiver_3D()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="openpiv.html#openpiv.PIV_3D_plotting.scatter_3D"><code class="docutils literal notranslate"><span class="pre">scatter_3D()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="openpiv.html#openpiv.PIV_3D_plotting.set_axes_equal"><code class="docutils literal notranslate"><span class="pre">set_axes_equal()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="openpiv.html#module-openpiv.filters">openpiv.filters module</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="openpiv.html#openpiv.filters.gaussian"><code class="docutils literal notranslate"><span class="pre">gaussian()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="openpiv.html#openpiv.filters.gaussian_kernel"><code class="docutils literal notranslate"><span class="pre">gaussian_kernel()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="openpiv.html#openpiv.filters.replace_outliers"><code class="docutils literal notranslate"><span class="pre">replace_outliers()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="openpiv.html#module-openpiv.lib">openpiv.lib module</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="openpiv.html#openpiv.lib.get_dist"><code class="docutils literal notranslate"><span class="pre">get_dist()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="openpiv.html#openpiv.lib.replace_nans"><code class="docutils literal notranslate"><span class="pre">replace_nans()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="openpiv.html#module-openpiv.phase_separation">openpiv.phase_separation module</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="openpiv.html#openpiv.phase_separation.get_particles_size_array"><code class="docutils literal notranslate"><span class="pre">get_particles_size_array()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="openpiv.html#openpiv.phase_separation.get_size_brightness_map"><code class="docutils literal notranslate"><span class="pre">get_size_brightness_map()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="openpiv.html#openpiv.phase_separation.khalitov_longmire"><code class="docutils literal notranslate"><span class="pre">khalitov_longmire()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="openpiv.html#openpiv.phase_separation.khalitov_longmire_analyse_particle_segments"><code class="docutils literal notranslate"><span class="pre">khalitov_longmire_analyse_particle_segments()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="openpiv.html#openpiv.phase_separation.khalitov_longmire_get_object_pixels"><code class="docutils literal notranslate"><span class="pre">khalitov_longmire_get_object_pixels()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="openpiv.html#openpiv.phase_separation.median_filter_method"><code class="docutils literal notranslate"><span class="pre">median_filter_method()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="openpiv.html#openpiv.phase_separation.opening_method"><code class="docutils literal notranslate"><span class="pre">opening_method()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="openpiv.html#module-openpiv.piv">openpiv.piv module</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="openpiv.html#openpiv.piv.piv_example"><code class="docutils literal notranslate"><span class="pre">piv_example()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="openpiv.html#openpiv.piv.simple_piv"><code class="docutils literal notranslate"><span class="pre">simple_piv()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="openpiv.html#module-openpiv.preprocess">openpiv.preprocess module</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="openpiv.html#openpiv.preprocess.contrast_stretch"><code class="docutils literal notranslate"><span class="pre">contrast_stretch()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="openpiv.html#openpiv.preprocess.dynamic_masking"><code class="docutils literal notranslate"><span class="pre">dynamic_masking()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="openpiv.html#openpiv.preprocess.gen_lowpass_background"><code class="docutils literal notranslate"><span class="pre">gen_lowpass_background()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="openpiv.html#openpiv.preprocess.gen_min_background"><code class="docutils literal notranslate"><span class="pre">gen_min_background()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="openpiv.html#openpiv.preprocess.high_pass"><code class="docutils literal notranslate"><span class="pre">high_pass()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="openpiv.html#openpiv.preprocess.instensity_cap"><code class="docutils literal notranslate"><span class="pre">instensity_cap()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="openpiv.html#openpiv.preprocess.intensity_clip"><code class="docutils literal notranslate"><span class="pre">intensity_clip()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="openpiv.html#openpiv.preprocess.local_variance_normalization"><code class="docutils literal notranslate"><span class="pre">local_variance_normalization()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="openpiv.html#openpiv.preprocess.mask_coordinates"><code class="docutils literal notranslate"><span class="pre">mask_coordinates()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="openpiv.html#openpiv.preprocess.normalize_array"><code class="docutils literal notranslate"><span class="pre">normalize_array()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="openpiv.html#openpiv.preprocess.offset_image"><code class="docutils literal notranslate"><span class="pre">offset_image()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="openpiv.html#openpiv.preprocess.prepare_mask_on_grid"><code class="docutils literal notranslate"><span class="pre">prepare_mask_on_grid()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="openpiv.html#openpiv.preprocess.standardize_array"><code class="docutils literal notranslate"><span class="pre">standardize_array()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="openpiv.html#openpiv.preprocess.stretch_image"><code class="docutils literal notranslate"><span class="pre">stretch_image()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="openpiv.html#openpiv.preprocess.threshold_binarize"><code class="docutils literal notranslate"><span class="pre">threshold_binarize()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="openpiv.html#openpiv-process-module">openpiv.process module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="openpiv.html#module-openpiv.pyprocess">openpiv.pyprocess module</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="openpiv.html#openpiv.pyprocess.correlate_windows"><code class="docutils literal notranslate"><span class="pre">correlate_windows()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="openpiv.html#openpiv.pyprocess.correlation_to_displacement"><code class="docutils literal notranslate"><span class="pre">correlation_to_displacement()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="openpiv.html#openpiv.pyprocess.extended_search_area_piv"><code class="docutils literal notranslate"><span class="pre">extended_search_area_piv()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="openpiv.html#openpiv.pyprocess.fft_correlate_images"><code class="docutils literal notranslate"><span class="pre">fft_correlate_images()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="openpiv.html#openpiv.pyprocess.fft_correlate_windows"><code class="docutils literal notranslate"><span class="pre">fft_correlate_windows()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="openpiv.html#openpiv.pyprocess.find_all_first_peaks"><code class="docutils literal notranslate"><span class="pre">find_all_first_peaks()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="openpiv.html#openpiv.pyprocess.find_all_second_peaks"><code class="docutils literal notranslate"><span class="pre">find_all_second_peaks()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="openpiv.html#openpiv.pyprocess.find_first_peak"><code class="docutils literal notranslate"><span class="pre">find_first_peak()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="openpiv.html#openpiv.pyprocess.find_second_peak"><code class="docutils literal notranslate"><span class="pre">find_second_peak()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="openpiv.html#openpiv.pyprocess.find_subpixel_peak_position"><code class="docutils literal notranslate"><span class="pre">find_subpixel_peak_position()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="openpiv.html#openpiv.pyprocess.get_coordinates"><code class="docutils literal notranslate"><span class="pre">get_coordinates()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="openpiv.html#openpiv.pyprocess.get_field_shape"><code class="docutils literal notranslate"><span class="pre">get_field_shape()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="openpiv.html#openpiv.pyprocess.get_rect_coordinates"><code class="docutils literal notranslate"><span class="pre">get_rect_coordinates()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="openpiv.html#openpiv.pyprocess.moving_window_array"><code class="docutils literal notranslate"><span class="pre">moving_window_array()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="openpiv.html#openpiv.pyprocess.nextpower2"><code class="docutils literal notranslate"><span class="pre">nextpower2()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="openpiv.html#openpiv.pyprocess.normalize_intensity"><code class="docutils literal notranslate"><span class="pre">normalize_intensity()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="openpiv.html#openpiv.pyprocess.sig2noise_ratio"><code class="docutils literal notranslate"><span class="pre">sig2noise_ratio()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="openpiv.html#openpiv.pyprocess.sliding_window_array"><code class="docutils literal notranslate"><span class="pre">sliding_window_array()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="openpiv.html#openpiv.pyprocess.vectorized_correlation_to_displacements"><code class="docutils literal notranslate"><span class="pre">vectorized_correlation_to_displacements()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="openpiv.html#openpiv.pyprocess.vectorized_sig2noise_ratio"><code class="docutils literal notranslate"><span class="pre">vectorized_sig2noise_ratio()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="openpiv.html#module-openpiv.pyprocess3D">openpiv.pyprocess3D module</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="openpiv.html#openpiv.pyprocess3D.check_input"><code class="docutils literal notranslate"><span class="pre">check_input()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="openpiv.html#openpiv.pyprocess3D.correlate_windows"><code class="docutils literal notranslate"><span class="pre">correlate_windows()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="openpiv.html#openpiv.pyprocess3D.extended_search_area_piv3D"><code class="docutils literal notranslate"><span class="pre">extended_search_area_piv3D()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="openpiv.html#openpiv.pyprocess3D.find_second_peak_3D"><code class="docutils literal notranslate"><span class="pre">find_second_peak_3D()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="openpiv.html#openpiv.pyprocess3D.find_subpixel_peak_position"><code class="docutils literal notranslate"><span class="pre">find_subpixel_peak_position()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="openpiv.html#openpiv.pyprocess3D.get_coordinates"><code class="docutils literal notranslate"><span class="pre">get_coordinates()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="openpiv.html#openpiv.pyprocess3D.nextpower2"><code class="docutils literal notranslate"><span class="pre">nextpower2()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="openpiv.html#openpiv.pyprocess3D.normalize_intensity"><code class="docutils literal notranslate"><span class="pre">normalize_intensity()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="openpiv.html#openpiv.pyprocess3D.sig2noise_ratio"><code class="docutils literal notranslate"><span class="pre">sig2noise_ratio()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="openpiv.html#module-openpiv.scaling">openpiv.scaling module</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="openpiv.html#openpiv.scaling.uniform"><code class="docutils literal notranslate"><span class="pre">uniform()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="openpiv.html#module-openpiv.smoothn">openpiv.smoothn module</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="openpiv.html#openpiv.smoothn.InitialGuess"><code class="docutils literal notranslate"><span class="pre">InitialGuess()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="openpiv.html#openpiv.smoothn.RobustWeights"><code class="docutils literal notranslate"><span class="pre">RobustWeights()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="openpiv.html#openpiv.smoothn.beta"><code class="docutils literal notranslate"><span class="pre">beta()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="openpiv.html#openpiv.smoothn.binomial"><code class="docutils literal notranslate"><span class="pre">binomial()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="openpiv.html#openpiv.smoothn.chisquare"><code class="docutils literal notranslate"><span class="pre">chisquare()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="openpiv.html#openpiv.smoothn.choice"><code class="docutils literal notranslate"><span class="pre">choice()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="openpiv.html#openpiv.smoothn.dctND"><code class="docutils literal notranslate"><span class="pre">dctND()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="openpiv.html#openpiv.smoothn.dirichlet"><code class="docutils literal notranslate"><span class="pre">dirichlet()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="openpiv.html#openpiv.smoothn.exponential"><code class="docutils literal notranslate"><span class="pre">exponential()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="openpiv.html#openpiv.smoothn.f"><code class="docutils literal notranslate"><span class="pre">f()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="openpiv.html#openpiv.smoothn.gamma"><code class="docutils literal notranslate"><span class="pre">gamma()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="openpiv.html#openpiv.smoothn.gcv"><code class="docutils literal notranslate"><span class="pre">gcv()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="openpiv.html#openpiv.smoothn.geometric"><code class="docutils literal notranslate"><span class="pre">geometric()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="openpiv.html#openpiv.smoothn.get_state"><code class="docutils literal notranslate"><span class="pre">get_state()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="openpiv.html#openpiv.smoothn.gumbel"><code class="docutils literal notranslate"><span class="pre">gumbel()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="openpiv.html#openpiv.smoothn.hypergeometric"><code class="docutils literal notranslate"><span class="pre">hypergeometric()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="openpiv.html#openpiv.smoothn.laplace"><code class="docutils literal notranslate"><span class="pre">laplace()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="openpiv.html#openpiv.smoothn.logistic"><code class="docutils literal notranslate"><span class="pre">logistic()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="openpiv.html#openpiv.smoothn.lognormal"><code class="docutils literal notranslate"><span class="pre">lognormal()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="openpiv.html#openpiv.smoothn.logseries"><code class="docutils literal notranslate"><span class="pre">logseries()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="openpiv.html#openpiv.smoothn.multinomial"><code class="docutils literal notranslate"><span class="pre">multinomial()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="openpiv.html#openpiv.smoothn.multivariate_normal"><code class="docutils literal notranslate"><span class="pre">multivariate_normal()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="openpiv.html#openpiv.smoothn.negative_binomial"><code class="docutils literal notranslate"><span class="pre">negative_binomial()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="openpiv.html#openpiv.smoothn.noncentral_chisquare"><code class="docutils literal notranslate"><span class="pre">noncentral_chisquare()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="openpiv.html#openpiv.smoothn.noncentral_f"><code class="docutils literal notranslate"><span class="pre">noncentral_f()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="openpiv.html#openpiv.smoothn.normal"><code class="docutils literal notranslate"><span class="pre">normal()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="openpiv.html#openpiv.smoothn.pareto"><code class="docutils literal notranslate"><span class="pre">pareto()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="openpiv.html#openpiv.smoothn.peaks"><code class="docutils literal notranslate"><span class="pre">peaks()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="openpiv.html#openpiv.smoothn.permutation"><code class="docutils literal notranslate"><span class="pre">permutation()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="openpiv.html#openpiv.smoothn.poisson"><code class="docutils literal notranslate"><span class="pre">poisson()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="openpiv.html#openpiv.smoothn.power"><code class="docutils literal notranslate"><span class="pre">power()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="openpiv.html#openpiv.smoothn.rand"><code class="docutils literal notranslate"><span class="pre">rand()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="openpiv.html#openpiv.smoothn.randint"><code class="docutils literal notranslate"><span class="pre">randint()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="openpiv.html#openpiv.smoothn.randn"><code class="docutils literal notranslate"><span class="pre">randn()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="openpiv.html#openpiv.smoothn.random"><code class="docutils literal notranslate"><span class="pre">random()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="openpiv.html#openpiv.smoothn.random_integers"><code class="docutils literal notranslate"><span class="pre">random_integers()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="openpiv.html#openpiv.smoothn.random_sample"><code class="docutils literal notranslate"><span class="pre">random_sample()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="openpiv.html#openpiv.smoothn.rayleigh"><code class="docutils literal notranslate"><span class="pre">rayleigh()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="openpiv.html#openpiv.smoothn.seed"><code class="docutils literal notranslate"><span class="pre">seed()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="openpiv.html#openpiv.smoothn.set_state"><code class="docutils literal notranslate"><span class="pre">set_state()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="openpiv.html#openpiv.smoothn.shuffle"><code class="docutils literal notranslate"><span class="pre">shuffle()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="openpiv.html#openpiv.smoothn.smooth"><code class="docutils literal notranslate"><span class="pre">smooth()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="openpiv.html#openpiv.smoothn.smooth_masked_array"><code class="docutils literal notranslate"><span class="pre">smooth_masked_array()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="openpiv.html#openpiv.smoothn.smoothn"><code class="docutils literal notranslate"><span class="pre">smoothn()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="openpiv.html#openpiv.smoothn.sparseSVD"><code class="docutils literal notranslate"><span class="pre">sparseSVD()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="openpiv.html#openpiv.smoothn.sparseTest"><code class="docutils literal notranslate"><span class="pre">sparseTest()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="openpiv.html#openpiv.smoothn.standard_cauchy"><code class="docutils literal notranslate"><span class="pre">standard_cauchy()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="openpiv.html#openpiv.smoothn.standard_exponential"><code class="docutils literal notranslate"><span class="pre">standard_exponential()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="openpiv.html#openpiv.smoothn.standard_gamma"><code class="docutils literal notranslate"><span class="pre">standard_gamma()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="openpiv.html#openpiv.smoothn.standard_normal"><code class="docutils literal notranslate"><span class="pre">standard_normal()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="openpiv.html#openpiv.smoothn.standard_t"><code class="docutils literal notranslate"><span class="pre">standard_t()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="openpiv.html#openpiv.smoothn.test1"><code class="docutils literal notranslate"><span class="pre">test1()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="openpiv.html#openpiv.smoothn.test2"><code class="docutils literal notranslate"><span class="pre">test2()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="openpiv.html#openpiv.smoothn.test3"><code class="docutils literal notranslate"><span class="pre">test3()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="openpiv.html#openpiv.smoothn.test4"><code class="docutils literal notranslate"><span class="pre">test4()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="openpiv.html#openpiv.smoothn.test5"><code class="docutils literal notranslate"><span class="pre">test5()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="openpiv.html#openpiv.smoothn.test6"><code class="docutils literal notranslate"><span class="pre">test6()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="openpiv.html#openpiv.smoothn.triangular"><code class="docutils literal notranslate"><span class="pre">triangular()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="openpiv.html#openpiv.smoothn.uniform"><code class="docutils literal notranslate"><span class="pre">uniform()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="openpiv.html#openpiv.smoothn.vonmises"><code class="docutils literal notranslate"><span class="pre">vonmises()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="openpiv.html#openpiv.smoothn.wald"><code class="docutils literal notranslate"><span class="pre">wald()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="openpiv.html#openpiv.smoothn.warning"><code class="docutils literal notranslate"><span class="pre">warning()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="openpiv.html#openpiv.smoothn.weibull"><code class="docutils literal notranslate"><span class="pre">weibull()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="openpiv.html#openpiv.smoothn.zipf"><code class="docutils literal notranslate"><span class="pre">zipf()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="openpiv.html#module-openpiv.tools">openpiv.tools module</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="openpiv.html#openpiv.tools.Multiprocesser"><code class="docutils literal notranslate"><span class="pre">Multiprocesser</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="openpiv.html#openpiv.tools.Multiprocesser.run"><code class="docutils literal notranslate"><span class="pre">Multiprocesser.run()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="openpiv.html#openpiv.tools.convert16bitsTIF"><code class="docutils literal notranslate"><span class="pre">convert16bitsTIF()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="openpiv.html#openpiv.tools.display"><code class="docutils literal notranslate"><span class="pre">display()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="openpiv.html#openpiv.tools.display_vector_field"><code class="docutils literal notranslate"><span class="pre">display_vector_field()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="openpiv.html#openpiv.tools.display_windows_sampling"><code class="docutils literal notranslate"><span class="pre">display_windows_sampling()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="openpiv.html#openpiv.tools.edges"><code class="docutils literal notranslate"><span class="pre">edges()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="openpiv.html#openpiv.tools.find_boundaries"><code class="docutils literal notranslate"><span class="pre">find_boundaries()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="openpiv.html#openpiv.tools.find_reflexions"><code class="docutils literal notranslate"><span class="pre">find_reflexions()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="openpiv.html#openpiv.tools.imread"><code class="docutils literal notranslate"><span class="pre">imread()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="openpiv.html#openpiv.tools.imsave"><code class="docutils literal notranslate"><span class="pre">imsave()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="openpiv.html#openpiv.tools.mark_background"><code class="docutils literal notranslate"><span class="pre">mark_background()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="openpiv.html#openpiv.tools.mark_background2"><code class="docutils literal notranslate"><span class="pre">mark_background2()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="openpiv.html#openpiv.tools.natural_sort"><code class="docutils literal notranslate"><span class="pre">natural_sort()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="openpiv.html#openpiv.tools.negative"><code class="docutils literal notranslate"><span class="pre">negative()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="openpiv.html#openpiv.tools.rgb2gray"><code class="docutils literal notranslate"><span class="pre">rgb2gray()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="openpiv.html#openpiv.tools.save"><code class="docutils literal notranslate"><span class="pre">save()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="openpiv.html#openpiv.tools.sorted_unique"><code class="docutils literal notranslate"><span class="pre">sorted_unique()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="openpiv.html#openpiv.tools.transform_coordinates"><code class="docutils literal notranslate"><span class="pre">transform_coordinates()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="openpiv.html#module-openpiv.validation">openpiv.validation module</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="openpiv.html#openpiv.validation.global_std"><code class="docutils literal notranslate"><span class="pre">global_std()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="openpiv.html#openpiv.validation.global_val"><code class="docutils literal notranslate"><span class="pre">global_val()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="openpiv.html#openpiv.validation.local_median_val"><code class="docutils literal notranslate"><span class="pre">local_median_val()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="openpiv.html#openpiv.validation.sig2noise_val"><code class="docutils literal notranslate"><span class="pre">sig2noise_val()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="openpiv.html#openpiv.validation.typical_validation"><code class="docutils literal notranslate"><span class="pre">typical_validation()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="openpiv.html#openpiv-widim-module">openpiv.widim module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="openpiv.html#module-openpiv.windef">openpiv.windef module</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="openpiv.html#openpiv.windef.PIVSettings"><code class="docutils literal notranslate"><span class="pre">PIVSettings</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="openpiv.html#openpiv.windef.PIVSettings.correlation_method"><code class="docutils literal notranslate"><span class="pre">PIVSettings.correlation_method</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="openpiv.html#openpiv.windef.PIVSettings.deformation_method"><code class="docutils literal notranslate"><span class="pre">PIVSettings.deformation_method</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="openpiv.html#openpiv.windef.PIVSettings.dt"><code class="docutils literal notranslate"><span class="pre">PIVSettings.dt</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="openpiv.html#openpiv.windef.PIVSettings.dynamic_masking_filter_size"><code class="docutils literal notranslate"><span class="pre">PIVSettings.dynamic_masking_filter_size</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="openpiv.html#openpiv.windef.PIVSettings.dynamic_masking_method"><code class="docutils literal notranslate"><span class="pre">PIVSettings.dynamic_masking_method</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="openpiv.html#openpiv.windef.PIVSettings.dynamic_masking_threshold"><code class="docutils literal notranslate"><span class="pre">PIVSettings.dynamic_masking_threshold</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="openpiv.html#openpiv.windef.PIVSettings.filepath_images"><code class="docutils literal notranslate"><span class="pre">PIVSettings.filepath_images</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="openpiv.html#openpiv.windef.PIVSettings.filter_kernel_size"><code class="docutils literal notranslate"><span class="pre">PIVSettings.filter_kernel_size</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="openpiv.html#openpiv.windef.PIVSettings.filter_method"><code class="docutils literal notranslate"><span class="pre">PIVSettings.filter_method</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="openpiv.html#openpiv.windef.PIVSettings.frame_pattern_a"><code class="docutils literal notranslate"><span class="pre">PIVSettings.frame_pattern_a</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="openpiv.html#openpiv.windef.PIVSettings.frame_pattern_b"><code class="docutils literal notranslate"><span class="pre">PIVSettings.frame_pattern_b</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="openpiv.html#openpiv.windef.PIVSettings.interpolation_order"><code class="docutils literal notranslate"><span class="pre">PIVSettings.interpolation_order</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="openpiv.html#openpiv.windef.PIVSettings.invert"><code class="docutils literal notranslate"><span class="pre">PIVSettings.invert</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="openpiv.html#openpiv.windef.PIVSettings.max_filter_iteration"><code class="docutils literal notranslate"><span class="pre">PIVSettings.max_filter_iteration</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="openpiv.html#openpiv.windef.PIVSettings.median_size"><code class="docutils literal notranslate"><span class="pre">PIVSettings.median_size</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="openpiv.html#openpiv.windef.PIVSettings.median_threshold"><code class="docutils literal notranslate"><span class="pre">PIVSettings.median_threshold</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="openpiv.html#openpiv.windef.PIVSettings.min_max_u_disp"><code class="docutils literal notranslate"><span class="pre">PIVSettings.min_max_u_disp</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="openpiv.html#openpiv.windef.PIVSettings.min_max_v_disp"><code class="docutils literal notranslate"><span class="pre">PIVSettings.min_max_v_disp</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="openpiv.html#openpiv.windef.PIVSettings.normalized_correlation"><code class="docutils literal notranslate"><span class="pre">PIVSettings.normalized_correlation</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="openpiv.html#openpiv.windef.PIVSettings.num_iterations"><code class="docutils literal notranslate"><span class="pre">PIVSettings.num_iterations</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="openpiv.html#openpiv.windef.PIVSettings.overlap"><code class="docutils literal notranslate"><span class="pre">PIVSettings.overlap</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="openpiv.html#openpiv.windef.PIVSettings.replace_vectors"><code class="docutils literal notranslate"><span class="pre">PIVSettings.replace_vectors</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="openpiv.html#openpiv.windef.PIVSettings.roi"><code class="docutils literal notranslate"><span class="pre">PIVSettings.roi</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="openpiv.html#openpiv.windef.PIVSettings.save_folder_suffix"><code class="docutils literal notranslate"><span class="pre">PIVSettings.save_folder_suffix</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="openpiv.html#openpiv.windef.PIVSettings.save_path"><code class="docutils literal notranslate"><span class="pre">PIVSettings.save_path</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="openpiv.html#openpiv.windef.PIVSettings.save_plot"><code class="docutils literal notranslate"><span class="pre">PIVSettings.save_plot</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="openpiv.html#openpiv.windef.PIVSettings.scale_plot"><code class="docutils literal notranslate"><span class="pre">PIVSettings.scale_plot</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="openpiv.html#openpiv.windef.PIVSettings.scaling_factor"><code class="docutils literal notranslate"><span class="pre">PIVSettings.scaling_factor</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="openpiv.html#openpiv.windef.PIVSettings.show_all_plots"><code class="docutils literal notranslate"><span class="pre">PIVSettings.show_all_plots</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="openpiv.html#openpiv.windef.PIVSettings.show_plot"><code class="docutils literal notranslate"><span class="pre">PIVSettings.show_plot</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="openpiv.html#openpiv.windef.PIVSettings.sig2noise_mask"><code class="docutils literal notranslate"><span class="pre">PIVSettings.sig2noise_mask</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="openpiv.html#openpiv.windef.PIVSettings.sig2noise_method"><code class="docutils literal notranslate"><span class="pre">PIVSettings.sig2noise_method</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="openpiv.html#openpiv.windef.PIVSettings.sig2noise_threshold"><code class="docutils literal notranslate"><span class="pre">PIVSettings.sig2noise_threshold</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="openpiv.html#openpiv.windef.PIVSettings.sig2noise_validate"><code class="docutils literal notranslate"><span class="pre">PIVSettings.sig2noise_validate</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="openpiv.html#openpiv.windef.PIVSettings.smoothn"><code class="docutils literal notranslate"><span class="pre">PIVSettings.smoothn</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="openpiv.html#openpiv.windef.PIVSettings.smoothn_p"><code class="docutils literal notranslate"><span class="pre">PIVSettings.smoothn_p</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="openpiv.html#openpiv.windef.PIVSettings.static_mask"><code class="docutils literal notranslate"><span class="pre">PIVSettings.static_mask</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="openpiv.html#openpiv.windef.PIVSettings.std_threshold"><code class="docutils literal notranslate"><span class="pre">PIVSettings.std_threshold</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="openpiv.html#openpiv.windef.PIVSettings.subpixel_method"><code class="docutils literal notranslate"><span class="pre">PIVSettings.subpixel_method</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="openpiv.html#openpiv.windef.PIVSettings.use_vectorized"><code class="docutils literal notranslate"><span class="pre">PIVSettings.use_vectorized</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="openpiv.html#openpiv.windef.PIVSettings.validation_first_pass"><code class="docutils literal notranslate"><span class="pre">PIVSettings.validation_first_pass</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="openpiv.html#openpiv.windef.PIVSettings.windowsizes"><code class="docutils literal notranslate"><span class="pre">PIVSettings.windowsizes</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="openpiv.html#openpiv.windef.create_deformation_field"><code class="docutils literal notranslate"><span class="pre">create_deformation_field()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="openpiv.html#openpiv.windef.deform_windows"><code class="docutils literal notranslate"><span class="pre">deform_windows()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="openpiv.html#openpiv.windef.first_pass"><code class="docutils literal notranslate"><span class="pre">first_pass()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="openpiv.html#openpiv.windef.multipass_img_deform"><code class="docutils literal notranslate"><span class="pre">multipass_img_deform()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="openpiv.html#openpiv.windef.piv"><code class="docutils literal notranslate"><span class="pre">piv()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="openpiv.html#openpiv.windef.prepare_images"><code class="docutils literal notranslate"><span class="pre">prepare_images()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="openpiv.html#openpiv.windef.simple_multipass"><code class="docutils literal notranslate"><span class="pre">simple_multipass()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="openpiv.html#module-openpiv">Module contents</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="openpiv.html#openpiv.test"><code class="docutils literal notranslate"><span class="pre">test()</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</div>
+</section>
+
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2014, OpenPIV team.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

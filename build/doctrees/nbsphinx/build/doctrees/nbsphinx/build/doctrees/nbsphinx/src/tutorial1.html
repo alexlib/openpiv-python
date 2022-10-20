@@ -1,0 +1,567 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>OpenPIV tutorial &mdash; OpenPIV  documentation</title>
+      <link rel="stylesheet" href="../../../../../../../../../../_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="../../../../../../../../../../_static/css/theme.css" type="text/css" />
+  <!--[if lt IE 9]>
+    <script src="../../../../../../../../../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script data-url_root="../../../../../../../../../../" id="documentation_options" src="../../../../../../../../../../_static/documentation_options.js"></script>
+        <script src="../../../../../../../../../../_static/jquery.js"></script>
+        <script src="../../../../../../../../../../_static/underscore.js"></script>
+        <script src="../../../../../../../../../../_static/_sphinx_javascript_frameworks_compat.js"></script>
+        <script src="../../../../../../../../../../_static/doctools.js"></script>
+        <script src="../../../../../../../../../../_static/sphinx_highlight.js"></script>
+        <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+        <script>window.MathJax = {"tex": {"inlineMath": [["$", "$"], ["\\(", "\\)"]], "processEscapes": true}, "options": {"ignoreHtmlClass": "tex2jax_ignore|mathjax_ignore|document", "processHtmlClass": "tex2jax_process|mathjax_process|math|output_area"}}</script>
+        <script defer="defer" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+    <script src="../../../../../../../../../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../../../../../../../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../../../../../../../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+            <a href="../../../../../../../../../../index.html" class="icon icon-home"> OpenPIV
+          </a>
+              <div class="version">
+                0.24.4a
+              </div>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../../../../../../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../../../../../../../../src/piv_basics.html">Basics of the PIV algorithms</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../../../../../../../src/installation_instruction.html">Installation instruction</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../../../../../../../src/tutorial1.html">OpenPIV tutorial</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../../../../../../../src/windef.html">Multi-grid window deformation algorithm tutorial</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../../../../../../../src/masking.html">OpenPIV masking tutorial</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../../../../../../../src/developers.html">Information for developers and contributors</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../../../../../../../src/api_reference.html">API reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../../../../../../../src/faq.html">Frequently Asked Questions about PIV parameters</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../../../../../../../../index.html">OpenPIV</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../../../../../../../../../index.html" class="icon icon-home"></a> &raquo;</li>
+      <li>OpenPIV tutorial</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="../../../../../../../../../../_sources/build/doctrees/nbsphinx/build/doctrees/nbsphinx/build/doctrees/nbsphinx/src/tutorial1.ipynb.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  
+<style>
+/* CSS for nbsphinx extension */
+
+/* remove conflicting styling from Sphinx themes */
+div.nbinput.container div.prompt *,
+div.nboutput.container div.prompt *,
+div.nbinput.container div.input_area pre,
+div.nboutput.container div.output_area pre,
+div.nbinput.container div.input_area .highlight,
+div.nboutput.container div.output_area .highlight {
+    border: none;
+    padding: 0;
+    margin: 0;
+    box-shadow: none;
+}
+
+div.nbinput.container > div[class*=highlight],
+div.nboutput.container > div[class*=highlight] {
+    margin: 0;
+}
+
+div.nbinput.container div.prompt *,
+div.nboutput.container div.prompt * {
+    background: none;
+}
+
+div.nboutput.container div.output_area .highlight,
+div.nboutput.container div.output_area pre {
+    background: unset;
+}
+
+div.nboutput.container div.output_area div.highlight {
+    color: unset;  /* override Pygments text color */
+}
+
+/* avoid gaps between output lines */
+div.nboutput.container div[class*=highlight] pre {
+    line-height: normal;
+}
+
+/* input/output containers */
+div.nbinput.container,
+div.nboutput.container {
+    display: -webkit-flex;
+    display: flex;
+    align-items: flex-start;
+    margin: 0;
+    width: 100%;
+}
+@media (max-width: 540px) {
+    div.nbinput.container,
+    div.nboutput.container {
+        flex-direction: column;
+    }
+}
+
+/* input container */
+div.nbinput.container {
+    padding-top: 5px;
+}
+
+/* last container */
+div.nblast.container {
+    padding-bottom: 5px;
+}
+
+/* input prompt */
+div.nbinput.container div.prompt pre {
+    color: #307FC1;
+}
+
+/* output prompt */
+div.nboutput.container div.prompt pre {
+    color: #BF5B3D;
+}
+
+/* all prompts */
+div.nbinput.container div.prompt,
+div.nboutput.container div.prompt {
+    width: 4.5ex;
+    padding-top: 5px;
+    position: relative;
+    user-select: none;
+}
+
+div.nbinput.container div.prompt > div,
+div.nboutput.container div.prompt > div {
+    position: absolute;
+    right: 0;
+    margin-right: 0.3ex;
+}
+
+@media (max-width: 540px) {
+    div.nbinput.container div.prompt,
+    div.nboutput.container div.prompt {
+        width: unset;
+        text-align: left;
+        padding: 0.4em;
+    }
+    div.nboutput.container div.prompt.empty {
+        padding: 0;
+    }
+
+    div.nbinput.container div.prompt > div,
+    div.nboutput.container div.prompt > div {
+        position: unset;
+    }
+}
+
+/* disable scrollbars on prompts */
+div.nbinput.container div.prompt pre,
+div.nboutput.container div.prompt pre {
+    overflow: hidden;
+}
+
+/* input/output area */
+div.nbinput.container div.input_area,
+div.nboutput.container div.output_area {
+    -webkit-flex: 1;
+    flex: 1;
+    overflow: auto;
+}
+@media (max-width: 540px) {
+    div.nbinput.container div.input_area,
+    div.nboutput.container div.output_area {
+        width: 100%;
+    }
+}
+
+/* input area */
+div.nbinput.container div.input_area {
+    border: 1px solid #e0e0e0;
+    border-radius: 2px;
+    /*background: #f5f5f5;*/
+}
+
+/* override MathJax center alignment in output cells */
+div.nboutput.container div[class*=MathJax] {
+    text-align: left !important;
+}
+
+/* override sphinx.ext.imgmath center alignment in output cells */
+div.nboutput.container div.math p {
+    text-align: left;
+}
+
+/* standard error */
+div.nboutput.container div.output_area.stderr {
+    background: #fdd;
+}
+
+/* ANSI colors */
+.ansi-black-fg { color: #3E424D; }
+.ansi-black-bg { background-color: #3E424D; }
+.ansi-black-intense-fg { color: #282C36; }
+.ansi-black-intense-bg { background-color: #282C36; }
+.ansi-red-fg { color: #E75C58; }
+.ansi-red-bg { background-color: #E75C58; }
+.ansi-red-intense-fg { color: #B22B31; }
+.ansi-red-intense-bg { background-color: #B22B31; }
+.ansi-green-fg { color: #00A250; }
+.ansi-green-bg { background-color: #00A250; }
+.ansi-green-intense-fg { color: #007427; }
+.ansi-green-intense-bg { background-color: #007427; }
+.ansi-yellow-fg { color: #DDB62B; }
+.ansi-yellow-bg { background-color: #DDB62B; }
+.ansi-yellow-intense-fg { color: #B27D12; }
+.ansi-yellow-intense-bg { background-color: #B27D12; }
+.ansi-blue-fg { color: #208FFB; }
+.ansi-blue-bg { background-color: #208FFB; }
+.ansi-blue-intense-fg { color: #0065CA; }
+.ansi-blue-intense-bg { background-color: #0065CA; }
+.ansi-magenta-fg { color: #D160C4; }
+.ansi-magenta-bg { background-color: #D160C4; }
+.ansi-magenta-intense-fg { color: #A03196; }
+.ansi-magenta-intense-bg { background-color: #A03196; }
+.ansi-cyan-fg { color: #60C6C8; }
+.ansi-cyan-bg { background-color: #60C6C8; }
+.ansi-cyan-intense-fg { color: #258F8F; }
+.ansi-cyan-intense-bg { background-color: #258F8F; }
+.ansi-white-fg { color: #C5C1B4; }
+.ansi-white-bg { background-color: #C5C1B4; }
+.ansi-white-intense-fg { color: #A1A6B2; }
+.ansi-white-intense-bg { background-color: #A1A6B2; }
+
+.ansi-default-inverse-fg { color: #FFFFFF; }
+.ansi-default-inverse-bg { background-color: #000000; }
+
+.ansi-bold { font-weight: bold; }
+.ansi-underline { text-decoration: underline; }
+
+
+div.nbinput.container div.input_area div[class*=highlight] > pre,
+div.nboutput.container div.output_area div[class*=highlight] > pre,
+div.nboutput.container div.output_area div[class*=highlight].math,
+div.nboutput.container div.output_area.rendered_html,
+div.nboutput.container div.output_area > div.output_javascript,
+div.nboutput.container div.output_area:not(.rendered_html) > img{
+    padding: 5px;
+    margin: 0;
+}
+
+/* fix copybtn overflow problem in chromium (needed for 'sphinx_copybutton') */
+div.nbinput.container div.input_area > div[class^='highlight'],
+div.nboutput.container div.output_area > div[class^='highlight']{
+    overflow-y: hidden;
+}
+
+/* hide copybtn icon on prompts (needed for 'sphinx_copybutton') */
+.prompt .copybtn {
+    display: none;
+}
+
+/* Some additional styling taken form the Jupyter notebook CSS */
+.jp-RenderedHTMLCommon table,
+div.rendered_html table {
+  border: none;
+  border-collapse: collapse;
+  border-spacing: 0;
+  color: black;
+  font-size: 12px;
+  table-layout: fixed;
+}
+.jp-RenderedHTMLCommon thead,
+div.rendered_html thead {
+  border-bottom: 1px solid black;
+  vertical-align: bottom;
+}
+.jp-RenderedHTMLCommon tr,
+.jp-RenderedHTMLCommon th,
+.jp-RenderedHTMLCommon td,
+div.rendered_html tr,
+div.rendered_html th,
+div.rendered_html td {
+  text-align: right;
+  vertical-align: middle;
+  padding: 0.5em 0.5em;
+  line-height: normal;
+  white-space: normal;
+  max-width: none;
+  border: none;
+}
+.jp-RenderedHTMLCommon th,
+div.rendered_html th {
+  font-weight: bold;
+}
+.jp-RenderedHTMLCommon tbody tr:nth-child(odd),
+div.rendered_html tbody tr:nth-child(odd) {
+  background: #f5f5f5;
+}
+.jp-RenderedHTMLCommon tbody tr:hover,
+div.rendered_html tbody tr:hover {
+  background: rgba(66, 165, 245, 0.2);
+}
+
+/* CSS overrides for sphinx_rtd_theme */
+
+/* 24px margin */
+.nbinput.nblast.container,
+.nboutput.nblast.container {
+    margin-bottom: 19px;  /* padding has already 5px */
+}
+
+/* ... except between code cells! */
+.nblast.container + .nbinput.container {
+    margin-top: -19px;
+}
+
+.admonition > p:before {
+    margin-right: 4px;  /* make room for the exclamation icon */
+}
+
+/* Fix math alignment, see https://github.com/rtfd/sphinx_rtd_theme/pull/686 */
+.math {
+    text-align: unset;
+}
+</style>
+<section id="OpenPIV-tutorial">
+<h1>OpenPIV tutorial<a class="headerlink" href="#OpenPIV-tutorial" title="Permalink to this heading"></a></h1>
+<p>In this tutorial we read a pair of images and perform the PIV using a standard algorithm. At the end, the velocity vector field is plotted.</p>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[11]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">openpiv</span> <span class="kn">import</span> <span class="n">tools</span><span class="p">,</span> <span class="n">pyprocess</span><span class="p">,</span> <span class="n">validation</span><span class="p">,</span> <span class="n">filters</span><span class="p">,</span> <span class="n">scaling</span>
+
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">import</span> <span class="nn">matplotlib.pyplot</span> <span class="k">as</span> <span class="nn">plt</span>
+<span class="o">%</span><span class="k">matplotlib</span> inline
+
+<span class="kn">import</span> <span class="nn">imageio</span>
+<span class="kn">import</span> <span class="nn">importlib_resources</span>
+<span class="kn">import</span> <span class="nn">pathlib</span>
+</pre></div>
+</div>
+</div>
+<section id="Reading-images:">
+<h2>Reading images:<a class="headerlink" href="#Reading-images:" title="Permalink to this heading"></a></h2>
+<p>The images can be read using the <code class="docutils literal notranslate"><span class="pre">imread</span></code> function, and diplayed with matplotlib.</p>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[12]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><br/><span></span><span class="n">path</span> <span class="o">=</span> <span class="n">importlib_resources</span><span class="o">.</span><span class="n">files</span><span class="p">(</span><span class="s1">&#39;openpiv&#39;</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[13]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><br/><span></span><span class="n">frame_a</span>  <span class="o">=</span> <span class="n">tools</span><span class="o">.</span><span class="n">imread</span><span class="p">(</span> <span class="n">path</span> <span class="o">/</span> <span class="s1">&#39;data/test1/exp1_001_a.bmp&#39;</span> <span class="p">)</span>
+<span class="n">frame_b</span>  <span class="o">=</span> <span class="n">tools</span><span class="o">.</span><span class="n">imread</span><span class="p">(</span> <span class="n">path</span> <span class="o">/</span> <span class="s1">&#39;data/test1/exp1_001_b.bmp&#39;</span> <span class="p">)</span>
+
+<span class="n">fig</span><span class="p">,</span><span class="n">ax</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">subplots</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span><span class="mi">2</span><span class="p">,</span><span class="n">figsize</span><span class="o">=</span><span class="p">(</span><span class="mi">12</span><span class="p">,</span><span class="mi">10</span><span class="p">))</span>
+<span class="n">ax</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">imshow</span><span class="p">(</span><span class="n">frame_a</span><span class="p">,</span><span class="n">cmap</span><span class="o">=</span><span class="n">plt</span><span class="o">.</span><span class="n">cm</span><span class="o">.</span><span class="n">gray</span><span class="p">);</span>
+<span class="n">ax</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">imshow</span><span class="p">(</span><span class="n">frame_b</span><span class="p">,</span><span class="n">cmap</span><span class="o">=</span><span class="n">plt</span><span class="o">.</span><span class="n">cm</span><span class="o">.</span><span class="n">gray</span><span class="p">);</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<img alt="../../../../../../../../../../_images/build_doctrees_nbsphinx_build_doctrees_nbsphinx_build_doctrees_nbsphinx_src_tutorial1_4_0.png" src="../../../../../../../../../../_images/build_doctrees_nbsphinx_build_doctrees_nbsphinx_build_doctrees_nbsphinx_src_tutorial1_4_0.png" />
+</div>
+</div>
+</section>
+<section id="Processing">
+<h2>Processing<a class="headerlink" href="#Processing" title="Permalink to this heading"></a></h2>
+<p>In this tutorial, we are going to use the <code class="docutils literal notranslate"><span class="pre">extended_search_area_piv</span></code> function, wich is a standard PIV cross-correlation algorithm.</p>
+<p>This function allows the search area (<code class="docutils literal notranslate"><span class="pre">search_area_size</span></code>) in the second frame to be larger than the interrogation window in the first frame (<code class="docutils literal notranslate"><span class="pre">window_size</span></code>). Also, the search areas can overlap (<code class="docutils literal notranslate"><span class="pre">overlap</span></code>).</p>
+<p>The <code class="docutils literal notranslate"><span class="pre">extended_search_area_piv</span></code> function will return three arrays. 1. The <code class="docutils literal notranslate"><span class="pre">u</span></code> component of the velocity vectors 2. The <code class="docutils literal notranslate"><span class="pre">v</span></code> component of the velocity vectors 3. The signal-to-noise ratio (S2N) of the cross-correlation map of each vector. The higher the S2N of a vector, the higher the probability that its magnitude and direction are correct.</p>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[14]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">winsize</span> <span class="o">=</span> <span class="mi">32</span> <span class="c1"># pixels, interrogation window size in frame A</span>
+<span class="n">searchsize</span> <span class="o">=</span> <span class="mi">38</span>  <span class="c1"># pixels, search area size in frame B</span>
+<span class="n">overlap</span> <span class="o">=</span> <span class="mi">17</span> <span class="c1"># pixels, 50% overlap</span>
+<span class="n">dt</span> <span class="o">=</span> <span class="mf">0.02</span> <span class="c1"># sec, time interval between the two frames</span>
+
+<span class="n">u0</span><span class="p">,</span> <span class="n">v0</span><span class="p">,</span> <span class="n">sig2noise</span> <span class="o">=</span> <span class="n">pyprocess</span><span class="o">.</span><span class="n">extended_search_area_piv</span><span class="p">(</span>
+    <span class="n">frame_a</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">int32</span><span class="p">),</span>
+    <span class="n">frame_b</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">int32</span><span class="p">),</span>
+    <span class="n">window_size</span><span class="o">=</span><span class="n">winsize</span><span class="p">,</span>
+    <span class="n">overlap</span><span class="o">=</span><span class="n">overlap</span><span class="p">,</span>
+    <span class="n">dt</span><span class="o">=</span><span class="n">dt</span><span class="p">,</span>
+    <span class="n">search_area_size</span><span class="o">=</span><span class="n">searchsize</span><span class="p">,</span>
+    <span class="n">sig2noise_method</span><span class="o">=</span><span class="s1">&#39;peak2peak&#39;</span><span class="p">,</span>
+<span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<p>The function <code class="docutils literal notranslate"><span class="pre">get_coordinates</span></code> finds the center of each interrogation window. This will be useful later on when plotting the vector field.</p>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[15]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">x</span><span class="p">,</span> <span class="n">y</span> <span class="o">=</span> <span class="n">pyprocess</span><span class="o">.</span><span class="n">get_coordinates</span><span class="p">(</span>
+    <span class="n">image_size</span><span class="o">=</span><span class="n">frame_a</span><span class="o">.</span><span class="n">shape</span><span class="p">,</span>
+    <span class="n">search_area_size</span><span class="o">=</span><span class="n">searchsize</span><span class="p">,</span>
+    <span class="n">overlap</span><span class="o">=</span><span class="n">overlap</span><span class="p">,</span>
+<span class="p">)</span>
+</pre></div>
+</div>
+</div>
+</section>
+<section id="Post-processing">
+<h2>Post-processing<a class="headerlink" href="#Post-processing" title="Permalink to this heading"></a></h2>
+<p>Strictly speaking, we are ready to plot the vector field. But before we do that, we can perform some convenient pos-processing.</p>
+<p>To start, lets use the function <code class="docutils literal notranslate"><span class="pre">sig2noise_val</span></code> to get a mask indicating which vectors have a minimum amount of S2N. Vectors below a certain threshold are substituted by <code class="docutils literal notranslate"><span class="pre">NaN</span></code>. If you are not sure about which threshold value to use, try taking a look at the S2N histogram with:</p>
+<p><code class="docutils literal notranslate"><span class="pre">plt.hist(sig2noise.flatten())</span></code></p>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[16]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">invalid_mask</span> <span class="o">=</span> <span class="n">validation</span><span class="o">.</span><span class="n">sig2noise_val</span><span class="p">(</span>
+    <span class="n">sig2noise</span><span class="p">,</span>
+    <span class="n">threshold</span> <span class="o">=</span> <span class="mf">1.05</span><span class="p">,</span>
+<span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<p>Another useful function is <code class="docutils literal notranslate"><span class="pre">replace_outliers</span></code>, which will find outlier vectors, and substitute them by an average of neighboring vectors. The larger the <code class="docutils literal notranslate"><span class="pre">kernel_size</span></code> the larger is the considered neighborhood. This function uses an iterative image inpainting algorithm. The amount of iterations can be chosen via <code class="docutils literal notranslate"><span class="pre">max_iter</span></code>.</p>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[17]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">u2</span><span class="p">,</span> <span class="n">v2</span> <span class="o">=</span> <span class="n">filters</span><span class="o">.</span><span class="n">replace_outliers</span><span class="p">(</span>
+    <span class="n">u0</span><span class="p">,</span> <span class="n">v0</span><span class="p">,</span>
+    <span class="n">invalid_mask</span><span class="p">,</span>
+    <span class="n">method</span><span class="o">=</span><span class="s1">&#39;localmean&#39;</span><span class="p">,</span>
+    <span class="n">max_iter</span><span class="o">=</span><span class="mi">3</span><span class="p">,</span>
+    <span class="n">kernel_size</span><span class="o">=</span><span class="mi">3</span><span class="p">,</span>
+<span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<p>Next, we are going to convert pixels to millimeters, and flip the coordinate system such that the origin becomes the bottom left corner of the image.</p>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[18]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="c1"># convert x,y to mm</span>
+<span class="c1"># convert u,v to mm/sec</span>
+
+<span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">u3</span><span class="p">,</span> <span class="n">v3</span> <span class="o">=</span> <span class="n">scaling</span><span class="o">.</span><span class="n">uniform</span><span class="p">(</span>
+    <span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">u2</span><span class="p">,</span> <span class="n">v2</span><span class="p">,</span>
+    <span class="n">scaling_factor</span> <span class="o">=</span> <span class="mf">96.52</span><span class="p">,</span>  <span class="c1"># 96.52 pixels/millimeter</span>
+<span class="p">)</span>
+
+<span class="c1"># 0,0 shall be bottom left, positive rotation rate is counterclockwise</span>
+<span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">u3</span><span class="p">,</span> <span class="n">v3</span> <span class="o">=</span> <span class="n">tools</span><span class="o">.</span><span class="n">transform_coordinates</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">u3</span><span class="p">,</span> <span class="n">v3</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+</section>
+<section id="Results">
+<h2>Results<a class="headerlink" href="#Results" title="Permalink to this heading"></a></h2>
+<p>The function <code class="docutils literal notranslate"><span class="pre">save</span></code> is used to save the vector field to a ASCII tabular file. The coordinates and S2N mask are also saved.</p>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[19]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">tools</span><span class="o">.</span><span class="n">save</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">u3</span><span class="p">,</span> <span class="n">v3</span><span class="p">,</span> <span class="n">invalid_mask</span><span class="p">,</span> <span class="s1">&#39;exp1_001.txt&#39;</span> <span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<p>Finally, the vector field can be plotted with <code class="docutils literal notranslate"><span class="pre">display_vector_field</span></code>.</p>
+<p>Vectors with S2N bellow the threshold are displayed in red.</p>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[20]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">fig</span><span class="p">,</span> <span class="n">ax</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">subplots</span><span class="p">(</span><span class="n">figsize</span><span class="o">=</span><span class="p">(</span><span class="mi">8</span><span class="p">,</span><span class="mi">8</span><span class="p">))</span>
+<span class="n">tools</span><span class="o">.</span><span class="n">display_vector_field</span><span class="p">(</span>
+    <span class="n">pathlib</span><span class="o">.</span><span class="n">Path</span><span class="p">(</span><span class="s1">&#39;exp1_001.txt&#39;</span><span class="p">),</span>
+    <span class="n">ax</span><span class="o">=</span><span class="n">ax</span><span class="p">,</span> <span class="n">scaling_factor</span><span class="o">=</span><span class="mf">96.52</span><span class="p">,</span>
+    <span class="n">scale</span><span class="o">=</span><span class="mi">50</span><span class="p">,</span> <span class="c1"># scale defines here the arrow length</span>
+    <span class="n">width</span><span class="o">=</span><span class="mf">0.0035</span><span class="p">,</span> <span class="c1"># width is the thickness of the arrow</span>
+    <span class="n">on_img</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="c1"># overlay on the image</span>
+    <span class="n">image_name</span><span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">path</span> <span class="o">/</span> <span class="s1">&#39;data&#39;</span><span class="o">/</span><span class="s1">&#39;test1&#39;</span><span class="o">/</span><span class="s1">&#39;exp1_001_a.bmp&#39;</span><span class="p">),</span>
+<span class="p">);</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<img alt="../../../../../../../../../../_images/build_doctrees_nbsphinx_build_doctrees_nbsphinx_build_doctrees_nbsphinx_src_tutorial1_18_0.png" src="../../../../../../../../../../_images/build_doctrees_nbsphinx_build_doctrees_nbsphinx_build_doctrees_nbsphinx_src_tutorial1_18_0.png" />
+</div>
+</div>
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2014, OpenPIV team.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

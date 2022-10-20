@@ -1,0 +1,1115 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>openpiv.windef &mdash; OpenPIV  documentation</title>
+      <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="../../_static/css/theme.css" type="text/css" />
+  <!--[if lt IE 9]>
+    <script src="../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script data-url_root="../../" id="documentation_options" src="../../_static/documentation_options.js"></script>
+        <script src="../../_static/jquery.js"></script>
+        <script src="../../_static/underscore.js"></script>
+        <script src="../../_static/_sphinx_javascript_frameworks_compat.js"></script>
+        <script src="../../_static/doctools.js"></script>
+        <script src="../../_static/sphinx_highlight.js"></script>
+        <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+    <script src="../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+            <a href="../../index.html" class="icon icon-home"> OpenPIV
+          </a>
+              <div class="version">
+                0.24.0
+              </div>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul>
+<li class="toctree-l1"><a class="reference internal" href="../../src/piv_basics.html">Basics of the PIV algorithms</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../src/installation_instruction.html">Installation instruction</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../src/tutorial1.html">OpenPIV tutorial</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../src/windef.html">Multi-grid window deformation algorithm tutorial</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../src/masking.html">OpenPIV masking tutorial</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../src/developers.html">Information for developers and contributors</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../src/api_reference.html">API reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../src/faq.html">Frequently Asked Questions about PIV parameters</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../index.html">OpenPIV</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../index.html" class="icon icon-home"></a> &raquo;</li>
+          <li><a href="../index.html">Module code</a> &raquo;</li>
+          <li><a href="../openpiv.html">openpiv</a> &raquo;</li>
+      <li>openpiv.windef</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for openpiv.windef</h1><div class="highlight"><pre>
+<span></span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">Created on Fri Oct  4 14:04:04 2019</span>
+
+<span class="sd">@author: Theo</span>
+<span class="sd">@modified: Alex, Erich</span>
+<span class="sd">&quot;&quot;&quot;</span>
+
+<span class="kn">import</span> <span class="nn">pathlib</span>
+<span class="kn">from</span> <span class="nn">dataclasses</span> <span class="kn">import</span> <span class="n">dataclass</span>
+<span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Optional</span><span class="p">,</span> <span class="n">Tuple</span><span class="p">,</span> <span class="n">Union</span>
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">import</span> <span class="nn">scipy.ndimage</span> <span class="k">as</span> <span class="nn">scn</span>
+
+<span class="kn">from</span> <span class="nn">scipy.interpolate</span> <span class="kn">import</span> <span class="n">RectBivariateSpline</span>
+<span class="kn">import</span> <span class="nn">matplotlib.pyplot</span> <span class="k">as</span> <span class="nn">plt</span>
+
+<span class="kn">from</span> <span class="nn">importlib_resources</span> <span class="kn">import</span> <span class="n">files</span>
+<span class="kn">from</span> <span class="nn">openpiv.tools</span> <span class="kn">import</span> <span class="n">Multiprocesser</span><span class="p">,</span> <span class="n">display_vector_field</span><span class="p">,</span> <span class="n">transform_coordinates</span>
+<span class="kn">from</span> <span class="nn">openpiv</span> <span class="kn">import</span> <span class="n">validation</span><span class="p">,</span> <span class="n">filters</span><span class="p">,</span> <span class="n">tools</span><span class="p">,</span> <span class="n">scaling</span><span class="p">,</span> <span class="n">preprocess</span>
+<span class="kn">from</span> <span class="nn">openpiv.pyprocess</span> <span class="kn">import</span> <span class="n">extended_search_area_piv</span><span class="p">,</span> <span class="n">get_rect_coordinates</span><span class="p">,</span> \
+    <span class="n">get_field_shape</span>
+<span class="kn">from</span> <span class="nn">openpiv</span> <span class="kn">import</span> <span class="n">smoothn</span>
+
+
+<div class="viewcode-block" id="PIVSettings"><a class="viewcode-back" href="../../src/openpiv.html#openpiv.windef.PIVSettings">[docs]</a><span class="nd">@dataclass</span>
+<span class="k">class</span> <span class="nc">PIVSettings</span><span class="p">:</span>
+    <span class="sd">&quot;&quot;&quot; All the PIV settings for the batch analysis with multi-processing and</span>
+<span class="sd">    window deformation. Default settings are set at the initiation</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="c1"># &quot;Data related settings&quot;</span>
+    <span class="c1"># Folder with the images to process</span>
+    <span class="n">filepath_images</span><span class="p">:</span> <span class="n">pathlib</span><span class="o">.</span><span class="n">Path</span> <span class="o">=</span> <span class="n">files</span><span class="p">(</span><span class="s1">&#39;openpiv&#39;</span><span class="p">)</span> <span class="o">/</span> <span class="s2">&quot;data&quot;</span> <span class="o">/</span> <span class="s2">&quot;test1&quot;</span>  <span class="c1"># type: ignore</span>
+    <span class="c1"># Folder for the outputs</span>
+    <span class="n">save_path</span><span class="p">:</span> <span class="n">pathlib</span><span class="o">.</span><span class="n">Path</span> <span class="o">=</span> <span class="n">filepath_images</span><span class="o">.</span><span class="n">parent</span>
+    <span class="c1"># Root name of the output Folder for Result Files</span>
+    <span class="n">save_folder_suffix</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s1">&#39;&#39;</span>
+    <span class="c1"># Format and Image Sequence</span>
+    <span class="n">frame_pattern_a</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s1">&#39;exp1_001_a.bmp&#39;</span>
+    <span class="n">frame_pattern_b</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s1">&#39;exp1_001_b.bmp&#39;</span>
+
+    <span class="c1"># &quot;Region of interest&quot;</span>
+    <span class="c1"># (50,300,50,300) #Region of interest: (xmin,xmax,ymin,ymax) or &#39;full&#39;</span>
+    <span class="c1"># for full image</span>
+    <span class="n">roi</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="n">Tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">int</span><span class="p">,</span> <span class="nb">int</span><span class="p">,</span> <span class="nb">int</span><span class="p">],</span> <span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;full&quot;</span>
+
+    <span class="c1"># &quot;Image preprocessing&quot;</span>
+    <span class="c1"># Every image would be processed separately and the </span>
+    <span class="c1"># average mask is applied to both A, B, but it&#39;s varying </span>
+    <span class="c1"># for the frames sequence</span>
+    <span class="c1">#: None for no masking</span>
+    <span class="c1">#: &#39;edges&#39; for edges masking, </span>
+    <span class="c1">#: &#39;intensity&#39; for intensity masking</span>
+    <span class="n">dynamic_masking_method</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span> <span class="c1"># [&#39;edge&#39;,&#39;intensity&#39;]</span>
+    <span class="n">dynamic_masking_threshold</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">0.005</span>
+    <span class="n">dynamic_masking_filter_size</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">7</span>
+
+    <span class="c1"># Static masking applied to all images, A,B</span>
+    <span class="n">static_mask</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span> <span class="c1"># or a boolean matrix of image shape</span>
+
+    <span class="c1"># &quot;Processing Parameters&quot;</span>
+    <span class="n">correlation_method</span><span class="p">:</span> <span class="nb">str</span><span class="o">=</span><span class="s2">&quot;circular&quot;</span>  <span class="c1"># [&#39;circular&#39;, &#39;linear&#39;]</span>
+    <span class="n">normalized_correlation</span><span class="p">:</span> <span class="nb">bool</span><span class="o">=</span><span class="kc">False</span>
+
+    <span class="c1"># add the interroagtion window size for each pass.</span>
+    <span class="c1"># For the moment, it should be a power of 2</span>
+    <span class="n">windowsizes</span><span class="p">:</span> <span class="n">Tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="o">...</span><span class="p">]</span><span class="o">=</span><span class="p">(</span><span class="mi">64</span><span class="p">,</span><span class="mi">32</span><span class="p">,</span><span class="mi">16</span><span class="p">)</span>
+    
+    <span class="c1"># The overlap of the interroagtion window for each pass.</span>
+    <span class="n">overlap</span><span class="p">:</span> <span class="n">Tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="o">...</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span><span class="mi">32</span><span class="p">,</span> <span class="mi">16</span><span class="p">,</span> <span class="mi">8</span><span class="p">)</span>  <span class="c1"># This is 50% overlap</span>
+
+    <span class="c1"># Has to be a value with base two. In general window size/2 is a good</span>
+    <span class="c1"># choice.</span>
+
+    <span class="n">num_iterations</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">windowsizes</span><span class="p">)</span>  <span class="c1"># select the number of PIV</span>
+    <span class="c1"># passes</span>
+
+    <span class="c1"># methode used for subpixel interpolation:</span>
+    <span class="c1"># &#39;gaussian&#39;,&#39;centroid&#39;,&#39;parabolic&#39;</span>
+    <span class="n">subpixel_method</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;gaussian&quot;</span>
+    <span class="c1"># use vectorized sig2noise and subpixel approximation functions</span>
+    <span class="n">use_vectorized</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span>
+    <span class="c1"># &#39;symmetric&#39; or &#39;second image&#39;, &#39;symmetric&#39; splits the deformation</span>
+    <span class="c1"># both images, while &#39;second image&#39; does only deform the second image.</span>
+    <span class="n">deformation_method</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s1">&#39;symmetric&#39;</span>  <span class="c1"># &#39;symmetric&#39; or &#39;second image&#39;</span>
+    <span class="c1"># order of the image interpolation for the window deformation</span>
+    <span class="n">interpolation_order</span><span class="p">:</span> <span class="nb">int</span><span class="o">=</span><span class="mi">3</span>
+    <span class="n">scaling_factor</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">1.0</span>  <span class="c1"># scaling factor pixel/meter</span>
+    <span class="n">dt</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">1.0</span>  <span class="c1"># time between to frames (in seconds)</span>
+
+    <span class="c1"># Signal to noise ratio:</span>
+    <span class="c1"># we can decide to estimate it or not at every vector position</span>
+    <span class="c1"># we can decided if we use it for validation or only store it for </span>
+    <span class="c1"># later post-processing</span>
+    <span class="c1"># plus we need some parameters for threshold validation and for the </span>
+    <span class="c1"># calculations:</span>
+
+    <span class="n">sig2noise_method</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span><span class="o">=</span><span class="s2">&quot;peak2mean&quot;</span> <span class="c1"># or &quot;peak2peak&quot; or &quot;None&quot;</span>
+    <span class="c1"># select the width of the masked to masked out pixels next to the main</span>
+    <span class="c1"># peak</span>
+    <span class="n">sig2noise_mask</span><span class="p">:</span> <span class="nb">int</span><span class="o">=</span><span class="mi">2</span>
+    <span class="c1"># If extract_sig2noise::False the values in the signal to noise ratio</span>
+    <span class="c1"># output column are set to NaN</span>
+    
+    <span class="c1"># &quot;Validation based on the signal to noise ratio&quot;</span>
+    <span class="c1"># Note: only available when extract_sig2noise::True and only for the</span>
+    <span class="c1"># last pass of the interrogation</span>
+    <span class="c1"># Enable the signal to noise ratio validation. Options: True or False</span>
+    <span class="c1"># sig2noise_validate: False  # This is time consuming</span>
+    <span class="c1"># minmum signal to noise ratio that is need for a valid vector</span>
+    <span class="n">sig2noise_threshold</span><span class="p">:</span> <span class="nb">float</span><span class="o">=</span><span class="mf">1.0</span>
+    <span class="n">sig2noise_validate</span><span class="p">:</span> <span class="nb">bool</span><span class="o">=</span><span class="kc">True</span> <span class="c1"># when it&#39;s False we can save time by not</span>
+    <span class="c1">#estimating sig2noise ratio at all, so we can set both sig2noise_method to None </span>
+    
+
+    <span class="c1"># &quot;vector validation options&quot;</span>
+    <span class="c1"># choose if you want to do validation of the first pass: True or False</span>
+    <span class="n">validation_first_pass</span><span class="p">:</span> <span class="nb">bool</span><span class="o">=</span><span class="kc">True</span>
+    <span class="c1"># only effecting the first pass of the interrogation the following</span>
+    <span class="c1"># passes</span>
+    <span class="c1"># in the multipass will be validated</span>
+
+    <span class="c1"># &quot;Validation Parameters&quot;</span>
+    <span class="c1"># The validation is done at each iteration based on three filters.</span>
+    <span class="c1"># The first filter is based on the min/max ranges. Observe that these</span>
+    <span class="c1"># values are defined in</span>
+    <span class="c1"># terms of minimum and maximum displacement in pixel/frames.</span>
+    <span class="n">min_max_u_disp</span><span class="p">:</span> <span class="n">Tuple</span><span class="o">=</span><span class="p">(</span><span class="o">-</span><span class="mi">30</span><span class="p">,</span> <span class="mi">30</span><span class="p">)</span>
+    <span class="n">min_max_v_disp</span><span class="p">:</span> <span class="n">Tuple</span><span class="o">=</span><span class="p">(</span><span class="o">-</span><span class="mi">30</span><span class="p">,</span> <span class="mi">30</span><span class="p">)</span>
+    <span class="c1"># The second filter is based on the global STD threshold</span>
+    <span class="n">std_threshold</span><span class="p">:</span> <span class="nb">int</span><span class="o">=</span><span class="mi">10</span>  <span class="c1"># threshold of the std validation</span>
+    <span class="c1"># The third filter is the median test (not normalized at the moment)</span>
+    <span class="n">median_threshold</span><span class="p">:</span> <span class="nb">int</span><span class="o">=</span><span class="mi">3</span>  <span class="c1"># threshold of the median validation</span>
+    <span class="c1"># On the last iteration, an additional validation can be done based on</span>
+    <span class="c1"># the S/N.</span>
+    <span class="n">median_size</span><span class="p">:</span> <span class="nb">int</span><span class="o">=</span><span class="mi">1</span>  <span class="c1"># defines the size of the local median</span>
+
+
+
+    <span class="c1"># &quot;Outlier replacement or Smoothing options&quot;</span>
+    <span class="c1"># Replacment options for vectors which are masked as invalid by the</span>
+    <span class="c1"># validation</span>
+    <span class="c1"># Choose: True or False</span>
+    <span class="n">replace_vectors</span><span class="p">:</span> <span class="nb">bool</span><span class="o">=</span><span class="kc">True</span>  <span class="c1"># Enable the replacement.</span>
+    <span class="n">smoothn</span><span class="p">:</span> <span class="nb">bool</span><span class="o">=</span><span class="kc">False</span>  <span class="c1"># Enables smoothing of the displacement field</span>
+    <span class="n">smoothn_p</span><span class="p">:</span> <span class="nb">float</span><span class="o">=</span><span class="mf">0.05</span>  <span class="c1"># This is a smoothing parameter</span>
+    <span class="c1"># select a method to replace the outliers:</span>
+    <span class="c1"># &#39;localmean&#39;, &#39;disk&#39;, &#39;distance&#39;</span>
+    <span class="n">filter_method</span><span class="p">:</span> <span class="nb">str</span><span class="o">=</span><span class="s2">&quot;localmean&quot;</span>
+    <span class="c1"># maximum iterations performed to replace the outliers</span>
+    <span class="n">max_filter_iteration</span><span class="p">:</span> <span class="nb">int</span><span class="o">=</span><span class="mi">4</span>
+    <span class="n">filter_kernel_size</span><span class="p">:</span> <span class="nb">int</span><span class="o">=</span><span class="mi">2</span>  <span class="c1"># kernel size for the localmean method</span>
+    
+    <span class="c1"># &quot;Output options&quot;</span>
+    <span class="c1"># Select if you want to save the plotted vectorfield: True or False</span>
+    <span class="n">save_plot</span><span class="p">:</span> <span class="nb">bool</span><span class="o">=</span><span class="kc">False</span>
+    <span class="c1"># Choose wether you want to see the vectorfield or not:True or False</span>
+    <span class="n">show_plot</span><span class="p">:</span> <span class="nb">bool</span><span class="o">=</span><span class="kc">False</span>
+    <span class="n">scale_plot</span><span class="p">:</span> <span class="nb">int</span><span class="o">=</span><span class="mi">100</span>  <span class="c1"># select a value to scale the quiver plot of</span>
+    <span class="c1"># the vectorfield run the script with the given settings</span>
+
+    <span class="n">show_all_plots</span><span class="p">:</span> <span class="nb">bool</span><span class="o">=</span><span class="kc">False</span>
+
+    <span class="n">invert</span><span class="p">:</span> <span class="nb">bool</span><span class="o">=</span><span class="kc">False</span>  <span class="c1"># for the test_invert</span></div>
+
+<div class="viewcode-block" id="prepare_images"><a class="viewcode-back" href="../../src/openpiv.html#openpiv.windef.prepare_images">[docs]</a><span class="k">def</span> <span class="nf">prepare_images</span><span class="p">(</span>
+    <span class="n">file_a</span><span class="p">:</span> <span class="n">pathlib</span><span class="o">.</span><span class="n">Path</span><span class="p">,</span>
+    <span class="n">file_b</span><span class="p">:</span> <span class="n">pathlib</span><span class="o">.</span><span class="n">Path</span><span class="p">,</span>
+    <span class="n">settings</span><span class="p">:</span> <span class="s2">&quot;PIVSettings&quot;</span><span class="p">,</span>
+    <span class="p">)</span><span class="o">-&gt;</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="n">Optional</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">]]:</span>
+    <span class="sd">&quot;&quot;&quot; prepares two images for the PIV pass</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        file_a (pathlib.Path): filename of frame A</span>
+<span class="sd">        file_b (pathlib.Path): filename of frame B</span>
+<span class="sd">        settings (_type_): windef.Settings() </span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">image_mask</span> <span class="o">=</span> <span class="kc">None</span>
+
+        <span class="c1"># read images into numpy arrays</span>
+    <span class="n">frame_a</span> <span class="o">=</span> <span class="n">tools</span><span class="o">.</span><span class="n">imread</span><span class="p">(</span><span class="n">settings</span><span class="o">.</span><span class="n">filepath_images</span> <span class="o">/</span> <span class="n">file_a</span><span class="p">)</span>
+    <span class="n">frame_b</span> <span class="o">=</span> <span class="n">tools</span><span class="o">.</span><span class="n">imread</span><span class="p">(</span><span class="n">settings</span><span class="o">.</span><span class="n">filepath_images</span> <span class="o">/</span> <span class="n">file_b</span><span class="p">)</span>
+
+    
+    <span class="c1"># crop to roi</span>
+    <span class="k">if</span> <span class="n">settings</span><span class="o">.</span><span class="n">roi</span> <span class="o">==</span> <span class="s2">&quot;full&quot;</span><span class="p">:</span>
+        <span class="k">pass</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">frame_a</span> <span class="o">=</span> <span class="n">frame_a</span><span class="p">[</span>
+            <span class="n">settings</span><span class="o">.</span><span class="n">roi</span><span class="p">[</span><span class="mi">0</span><span class="p">]:</span><span class="n">settings</span><span class="o">.</span><span class="n">roi</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span>
+            <span class="n">settings</span><span class="o">.</span><span class="n">roi</span><span class="p">[</span><span class="mi">2</span><span class="p">]:</span><span class="n">settings</span><span class="o">.</span><span class="n">roi</span><span class="p">[</span><span class="mi">3</span><span class="p">]</span>
+        <span class="p">]</span>
+        <span class="n">frame_b</span> <span class="o">=</span> <span class="n">frame_b</span><span class="p">[</span>
+            <span class="n">settings</span><span class="o">.</span><span class="n">roi</span><span class="p">[</span><span class="mi">0</span><span class="p">]:</span><span class="n">settings</span><span class="o">.</span><span class="n">roi</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span>
+            <span class="n">settings</span><span class="o">.</span><span class="n">roi</span><span class="p">[</span><span class="mi">2</span><span class="p">]:</span><span class="n">settings</span><span class="o">.</span><span class="n">roi</span><span class="p">[</span><span class="mi">3</span><span class="p">]</span>
+        <span class="p">]</span>
+
+    <span class="k">if</span> <span class="n">settings</span><span class="o">.</span><span class="n">invert</span> <span class="ow">is</span> <span class="kc">True</span><span class="p">:</span>
+        <span class="n">frame_a</span> <span class="o">=</span> <span class="n">preprocess</span><span class="o">.</span><span class="n">invert</span><span class="p">(</span><span class="n">frame_a</span><span class="p">)</span>
+        <span class="n">frame_b</span> <span class="o">=</span> <span class="n">preprocess</span><span class="o">.</span><span class="n">invert</span><span class="p">(</span><span class="n">frame_b</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">settings</span><span class="o">.</span><span class="n">show_all_plots</span><span class="p">:</span>
+        <span class="n">_</span><span class="p">,</span> <span class="n">ax</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">subplots</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+        <span class="n">ax</span><span class="o">.</span><span class="n">imshow</span><span class="p">(</span><span class="n">frame_a</span><span class="p">,</span> <span class="n">cmap</span><span class="o">=</span><span class="s1">&#39;Reds&#39;</span><span class="p">)</span>
+        <span class="n">ax</span><span class="o">.</span><span class="n">imshow</span><span class="p">(</span><span class="n">frame_b</span><span class="p">,</span> <span class="n">cmap</span><span class="o">=</span><span class="s1">&#39;Blues&#39;</span><span class="p">,</span> <span class="n">alpha</span><span class="o">=</span><span class="mf">.5</span><span class="p">)</span>
+        <span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
+
+    <span class="k">if</span> <span class="n">settings</span><span class="o">.</span><span class="n">static_mask</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="c1"># for some unclear reason these are non-writable arrays</span>
+        <span class="k">for</span> <span class="n">frame</span> <span class="ow">in</span> <span class="p">[</span><span class="n">frame_a</span><span class="p">,</span> <span class="n">frame_b</span><span class="p">]:</span>
+            <span class="n">tmp</span> <span class="o">=</span> <span class="n">frame</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+            <span class="n">tmp</span><span class="p">[</span><span class="n">settings</span><span class="o">.</span><span class="n">static_mask</span><span class="p">]</span> <span class="o">=</span> <span class="mi">0</span>
+            <span class="n">frame</span> <span class="o">=</span> <span class="n">tmp</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+
+        <span class="n">image_mask</span> <span class="o">=</span> <span class="n">settings</span><span class="o">.</span><span class="n">static_mask</span>
+    
+        <span class="k">if</span> <span class="n">settings</span><span class="o">.</span><span class="n">show_all_plots</span><span class="p">:</span>
+            <span class="n">_</span><span class="p">,</span> <span class="n">ax</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">subplots</span><span class="p">()</span>
+            <span class="n">ax</span><span class="o">.</span><span class="n">set_title</span><span class="p">(</span><span class="s1">&#39;Masked frames&#39;</span><span class="p">)</span>
+            <span class="n">ax</span><span class="o">.</span><span class="n">imshow</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">c_</span><span class="p">[</span><span class="n">frame_a</span><span class="p">,</span> <span class="n">frame_b</span><span class="p">])</span>
+    
+
+    <span class="k">if</span> <span class="n">settings</span><span class="o">.</span><span class="n">dynamic_masking_method</span> <span class="ow">in</span> <span class="p">(</span><span class="s2">&quot;edge&quot;</span><span class="p">,</span> <span class="s2">&quot;intensity&quot;</span><span class="p">):</span>
+        <span class="n">frame_a</span><span class="p">,</span> <span class="n">mask_a</span> <span class="o">=</span> <span class="n">preprocess</span><span class="o">.</span><span class="n">dynamic_masking</span><span class="p">(</span>
+            <span class="n">frame_a</span><span class="p">,</span>
+            <span class="n">method</span><span class="o">=</span><span class="n">settings</span><span class="o">.</span><span class="n">dynamic_masking_method</span><span class="p">,</span>
+            <span class="n">filter_size</span><span class="o">=</span><span class="n">settings</span><span class="o">.</span><span class="n">dynamic_masking_filter_size</span><span class="p">,</span>
+            <span class="n">threshold</span><span class="o">=</span><span class="n">settings</span><span class="o">.</span><span class="n">dynamic_masking_threshold</span><span class="p">,</span>
+        <span class="p">)</span>
+        <span class="n">frame_b</span><span class="p">,</span> <span class="n">mask_b</span> <span class="o">=</span> <span class="n">preprocess</span><span class="o">.</span><span class="n">dynamic_masking</span><span class="p">(</span>
+            <span class="n">frame_b</span><span class="p">,</span>
+            <span class="n">method</span><span class="o">=</span><span class="n">settings</span><span class="o">.</span><span class="n">dynamic_masking_method</span><span class="p">,</span>
+            <span class="n">filter_size</span><span class="o">=</span><span class="n">settings</span><span class="o">.</span><span class="n">dynamic_masking_filter_size</span><span class="p">,</span>
+            <span class="n">threshold</span><span class="o">=</span><span class="n">settings</span><span class="o">.</span><span class="n">dynamic_masking_threshold</span><span class="p">,</span>
+        <span class="p">)</span>
+
+        <span class="n">image_mask</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">logical_and</span><span class="p">(</span><span class="n">mask_a</span><span class="p">,</span> <span class="n">mask_b</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">settings</span><span class="o">.</span><span class="n">show_all_plots</span><span class="p">:</span>
+            <span class="n">_</span><span class="p">,</span> <span class="p">(</span><span class="n">ax0</span><span class="p">,</span><span class="n">ax1</span><span class="p">,</span><span class="n">ax2</span><span class="p">,</span><span class="n">ax3</span><span class="p">)</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">subplots</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span><span class="mi">2</span><span class="p">)</span>
+            <span class="n">ax0</span><span class="o">.</span><span class="n">imshow</span><span class="p">(</span><span class="n">frame_a</span><span class="p">)</span>  <span class="c1"># type: ignore</span>
+            <span class="n">ax1</span><span class="o">.</span><span class="n">imshow</span><span class="p">(</span><span class="n">mask_a</span><span class="p">)</span>  <span class="c1"># type: ignore</span>
+            <span class="n">ax2</span><span class="o">.</span><span class="n">imshow</span><span class="p">(</span><span class="n">frame_b</span><span class="p">)</span> <span class="c1"># type: ignore</span>
+            <span class="n">ax3</span><span class="o">.</span><span class="n">imshow</span><span class="p">(</span><span class="n">mask_b</span><span class="p">)</span> <span class="c1"># type: ignore</span>
+
+    <span class="k">return</span> <span class="p">(</span><span class="n">frame_a</span><span class="p">,</span> <span class="n">frame_b</span><span class="p">,</span> <span class="n">image_mask</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="piv"><a class="viewcode-back" href="../../src/openpiv.html#openpiv.windef.piv">[docs]</a><span class="k">def</span> <span class="nf">piv</span><span class="p">(</span><span class="n">settings</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot; the func fuction is the &quot;frame&quot; in which the PIV evaluation is done &quot;&quot;&quot;</span>
+
+    <span class="c1"># note that settings is in the outer scope of piv()</span>
+
+    <span class="k">def</span> <span class="nf">func</span><span class="p">(</span><span class="n">args</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;A function to process each image pair.&quot;&quot;&quot;</span>
+
+        <span class="c1"># this line is REQUIRED for multiprocessing to work</span>
+        <span class="c1"># always use it in your custom function</span>
+
+        <span class="n">file_a</span><span class="p">,</span> <span class="n">file_b</span><span class="p">,</span> <span class="n">counter</span> <span class="o">=</span> <span class="n">args</span>
+
+        <span class="c1"># frame_a, frame_b are masked as black where we do not </span>
+        <span class="c1"># want to get vectors. later piv would mark it as completely black</span>
+        <span class="c1"># and set s2n to invalid</span>
+        <span class="n">frame_a</span><span class="p">,</span> <span class="n">frame_b</span><span class="p">,</span> <span class="n">image_mask</span> <span class="o">=</span> <span class="n">prepare_images</span><span class="p">(</span>
+            <span class="n">file_a</span><span class="p">,</span>
+            <span class="n">file_b</span><span class="p">,</span>
+            <span class="n">settings</span><span class="p">,</span>
+        <span class="p">)</span>
+
+        <span class="c1"># &quot;first pass&quot;</span>
+        <span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">u</span><span class="p">,</span> <span class="n">v</span><span class="p">,</span> <span class="n">s2n</span> <span class="o">=</span> <span class="n">first_pass</span><span class="p">(</span>
+            <span class="n">frame_a</span><span class="p">,</span>
+            <span class="n">frame_b</span><span class="p">,</span>
+            <span class="n">settings</span>
+        <span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">settings</span><span class="o">.</span><span class="n">show_all_plots</span><span class="p">:</span>
+            <span class="n">plt</span><span class="o">.</span><span class="n">figure</span><span class="p">()</span>
+            <span class="n">plt</span><span class="o">.</span><span class="n">quiver</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">u</span><span class="p">,</span> <span class="o">-</span><span class="n">v</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="s1">&#39;b&#39;</span><span class="p">)</span>
+
+        <span class="c1"># &quot; Image masking &quot;</span>
+        <span class="c1"># note that grid_mask keeps only the user-supplied image masking</span>
+        <span class="c1"># the invalid vectors are treated separately using a different</span>
+        <span class="c1"># marker</span>
+        <span class="k">if</span> <span class="n">image_mask</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">grid_mask</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros_like</span><span class="p">(</span><span class="n">u</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">bool</span><span class="p">)</span>
+            <span class="n">mask_coords</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">mask_coords</span> <span class="o">=</span> <span class="n">preprocess</span><span class="o">.</span><span class="n">mask_coordinates</span><span class="p">(</span><span class="n">image_mask</span><span class="p">)</span>
+            <span class="c1"># mark those points on the grid of PIV inside the mask</span>
+            <span class="n">grid_mask</span> <span class="o">=</span> <span class="n">preprocess</span><span class="o">.</span><span class="n">prepare_mask_on_grid</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">mask_coords</span><span class="p">)</span>
+
+
+        <span class="c1"># mask the velocity</span>
+        <span class="n">u</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">ma</span><span class="o">.</span><span class="n">masked_array</span><span class="p">(</span><span class="n">u</span><span class="p">,</span> <span class="n">mask</span><span class="o">=</span><span class="n">grid_mask</span><span class="p">)</span>
+        <span class="n">v</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">ma</span><span class="o">.</span><span class="n">masked_array</span><span class="p">(</span><span class="n">v</span><span class="p">,</span> <span class="n">mask</span><span class="o">=</span><span class="n">grid_mask</span><span class="p">)</span>
+
+        <span class="c1"># validation also masks the u,v and returns another invalid_mask</span>
+        <span class="c1"># the question is whether to merge the two masks or just keep for the </span>
+        <span class="c1"># reference</span>
+        <span class="k">if</span> <span class="n">settings</span><span class="o">.</span><span class="n">validation_first_pass</span><span class="p">:</span>
+            <span class="n">invalid_mask</span> <span class="o">=</span> <span class="n">validation</span><span class="o">.</span><span class="n">typical_validation</span><span class="p">(</span><span class="n">u</span><span class="p">,</span> <span class="n">v</span><span class="p">,</span> <span class="n">s2n</span><span class="p">,</span> <span class="n">settings</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">invalid_mask</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros_like</span><span class="p">(</span><span class="n">u</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">bool</span><span class="p">)</span>
+        
+        
+
+        <span class="k">if</span> <span class="n">settings</span><span class="o">.</span><span class="n">show_all_plots</span><span class="p">:</span>
+            <span class="c1"># plt.figure()</span>
+            <span class="n">plt</span><span class="o">.</span><span class="n">quiver</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span>  <span class="n">u</span><span class="p">,</span> <span class="o">-</span><span class="n">v</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="s1">&#39;r&#39;</span><span class="p">)</span>
+            <span class="n">plt</span><span class="o">.</span><span class="n">gca</span><span class="p">()</span><span class="o">.</span><span class="n">invert_yaxis</span><span class="p">()</span>
+            <span class="n">plt</span><span class="o">.</span><span class="n">gca</span><span class="p">()</span><span class="o">.</span><span class="n">set_aspect</span><span class="p">(</span><span class="mf">1.</span><span class="p">)</span>
+            <span class="n">plt</span><span class="o">.</span><span class="n">title</span><span class="p">(</span><span class="s1">&#39;after first pass validation new, inverted&#39;</span><span class="p">)</span>
+            <span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
+
+        <span class="c1"># &quot;filter to replace the values that where marked by the validation&quot;</span>
+        <span class="k">if</span> <span class="p">(</span><span class="n">settings</span><span class="o">.</span><span class="n">num_iterations</span> <span class="o">==</span> <span class="mi">1</span> <span class="ow">and</span> <span class="n">settings</span><span class="o">.</span><span class="n">replace_vectors</span><span class="p">)</span> \
+            <span class="ow">or</span> <span class="p">(</span><span class="n">settings</span><span class="o">.</span><span class="n">num_iterations</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">):</span>
+            <span class="c1"># for multi-pass we cannot have holes in the data</span>
+            <span class="c1"># after the first pass</span>
+            <span class="n">u</span><span class="p">,</span> <span class="n">v</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">filters</span><span class="o">.</span><span class="n">replace_outliers</span><span class="p">(</span>
+                <span class="n">u</span><span class="p">,</span>
+                <span class="n">v</span><span class="p">,</span>
+                <span class="n">invalid_mask</span><span class="p">,</span>
+                <span class="n">grid_mask</span><span class="p">,</span>
+                <span class="n">method</span><span class="o">=</span><span class="n">settings</span><span class="o">.</span><span class="n">filter_method</span><span class="p">,</span>
+                <span class="n">max_iter</span><span class="o">=</span><span class="n">settings</span><span class="o">.</span><span class="n">max_filter_iteration</span><span class="p">,</span>
+                <span class="n">kernel_size</span><span class="o">=</span><span class="n">settings</span><span class="o">.</span><span class="n">filter_kernel_size</span><span class="p">,</span>
+            <span class="p">)</span>
+
+            <span class="c1"># &quot;adding masks to add the effect of all the validations&quot;</span>
+        <span class="k">if</span> <span class="n">settings</span><span class="o">.</span><span class="n">smoothn</span><span class="p">:</span>
+            <span class="n">u</span><span class="p">,</span> <span class="o">*</span><span class="n">_</span> <span class="o">=</span> <span class="n">smoothn</span><span class="o">.</span><span class="n">smoothn</span><span class="p">(</span>
+                <span class="n">u</span><span class="p">,</span>
+                <span class="n">s</span><span class="o">=</span><span class="n">settings</span><span class="o">.</span><span class="n">smoothn_p</span>
+            <span class="p">)</span>
+            <span class="n">v</span><span class="p">,</span> <span class="o">*</span><span class="n">_</span> <span class="o">=</span> <span class="n">smoothn</span><span class="o">.</span><span class="n">smoothn</span><span class="p">(</span>
+                <span class="n">v</span><span class="p">,</span>
+                <span class="n">s</span><span class="o">=</span><span class="n">settings</span><span class="o">.</span><span class="n">smoothn_p</span>
+            <span class="p">)</span>
+
+            <span class="c1"># enforce grid_mask that possibly destroyed by smoothing</span>
+            <span class="n">u</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">ma</span><span class="o">.</span><span class="n">masked_array</span><span class="p">(</span><span class="n">u</span><span class="p">,</span> <span class="n">mask</span><span class="o">=</span><span class="n">grid_mask</span><span class="p">)</span>
+            <span class="n">v</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">ma</span><span class="o">.</span><span class="n">masked_array</span><span class="p">(</span><span class="n">v</span><span class="p">,</span> <span class="n">mask</span><span class="o">=</span><span class="n">grid_mask</span><span class="p">)</span>
+
+
+        <span class="k">if</span> <span class="n">settings</span><span class="o">.</span><span class="n">show_all_plots</span><span class="p">:</span>
+            <span class="n">plt</span><span class="o">.</span><span class="n">figure</span><span class="p">()</span>
+            <span class="n">plt</span><span class="o">.</span><span class="n">quiver</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">u</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="o">*</span><span class="n">v</span><span class="p">)</span>
+            <span class="n">plt</span><span class="o">.</span><span class="n">gca</span><span class="p">()</span><span class="o">.</span><span class="n">invert_yaxis</span><span class="p">()</span>
+            <span class="n">plt</span><span class="o">.</span><span class="n">gca</span><span class="p">()</span><span class="o">.</span><span class="n">set_aspect</span><span class="p">(</span><span class="mf">1.</span><span class="p">)</span>
+            <span class="n">plt</span><span class="o">.</span><span class="n">title</span><span class="p">(</span><span class="s1">&#39;before multi pass, inverted&#39;</span><span class="p">)</span>
+            <span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
+
+        <span class="c1"># if not isinstance(u, np.ma.MaskedArray):</span>
+        <span class="c1">#     raise ValueError(&quot;Expected masked array&quot;)</span>
+
+        <span class="c1"># Multi pass</span>
+        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">settings</span><span class="o">.</span><span class="n">num_iterations</span><span class="p">):</span>
+            <span class="c1"># if not isinstance(u, np.ma.MaskedArray):</span>
+            <span class="c1">#     raise ValueError(&quot;Expected masked array&quot;)</span>
+
+            <span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">u</span><span class="p">,</span> <span class="n">v</span><span class="p">,</span> <span class="n">s2n</span><span class="p">,</span> <span class="n">grid_mask</span> <span class="o">=</span> <span class="n">multipass_img_deform</span><span class="p">(</span>
+                <span class="n">frame_a</span><span class="p">,</span>
+                <span class="n">frame_b</span><span class="p">,</span>
+                <span class="n">i</span><span class="p">,</span>
+                <span class="n">x</span><span class="p">,</span>
+                <span class="n">y</span><span class="p">,</span>
+                <span class="n">u</span><span class="p">,</span>
+                <span class="n">v</span><span class="p">,</span>
+                <span class="n">settings</span><span class="p">,</span>
+                <span class="n">mask_coords</span><span class="o">=</span><span class="n">mask_coords</span>
+            <span class="p">)</span>
+
+            <span class="c1"># If the smoothing is active, we do it at each pass</span>
+            <span class="c1"># but not the last one</span>
+            <span class="k">if</span> <span class="n">settings</span><span class="o">.</span><span class="n">smoothn</span> <span class="ow">is</span> <span class="kc">True</span> <span class="ow">and</span> <span class="n">i</span> <span class="o">&lt;</span> <span class="n">settings</span><span class="o">.</span><span class="n">num_iterations</span><span class="o">-</span><span class="mi">1</span><span class="p">:</span>
+                <span class="n">u</span><span class="p">,</span> <span class="n">dummy_u1</span><span class="p">,</span> <span class="n">dummy_u2</span><span class="p">,</span> <span class="n">dummy_u3</span> <span class="o">=</span> <span class="n">smoothn</span><span class="o">.</span><span class="n">smoothn</span><span class="p">(</span>
+                    <span class="n">u</span><span class="p">,</span> <span class="n">s</span><span class="o">=</span><span class="n">settings</span><span class="o">.</span><span class="n">smoothn_p</span>
+                <span class="p">)</span>
+                <span class="n">v</span><span class="p">,</span> <span class="n">dummy_v1</span><span class="p">,</span> <span class="n">dummy_v2</span><span class="p">,</span> <span class="n">dummy_v3</span> <span class="o">=</span> <span class="n">smoothn</span><span class="o">.</span><span class="n">smoothn</span><span class="p">(</span>
+                    <span class="n">v</span><span class="p">,</span> <span class="n">s</span><span class="o">=</span><span class="n">settings</span><span class="o">.</span><span class="n">smoothn_p</span>
+                <span class="p">)</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">u</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">ma</span><span class="o">.</span><span class="n">MaskedArray</span><span class="p">):</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;not a masked array anymore&#39;</span><span class="p">)</span>
+
+            <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">settings</span><span class="p">,</span> <span class="s1">&#39;image_mask&#39;</span><span class="p">)</span> <span class="ow">and</span> <span class="n">settings</span><span class="o">.</span><span class="n">image_mask</span><span class="p">:</span>
+                <span class="n">grid_mask</span> <span class="o">=</span> <span class="n">preprocess</span><span class="o">.</span><span class="n">prepare_mask_on_grid</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">mask_coords</span><span class="p">)</span>
+                <span class="n">u</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">ma</span><span class="o">.</span><span class="n">masked_array</span><span class="p">(</span><span class="n">u</span><span class="p">,</span> <span class="n">mask</span><span class="o">=</span><span class="n">grid_mask</span><span class="p">)</span>
+                <span class="n">v</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">ma</span><span class="o">.</span><span class="n">masked_array</span><span class="p">(</span><span class="n">v</span><span class="p">,</span> <span class="n">mask</span><span class="o">=</span><span class="n">grid_mask</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">u</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">ma</span><span class="o">.</span><span class="n">masked_array</span><span class="p">(</span><span class="n">u</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">ma</span><span class="o">.</span><span class="n">nomask</span><span class="p">)</span>
+                <span class="n">v</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">ma</span><span class="o">.</span><span class="n">masked_array</span><span class="p">(</span><span class="n">v</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">ma</span><span class="o">.</span><span class="n">nomask</span><span class="p">)</span>
+
+            <span class="k">if</span> <span class="n">settings</span><span class="o">.</span><span class="n">show_all_plots</span><span class="p">:</span>
+                <span class="n">plt</span><span class="o">.</span><span class="n">figure</span><span class="p">()</span>
+                <span class="n">plt</span><span class="o">.</span><span class="n">quiver</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">u</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="o">*</span><span class="n">v</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="s1">&#39;r&#39;</span><span class="p">)</span>
+                <span class="n">plt</span><span class="o">.</span><span class="n">gca</span><span class="p">()</span><span class="o">.</span><span class="n">set_aspect</span><span class="p">(</span><span class="mf">1.</span><span class="p">)</span>
+                <span class="n">plt</span><span class="o">.</span><span class="n">gca</span><span class="p">()</span><span class="o">.</span><span class="n">invert_yaxis</span><span class="p">()</span>
+                <span class="n">plt</span><span class="o">.</span><span class="n">title</span><span class="p">(</span><span class="s1">&#39;end of the multipass, invert&#39;</span><span class="p">)</span>
+                <span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
+
+        <span class="k">if</span> <span class="n">settings</span><span class="o">.</span><span class="n">show_all_plots</span> <span class="ow">and</span> <span class="n">settings</span><span class="o">.</span><span class="n">num_iterations</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="n">plt</span><span class="o">.</span><span class="n">figure</span><span class="p">()</span>
+            <span class="n">plt</span><span class="o">.</span><span class="n">quiver</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">u</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="o">*</span><span class="n">v</span><span class="p">)</span>
+            <span class="n">plt</span><span class="o">.</span><span class="n">gca</span><span class="p">()</span><span class="o">.</span><span class="n">invert_yaxis</span><span class="p">()</span>
+            <span class="n">plt</span><span class="o">.</span><span class="n">gca</span><span class="p">()</span><span class="o">.</span><span class="n">set_aspect</span><span class="p">(</span><span class="mf">1.</span><span class="p">)</span>
+            <span class="n">plt</span><span class="o">.</span><span class="n">title</span><span class="p">(</span><span class="s1">&#39;after multi pass, before saving, inverted&#39;</span><span class="p">)</span>
+            <span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
+
+        <span class="c1"># we now use only 0s instead of the image</span>
+        <span class="c1"># masked regions.</span>
+        <span class="c1"># we could do Nan, not sure what is best</span>
+        <span class="n">u</span> <span class="o">=</span> <span class="n">u</span><span class="o">.</span><span class="n">filled</span><span class="p">(</span><span class="mf">0.</span><span class="p">)</span>
+        <span class="n">v</span> <span class="o">=</span> <span class="n">v</span><span class="o">.</span><span class="n">filled</span><span class="p">(</span><span class="mf">0.</span><span class="p">)</span>
+
+        <span class="c1"># &quot;scales the results pixel-&gt; meter&quot;</span>
+        <span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">u</span><span class="p">,</span> <span class="n">v</span> <span class="o">=</span> <span class="n">scaling</span><span class="o">.</span><span class="n">uniform</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">u</span><span class="p">,</span> <span class="n">v</span><span class="p">,</span>
+                                     <span class="n">scaling_factor</span><span class="o">=</span><span class="n">settings</span><span class="o">.</span><span class="n">scaling_factor</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">image_mask</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">grid_mask</span> <span class="o">=</span> <span class="n">preprocess</span><span class="o">.</span><span class="n">prepare_mask_on_grid</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">mask_coords</span><span class="p">)</span>
+            <span class="n">u</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">ma</span><span class="o">.</span><span class="n">masked_array</span><span class="p">(</span><span class="n">u</span><span class="p">,</span> <span class="n">mask</span><span class="o">=</span><span class="n">grid_mask</span><span class="p">)</span>
+            <span class="n">v</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">ma</span><span class="o">.</span><span class="n">masked_array</span><span class="p">(</span><span class="n">v</span><span class="p">,</span> <span class="n">mask</span><span class="o">=</span><span class="n">grid_mask</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">u</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">ma</span><span class="o">.</span><span class="n">masked_array</span><span class="p">(</span><span class="n">u</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">ma</span><span class="o">.</span><span class="n">nomask</span><span class="p">)</span>
+            <span class="n">v</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">ma</span><span class="o">.</span><span class="n">masked_array</span><span class="p">(</span><span class="n">v</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">ma</span><span class="o">.</span><span class="n">nomask</span><span class="p">)</span>
+
+        <span class="c1"># before saving we conver to the &quot;physically relevant&quot;</span>
+        <span class="c1"># right-hand coordinate system with 0,0 at the bottom left</span>
+        <span class="c1"># x to the right, y upwards</span>
+        <span class="c1"># and so u,v</span>
+
+        <span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">u</span><span class="p">,</span> <span class="n">v</span> <span class="o">=</span> <span class="n">transform_coordinates</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">u</span><span class="p">,</span> <span class="n">v</span><span class="p">)</span>
+        <span class="c1"># import pdb; pdb.set_trace()</span>
+        <span class="c1"># &quot;save to a file&quot;</span>
+
+        <span class="n">txt_file</span> <span class="o">=</span> <span class="n">save_path</span> <span class="o">/</span> <span class="sa">f</span><span class="s1">&#39;field_A</span><span class="si">{</span><span class="n">counter</span><span class="si">:</span><span class="s1">04d</span><span class="si">}</span><span class="s1">.txt&#39;</span>
+        <span class="n">fig_name</span> <span class="o">=</span> <span class="n">save_path</span> <span class="o">/</span> <span class="sa">f</span><span class="s1">&#39;field_A</span><span class="si">{</span><span class="n">counter</span><span class="si">:</span><span class="s1">04d</span><span class="si">}</span><span class="s1">.png&#39;</span>
+
+        <span class="n">tools</span><span class="o">.</span><span class="n">save</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">u</span><span class="p">,</span> <span class="n">v</span><span class="p">,</span> <span class="n">grid_mask</span><span class="p">,</span> <span class="n">txt_file</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">settings</span><span class="o">.</span><span class="n">show_plot</span> <span class="ow">or</span> <span class="n">settings</span><span class="o">.</span><span class="n">save_plot</span><span class="p">:</span>
+            <span class="n">fig</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">display_vector_field</span><span class="p">(</span>
+                <span class="n">txt_file</span><span class="p">,</span> 
+                <span class="n">scale</span><span class="o">=</span><span class="n">settings</span><span class="o">.</span><span class="n">scale_plot</span><span class="p">,</span>
+            <span class="p">)</span>
+            <span class="k">if</span> <span class="n">settings</span><span class="o">.</span><span class="n">save_plot</span> <span class="ow">is</span> <span class="kc">True</span><span class="p">:</span>
+                <span class="n">fig</span><span class="o">.</span><span class="n">savefig</span><span class="p">(</span><span class="n">fig_name</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">settings</span><span class="o">.</span><span class="n">show_plot</span> <span class="ow">is</span> <span class="kc">True</span><span class="p">:</span>
+                <span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
+
+        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Image Pair </span><span class="si">{</span><span class="n">counter</span> <span class="o">+</span> <span class="mi">1</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+        <span class="nb">print</span><span class="p">(</span><span class="n">file_a</span><span class="o">.</span><span class="n">stem</span><span class="p">,</span> <span class="n">file_b</span><span class="o">.</span><span class="n">stem</span><span class="p">)</span>
+
+    <span class="c1"># &quot;Below is code to read files and create a folder to store the results&quot;</span>
+    <span class="n">save_path_string</span> <span class="o">=</span> \
+        <span class="sa">f</span><span class="s2">&quot;OpenPIV_results_</span><span class="si">{</span><span class="n">settings</span><span class="o">.</span><span class="n">windowsizes</span><span class="p">[</span><span class="n">settings</span><span class="o">.</span><span class="n">num_iterations</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span><span class="si">}</span><span class="s2">_</span><span class="si">{</span><span class="n">settings</span><span class="o">.</span><span class="n">save_folder_suffix</span><span class="si">}</span><span class="s2">&quot;</span>
+
+    <span class="n">save_path</span> <span class="o">=</span> \
+        <span class="n">settings</span><span class="o">.</span><span class="n">save_path</span> <span class="o">/</span> <span class="n">save_path_string</span>
+
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">save_path</span><span class="o">.</span><span class="n">exists</span><span class="p">():</span>
+        <span class="c1"># os.makedirs(save_path)</span>
+        <span class="n">save_path</span><span class="o">.</span><span class="n">mkdir</span><span class="p">(</span><span class="n">parents</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">exist_ok</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+    <span class="n">task</span> <span class="o">=</span> <span class="n">Multiprocesser</span><span class="p">(</span>
+        <span class="n">data_dir</span><span class="o">=</span><span class="n">settings</span><span class="o">.</span><span class="n">filepath_images</span><span class="p">,</span>
+        <span class="n">pattern_a</span><span class="o">=</span><span class="n">settings</span><span class="o">.</span><span class="n">frame_pattern_a</span><span class="p">,</span>
+        <span class="n">pattern_b</span><span class="o">=</span><span class="n">settings</span><span class="o">.</span><span class="n">frame_pattern_b</span><span class="p">,</span>
+    <span class="p">)</span>
+    <span class="n">task</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="n">func</span><span class="o">=</span><span class="n">func</span><span class="p">,</span> <span class="n">n_cpus</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="create_deformation_field"><a class="viewcode-back" href="../../src/openpiv.html#openpiv.windef.create_deformation_field">[docs]</a><span class="k">def</span> <span class="nf">create_deformation_field</span><span class="p">(</span><span class="n">frame</span><span class="p">,</span> <span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">u</span><span class="p">,</span> <span class="n">v</span><span class="p">,</span> <span class="n">interpolation_order</span> <span class="o">=</span> <span class="mi">3</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Deform an image by window deformation where a new grid is defined based</span>
+<span class="sd">    on the grid and displacements of the previous pass and pixel values are</span>
+<span class="sd">    interpolated onto the new grid.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    frame : 2d np.ndarray, dtype=np.int32</span>
+<span class="sd">        an two dimensions array of integers containing grey levels of</span>
+<span class="sd">        the first frame.</span>
+
+<span class="sd">    x : 2d np.ndarray</span>
+<span class="sd">        a two dimensional array containing the x coordinates of the</span>
+<span class="sd">        interrogation window centers, in pixels.</span>
+
+<span class="sd">    y : 2d np.ndarray</span>
+<span class="sd">        a two dimensional array containing the y coordinates of the</span>
+<span class="sd">        interrogation window centers, in pixels.</span>
+
+<span class="sd">    u : 2d np.ndarray</span>
+<span class="sd">        a two dimensional array containing the u velocity component,</span>
+<span class="sd">        in pixels/seconds.</span>
+
+<span class="sd">    v : 2d np.ndarray</span>
+<span class="sd">        a two dimensional array containing the v velocity component,</span>
+<span class="sd">        in pixels/seconds.</span>
+
+<span class="sd">    interpolation_order: scalar</span>
+<span class="sd">        the degree of the interpolation of the B-splines over the rectangular mesh</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">        x,y : new grid (after meshgrid)</span>
+<span class="sd">        u,v : deformation field</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">y1</span> <span class="o">=</span> <span class="n">y</span><span class="p">[:,</span> <span class="mi">0</span><span class="p">]</span>  <span class="c1"># extract first coloumn from meshgrid</span>
+    <span class="n">x1</span> <span class="o">=</span> <span class="n">x</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="p">:]</span>  <span class="c1"># extract first row from meshgrid</span>
+    <span class="n">side_x</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="n">frame</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span>  <span class="c1"># extract the image grid</span>
+    <span class="n">side_y</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="n">frame</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+
+    <span class="c1"># interpolating displacements onto a new meshgrid</span>
+    <span class="n">ip</span> <span class="o">=</span> <span class="n">RectBivariateSpline</span><span class="p">(</span><span class="n">y1</span><span class="p">,</span> <span class="n">x1</span><span class="p">,</span> <span class="n">u</span><span class="p">,</span> <span class="n">kx</span><span class="o">=</span><span class="n">interpolation_order</span><span class="p">,</span> <span class="n">ky</span><span class="o">=</span><span class="n">interpolation_order</span><span class="p">)</span>
+    <span class="n">ut</span> <span class="o">=</span> <span class="n">ip</span><span class="p">(</span><span class="n">side_y</span><span class="p">,</span> <span class="n">side_x</span><span class="p">)</span>
+    <span class="c1"># the way how to use the interpolation functions differs from matlab</span>
+
+    <span class="n">ip2</span> <span class="o">=</span> <span class="n">RectBivariateSpline</span><span class="p">(</span><span class="n">y1</span><span class="p">,</span> <span class="n">x1</span><span class="p">,</span> <span class="n">v</span><span class="p">,</span> <span class="n">kx</span><span class="o">=</span><span class="n">interpolation_order</span><span class="p">,</span> <span class="n">ky</span><span class="o">=</span><span class="n">interpolation_order</span><span class="p">)</span>
+    <span class="n">vt</span> <span class="o">=</span> <span class="n">ip2</span><span class="p">(</span><span class="n">side_y</span><span class="p">,</span> <span class="n">side_x</span><span class="p">)</span>
+
+    <span class="n">x</span><span class="p">,</span> <span class="n">y</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">meshgrid</span><span class="p">(</span><span class="n">side_x</span><span class="p">,</span> <span class="n">side_y</span><span class="p">)</span>
+
+    <span class="c1"># plt.figure()</span>
+    <span class="c1"># plt.quiver(x1,y1,u,-v,color=&#39;r&#39;)</span>
+    <span class="c1"># plt.quiver(x,y,ut,-vt)</span>
+    <span class="c1"># plt.gca().invert_yaxis()</span>
+    <span class="c1"># plt.show()</span>
+
+    <span class="k">return</span> <span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">ut</span><span class="p">,</span> <span class="n">vt</span></div>
+
+
+<div class="viewcode-block" id="deform_windows"><a class="viewcode-back" href="../../src/openpiv.html#openpiv.windef.deform_windows">[docs]</a><span class="k">def</span> <span class="nf">deform_windows</span><span class="p">(</span><span class="n">frame</span><span class="p">,</span> <span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">u</span><span class="p">,</span> <span class="n">v</span><span class="p">,</span> <span class="n">interpolation_order</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">interpolation_order2</span><span class="o">=</span><span class="mi">3</span><span class="p">,</span>
+                   <span class="n">debugging</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Deform an image by window deformation where a new grid is defined based</span>
+<span class="sd">    on the grid and displacements of the previous pass and pixel values are</span>
+<span class="sd">    interpolated onto the new grid.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    frame : 2d np.ndarray, dtype=np.int32</span>
+<span class="sd">        an two dimensions array of integers containing grey levels of</span>
+<span class="sd">        the first frame.</span>
+
+<span class="sd">    x : 2d np.ndarray</span>
+<span class="sd">        a two dimensional array containing the x coordinates of the</span>
+<span class="sd">        interrogation window centers, in pixels.</span>
+
+<span class="sd">    y : 2d np.ndarray</span>
+<span class="sd">        a two dimensional array containing the y coordinates of the</span>
+<span class="sd">        interrogation window centers, in pixels.</span>
+
+<span class="sd">    u : 2d np.ndarray</span>
+<span class="sd">        a two dimensional array containing the u velocity component,</span>
+<span class="sd">        in pixels/seconds.</span>
+
+<span class="sd">    v : 2d np.ndarray</span>
+<span class="sd">        a two dimensional array containing the v velocity component,</span>
+<span class="sd">        in pixels/seconds.</span>
+
+<span class="sd">    interpolation_order: scalar</span>
+<span class="sd">        the degree of the frame interpolation (deformation) of the image</span>
+
+<span class="sd">    interpolation_order2: scalar</span>
+<span class="sd">        the degree of the interpolation of the B-splines over the rectangular mesh</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    frame_def:</span>
+<span class="sd">        a deformed image based on the meshgrid and displacements of the</span>
+<span class="sd">        previous pass</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">frame</span> <span class="o">=</span> <span class="n">frame</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">float32</span><span class="p">)</span>
+    <span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">ut</span><span class="p">,</span> <span class="n">vt</span> <span class="o">=</span> \
+        <span class="n">create_deformation_field</span><span class="p">(</span><span class="n">frame</span><span class="p">,</span>
+                                 <span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">u</span><span class="p">,</span> <span class="n">v</span><span class="p">,</span>
+                                 <span class="n">interpolation_order</span><span class="o">=</span><span class="n">interpolation_order2</span><span class="p">)</span>
+    <span class="n">frame_def</span> <span class="o">=</span> <span class="n">scn</span><span class="o">.</span><span class="n">map_coordinates</span><span class="p">(</span>
+        <span class="n">frame</span><span class="p">,</span> <span class="p">((</span><span class="n">y</span> <span class="o">-</span> <span class="n">vt</span><span class="p">,</span> <span class="n">x</span> <span class="o">+</span> <span class="n">ut</span><span class="p">,)),</span> <span class="n">order</span><span class="o">=</span><span class="n">interpolation_order</span><span class="p">,</span> <span class="n">mode</span><span class="o">=</span><span class="s1">&#39;nearest&#39;</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">debugging</span><span class="p">:</span>
+        <span class="n">plt</span><span class="o">.</span><span class="n">figure</span><span class="p">()</span>
+        <span class="n">plt</span><span class="o">.</span><span class="n">quiver</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">ut</span><span class="p">,</span> <span class="n">vt</span><span class="p">)</span>
+        <span class="n">plt</span><span class="o">.</span><span class="n">title</span><span class="p">(</span><span class="s1">&#39;new, x,y, ut,vt&#39;</span><span class="p">)</span>
+        <span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
+
+        <span class="n">plt</span><span class="o">.</span><span class="n">figure</span><span class="p">()</span>
+        <span class="n">plt</span><span class="o">.</span><span class="n">imshow</span><span class="p">(</span><span class="n">frame</span><span class="o">-</span><span class="n">frame_def</span><span class="p">)</span>
+        <span class="n">plt</span><span class="o">.</span><span class="n">title</span><span class="p">(</span><span class="s1">&#39;new deformed image&#39;</span><span class="p">)</span>
+        <span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
+
+    <span class="k">return</span> <span class="n">frame_def</span></div>
+
+
+<div class="viewcode-block" id="first_pass"><a class="viewcode-back" href="../../src/openpiv.html#openpiv.windef.first_pass">[docs]</a><span class="k">def</span> <span class="nf">first_pass</span><span class="p">(</span><span class="n">frame_a</span><span class="p">,</span> <span class="n">frame_b</span><span class="p">,</span> <span class="n">settings</span><span class="p">):</span>
+    <span class="c1"># window_size,</span>
+    <span class="c1"># overlap,</span>
+    <span class="c1"># iterations,</span>
+    <span class="c1"># correlation_method=&quot;circular&quot;,</span>
+    <span class="c1"># normalized_correlation=False,</span>
+    <span class="c1"># subpixel_method=&quot;gaussian&quot;,</span>
+    <span class="c1"># do_sig2noise=False,</span>
+    <span class="c1"># sig2noise_method=&quot;peak2peak&quot;,</span>
+    <span class="c1"># sig2noise_mask=2,</span>
+    <span class="c1"># settings):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    First pass of the PIV evaluation.</span>
+
+<span class="sd">    This function does the PIV evaluation of the first pass. It returns</span>
+<span class="sd">    the coordinates of the interrogation window centres, the displacment</span>
+<span class="sd">    u and v for each interrogation window as well as the mask which indicates</span>
+<span class="sd">    wether the displacement vector was interpolated or not.</span>
+
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    frame_a : 2d np.ndarray</span>
+<span class="sd">        the first image</span>
+
+<span class="sd">    frame_b : 2d np.ndarray</span>
+<span class="sd">        the second image</span>
+
+<span class="sd">    window_size : int</span>
+<span class="sd">         the size of the interrogation window</span>
+
+<span class="sd">    overlap : int</span>
+<span class="sd">        the overlap of the interrogation window, typically it is window_size/2</span>
+
+<span class="sd">    subpixel_method: string</span>
+<span class="sd">        the method used for the subpixel interpolation.</span>
+<span class="sd">        one of the following methods to estimate subpixel location of the peak:</span>
+<span class="sd">        &#39;centroid&#39; [replaces default if correlation map is negative],</span>
+<span class="sd">        &#39;gaussian&#39; [default if correlation map is positive],</span>
+<span class="sd">        &#39;parabolic&#39;</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    x : 2d np.array</span>
+<span class="sd">        array containg the x coordinates of the interrogation window centres</span>
+
+<span class="sd">    y : 2d np.array</span>
+<span class="sd">        array containg the y coordinates of the interrogation window centres</span>
+
+<span class="sd">    u : 2d np.array</span>
+<span class="sd">        array containing the u displacement for every interrogation window</span>
+
+<span class="sd">    v : 2d np.array</span>
+<span class="sd">        array containing the u displacement for every interrogation window</span>
+<span class="sd">    </span>
+<span class="sd">    s2n: 2d np.array of the signal to noise ratio</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="c1">#     if do_sig2noise is False or iterations != 1:</span>
+    <span class="c1">#         sig2noise_method = None  # this indicates to get out nans</span>
+
+    <span class="n">u</span><span class="p">,</span> <span class="n">v</span><span class="p">,</span> <span class="n">s2n</span> <span class="o">=</span> <span class="n">extended_search_area_piv</span><span class="p">(</span>
+        <span class="n">frame_a</span><span class="p">,</span>
+        <span class="n">frame_b</span><span class="p">,</span>
+        <span class="n">window_size</span><span class="o">=</span><span class="n">settings</span><span class="o">.</span><span class="n">windowsizes</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span>
+        <span class="n">overlap</span><span class="o">=</span><span class="n">settings</span><span class="o">.</span><span class="n">overlap</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span>
+        <span class="n">search_area_size</span><span class="o">=</span><span class="n">settings</span><span class="o">.</span><span class="n">windowsizes</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span>
+        <span class="n">width</span><span class="o">=</span><span class="n">settings</span><span class="o">.</span><span class="n">sig2noise_mask</span><span class="p">,</span>
+        <span class="n">subpixel_method</span><span class="o">=</span><span class="n">settings</span><span class="o">.</span><span class="n">subpixel_method</span><span class="p">,</span>
+        <span class="n">sig2noise_method</span><span class="o">=</span><span class="n">settings</span><span class="o">.</span><span class="n">sig2noise_method</span><span class="p">,</span>
+        <span class="n">correlation_method</span><span class="o">=</span><span class="n">settings</span><span class="o">.</span><span class="n">correlation_method</span><span class="p">,</span>
+        <span class="n">normalized_correlation</span><span class="o">=</span><span class="n">settings</span><span class="o">.</span><span class="n">normalized_correlation</span><span class="p">,</span>
+        <span class="n">use_vectorized</span> <span class="o">=</span> <span class="n">settings</span><span class="o">.</span><span class="n">use_vectorized</span><span class="p">,</span>
+    <span class="p">)</span>
+
+    <span class="n">shapes</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">get_field_shape</span><span class="p">(</span><span class="n">frame_a</span><span class="o">.</span><span class="n">shape</span><span class="p">,</span>
+                                      <span class="n">settings</span><span class="o">.</span><span class="n">windowsizes</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span>
+                                      <span class="n">settings</span><span class="o">.</span><span class="n">overlap</span><span class="p">[</span><span class="mi">0</span><span class="p">]))</span>
+    <span class="n">u</span> <span class="o">=</span> <span class="n">u</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="n">shapes</span><span class="p">)</span>
+    <span class="n">v</span> <span class="o">=</span> <span class="n">v</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="n">shapes</span><span class="p">)</span>
+    <span class="n">s2n</span> <span class="o">=</span> <span class="n">s2n</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="n">shapes</span><span class="p">)</span>
+
+    <span class="n">x</span><span class="p">,</span> <span class="n">y</span> <span class="o">=</span> <span class="n">get_rect_coordinates</span><span class="p">(</span><span class="n">frame_a</span><span class="o">.</span><span class="n">shape</span><span class="p">,</span>
+                           <span class="n">settings</span><span class="o">.</span><span class="n">windowsizes</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span>
+                           <span class="n">settings</span><span class="o">.</span><span class="n">overlap</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+
+    <span class="k">return</span> <span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">u</span><span class="p">,</span> <span class="n">v</span><span class="p">,</span> <span class="n">s2n</span></div>
+
+
+<div class="viewcode-block" id="multipass_img_deform"><a class="viewcode-back" href="../../src/openpiv.html#openpiv.windef.multipass_img_deform">[docs]</a><span class="k">def</span> <span class="nf">multipass_img_deform</span><span class="p">(</span>
+    <span class="n">frame_a</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span>
+    <span class="n">frame_b</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span>
+    <span class="n">current_iteration</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
+    <span class="n">x_old</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span>
+    <span class="n">y_old</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span>
+    <span class="n">u_old</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span>
+    <span class="n">v_old</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span>
+    <span class="n">settings</span><span class="p">:</span> <span class="s2">&quot;PIVSettings&quot;</span><span class="p">,</span>
+    <span class="n">mask_coords</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="kc">None</span><span class="p">]</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+<span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Multi pass of the PIV evaluation.</span>
+
+<span class="sd">        This function does the PIV evaluation of the second and other passes.</span>
+<span class="sd">        It returns the coordinates of the interrogation window centres,</span>
+<span class="sd">        the displacement u, v for each interrogation window as well as</span>
+<span class="sd">        the signal to noise ratio array (which is full of NaNs if opted out)</span>
+
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        frame_a : 2d np.ndarray</span>
+<span class="sd">            the first image</span>
+
+<span class="sd">        frame_b : 2d np.ndarray</span>
+<span class="sd">            the second image</span>
+
+<span class="sd">        window_size : tuple of ints</span>
+<span class="sd">            the size of the interrogation window</span>
+
+<span class="sd">        overlap : tuple of ints</span>
+<span class="sd">            the overlap of the interrogation window, e.g. window_size/2</span>
+
+<span class="sd">        x_old : 2d np.ndarray</span>
+<span class="sd">            the x coordinates of the vector field of the previous pass</span>
+
+<span class="sd">        y_old : 2d np.ndarray</span>
+<span class="sd">            the y coordinates of the vector field of the previous pass</span>
+
+<span class="sd">        u_old : 2d np.ndarray</span>
+<span class="sd">            the u displacement of the vector field of the previous pass</span>
+<span class="sd">            in case of the image mask - u_old and v_old are MaskedArrays</span>
+
+<span class="sd">        v_old : 2d np.ndarray</span>
+<span class="sd">            the v displacement of the vector field of the previous pass</span>
+
+<span class="sd">        subpixel_method: string</span>
+<span class="sd">            the method used for the subpixel interpolation.</span>
+<span class="sd">            one of the following methods to estimate subpixel location of the peak:</span>
+<span class="sd">            &#39;centroid&#39; [replaces default if correlation map is negative],</span>
+<span class="sd">            &#39;gaussian&#39; [default if correlation map is positive],</span>
+<span class="sd">            &#39;parabolic&#39;</span>
+
+<span class="sd">        interpolation_order : int</span>
+<span class="sd">            the order of the spline interpolation used for the image deformation</span>
+
+<span class="sd">        mask_coords : list of x,y coordinates (pixels) of the image mask,</span>
+<span class="sd">            default is an empty list</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        x : 2d np.array</span>
+<span class="sd">            array containg the x coordinates of the interrogation window centres</span>
+
+<span class="sd">        y : 2d np.array</span>
+<span class="sd">            array containg the y coordinates of the interrogation window centres</span>
+
+<span class="sd">        u : 2d np.array</span>
+<span class="sd">            array containing the horizontal displacement for every interrogation</span>
+<span class="sd">            window [pixels]</span>
+
+<span class="sd">        u : 2d np.array</span>
+<span class="sd">            array containing the vertical displacement for every interrogation</span>
+<span class="sd">            window it returns values in [pixels]</span>
+
+<span class="sd">        s2n : 2D np.array of signal to noise ratio values</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+
+    <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">u_old</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">ma</span><span class="o">.</span><span class="n">MaskedArray</span><span class="p">):</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;Expected masked array&#39;</span><span class="p">)</span>
+
+    <span class="c1"># calculate the y and y coordinates of the interrogation window centres.</span>
+    <span class="c1"># Hence, the</span>
+    <span class="c1"># edges must be extracted to provide the sufficient input. x_old and y_old</span>
+    <span class="c1"># are the coordinates of the old grid. x_int and y_int are the coordinates</span>
+    <span class="c1"># of the new grid</span>
+
+    <span class="n">window_size</span> <span class="o">=</span> <span class="n">settings</span><span class="o">.</span><span class="n">windowsizes</span><span class="p">[</span><span class="n">current_iteration</span><span class="p">]</span> <span class="c1"># integer only</span>
+    <span class="n">overlap</span> <span class="o">=</span> <span class="n">settings</span><span class="o">.</span><span class="n">overlap</span><span class="p">[</span><span class="n">current_iteration</span><span class="p">]</span> <span class="c1"># integer only, won&#39;t work for rectangular windows</span>
+
+    <span class="n">x</span><span class="p">,</span> <span class="n">y</span> <span class="o">=</span> <span class="n">get_rect_coordinates</span><span class="p">(</span><span class="n">frame_a</span><span class="o">.</span><span class="n">shape</span><span class="p">,</span>
+                           <span class="n">window_size</span><span class="p">,</span>
+                           <span class="n">overlap</span><span class="p">)</span>
+
+    <span class="c1"># The interpolation function dont like meshgrids as input.</span>
+    <span class="c1"># plus the coordinate system for y is now from top to bottom</span>
+    <span class="c1"># and RectBivariateSpline wants an increasing set</span>
+
+    <span class="c1"># 1D arrays for the interpolation</span>
+    <span class="n">y_old</span> <span class="o">=</span> <span class="n">y_old</span><span class="p">[:,</span> <span class="mi">0</span><span class="p">]</span>
+    <span class="n">x_old</span> <span class="o">=</span> <span class="n">x_old</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="p">:]</span>
+
+    <span class="n">y_int</span> <span class="o">=</span> <span class="n">y</span><span class="p">[:,</span> <span class="mi">0</span><span class="p">]</span>
+    <span class="n">x_int</span> <span class="o">=</span> <span class="n">x</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="p">:]</span>
+
+    <span class="c1"># interpolating the displacements from the old grid onto the new grid</span>
+    <span class="c1"># y befor x because of numpy works row major</span>
+    <span class="n">ip</span> <span class="o">=</span> <span class="n">RectBivariateSpline</span><span class="p">(</span><span class="n">y_old</span><span class="p">,</span> <span class="n">x_old</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">ma</span><span class="o">.</span><span class="n">filled</span><span class="p">(</span><span class="n">u_old</span><span class="p">,</span> <span class="mf">0.</span><span class="p">))</span>
+    <span class="n">u_pre</span> <span class="o">=</span> <span class="n">ip</span><span class="p">(</span><span class="n">y_int</span><span class="p">,</span> <span class="n">x_int</span><span class="p">)</span>
+
+    <span class="n">ip2</span> <span class="o">=</span> <span class="n">RectBivariateSpline</span><span class="p">(</span><span class="n">y_old</span><span class="p">,</span> <span class="n">x_old</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">ma</span><span class="o">.</span><span class="n">filled</span><span class="p">(</span><span class="n">v_old</span><span class="p">,</span> <span class="mf">0.</span><span class="p">))</span>
+    <span class="n">v_pre</span> <span class="o">=</span> <span class="n">ip2</span><span class="p">(</span><span class="n">y_int</span><span class="p">,</span> <span class="n">x_int</span><span class="p">)</span>
+
+    <span class="c1"># if settings.show_plot:</span>
+    <span class="k">if</span> <span class="n">settings</span><span class="o">.</span><span class="n">show_all_plots</span><span class="p">:</span>
+        <span class="n">plt</span><span class="o">.</span><span class="n">figure</span><span class="p">()</span>
+        <span class="n">plt</span><span class="o">.</span><span class="n">quiver</span><span class="p">(</span><span class="n">x_old</span><span class="p">,</span> <span class="n">y_old</span><span class="p">,</span> <span class="n">u_old</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="o">*</span><span class="n">v_old</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="s1">&#39;b&#39;</span><span class="p">)</span>
+        <span class="n">plt</span><span class="o">.</span><span class="n">quiver</span><span class="p">(</span><span class="n">x_int</span><span class="p">,</span> <span class="n">y_int</span><span class="p">,</span> <span class="n">u_pre</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="o">*</span><span class="n">v_pre</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="s1">&#39;r&#39;</span><span class="p">,</span> <span class="n">lw</span><span class="o">=</span><span class="mi">2</span><span class="p">)</span>
+        <span class="n">plt</span><span class="o">.</span><span class="n">gca</span><span class="p">()</span><span class="o">.</span><span class="n">set_aspect</span><span class="p">(</span><span class="mf">1.</span><span class="p">)</span>
+        <span class="n">plt</span><span class="o">.</span><span class="n">gca</span><span class="p">()</span><span class="o">.</span><span class="n">invert_yaxis</span><span class="p">()</span>
+        <span class="n">plt</span><span class="o">.</span><span class="n">title</span><span class="p">(</span><span class="s1">&#39;inside deform, invert&#39;</span><span class="p">)</span>
+        <span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
+
+    <span class="c1"># @TKauefer added another method to the windowdeformation, &#39;symmetric&#39;</span>
+    <span class="c1"># splits the onto both frames, takes more effort due to additional</span>
+    <span class="c1"># interpolation however should deliver better results</span>
+
+    <span class="n">old_frame_a</span> <span class="o">=</span> <span class="n">frame_a</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+    <span class="n">old_frame_b</span> <span class="o">=</span> <span class="n">frame_b</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+
+    <span class="c1"># Image deformation has to occur in image coordinates</span>
+    <span class="c1"># therefore we need to convert the results of the</span>
+    <span class="c1"># previous pass which are stored in the physical units</span>
+    <span class="c1"># and so y from the get_coordinates</span>
+
+    <span class="k">if</span> <span class="n">settings</span><span class="o">.</span><span class="n">deformation_method</span> <span class="o">==</span> <span class="s2">&quot;symmetric&quot;</span><span class="p">:</span>
+        <span class="c1"># this one is doing the image deformation (see above)</span>
+        <span class="n">x_new</span><span class="p">,</span> <span class="n">y_new</span><span class="p">,</span> <span class="n">ut</span><span class="p">,</span> <span class="n">vt</span> <span class="o">=</span> <span class="n">create_deformation_field</span><span class="p">(</span>
+            <span class="n">frame_a</span><span class="p">,</span> <span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">u_pre</span><span class="p">,</span> <span class="n">v_pre</span><span class="p">)</span>
+        <span class="n">frame_a</span> <span class="o">=</span> <span class="n">scn</span><span class="o">.</span><span class="n">map_coordinates</span><span class="p">(</span>
+            <span class="n">frame_a</span><span class="p">,</span> <span class="p">((</span><span class="n">y_new</span> <span class="o">-</span> <span class="n">vt</span> <span class="o">/</span> <span class="mi">2</span><span class="p">,</span> <span class="n">x_new</span> <span class="o">-</span> <span class="n">ut</span> <span class="o">/</span> <span class="mi">2</span><span class="p">)),</span>
+            <span class="n">order</span><span class="o">=</span><span class="n">settings</span><span class="o">.</span><span class="n">interpolation_order</span><span class="p">,</span> <span class="n">mode</span><span class="o">=</span><span class="s1">&#39;nearest&#39;</span><span class="p">)</span>
+        <span class="n">frame_b</span> <span class="o">=</span> <span class="n">scn</span><span class="o">.</span><span class="n">map_coordinates</span><span class="p">(</span>
+            <span class="n">frame_b</span><span class="p">,</span> <span class="p">((</span><span class="n">y_new</span> <span class="o">+</span> <span class="n">vt</span> <span class="o">/</span> <span class="mi">2</span><span class="p">,</span> <span class="n">x_new</span> <span class="o">+</span> <span class="n">ut</span> <span class="o">/</span> <span class="mi">2</span><span class="p">)),</span>
+            <span class="n">order</span><span class="o">=</span><span class="n">settings</span><span class="o">.</span><span class="n">interpolation_order</span><span class="p">,</span> <span class="n">mode</span><span class="o">=</span><span class="s1">&#39;nearest&#39;</span><span class="p">)</span>
+    <span class="k">elif</span> <span class="n">settings</span><span class="o">.</span><span class="n">deformation_method</span> <span class="o">==</span> <span class="s2">&quot;second image&quot;</span><span class="p">:</span>
+        <span class="n">frame_b</span> <span class="o">=</span> <span class="n">deform_windows</span><span class="p">(</span>
+            <span class="n">frame_b</span><span class="p">,</span> <span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">u_pre</span><span class="p">,</span> <span class="o">-</span><span class="n">v_pre</span><span class="p">,</span>
+            <span class="n">interpolation_order</span><span class="o">=</span><span class="n">settings</span><span class="o">.</span><span class="n">interpolation_order</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">Exception</span><span class="p">(</span><span class="s2">&quot;Deformation method is not valid.&quot;</span><span class="p">)</span>
+
+    <span class="c1"># if settings.show_plot:</span>
+    <span class="k">if</span> <span class="n">settings</span><span class="o">.</span><span class="n">show_all_plots</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">settings</span><span class="o">.</span><span class="n">deformation_method</span> <span class="o">==</span> <span class="s1">&#39;symmetric&#39;</span><span class="p">:</span>
+            <span class="n">plt</span><span class="o">.</span><span class="n">figure</span><span class="p">()</span>
+            <span class="n">plt</span><span class="o">.</span><span class="n">imshow</span><span class="p">(</span><span class="n">frame_a</span><span class="o">-</span><span class="n">old_frame_a</span><span class="p">)</span>
+            <span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
+
+        <span class="n">plt</span><span class="o">.</span><span class="n">figure</span><span class="p">()</span>
+        <span class="n">plt</span><span class="o">.</span><span class="n">imshow</span><span class="p">(</span><span class="n">frame_b</span><span class="o">-</span><span class="n">old_frame_b</span><span class="p">)</span>
+        <span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
+
+    <span class="c1"># if do_sig2noise is True</span>
+    <span class="c1">#     sig2noise_method = sig2noise_method</span>
+    <span class="c1"># else:</span>
+    <span class="c1">#     sig2noise_method = None</span>
+
+    <span class="c1"># so we use here default circular not normalized correlation:</span>
+    <span class="c1"># if we did not want to validate every step, remove the method</span>
+    <span class="c1"># and save some time on cross-correlations</span>
+    <span class="k">if</span> <span class="n">settings</span><span class="o">.</span><span class="n">sig2noise_validate</span> <span class="ow">is</span> <span class="kc">False</span><span class="p">:</span>
+        <span class="n">settings</span><span class="o">.</span><span class="n">sig2noise_method</span> <span class="o">=</span> <span class="kc">None</span>
+
+    <span class="n">u</span><span class="p">,</span> <span class="n">v</span><span class="p">,</span> <span class="n">s2n</span> <span class="o">=</span> <span class="n">extended_search_area_piv</span><span class="p">(</span>
+        <span class="n">frame_a</span><span class="p">,</span>
+        <span class="n">frame_b</span><span class="p">,</span>
+        <span class="n">window_size</span><span class="o">=</span><span class="n">window_size</span><span class="p">,</span>
+        <span class="n">overlap</span><span class="o">=</span><span class="n">overlap</span><span class="p">,</span>
+        <span class="n">width</span><span class="o">=</span><span class="n">settings</span><span class="o">.</span><span class="n">sig2noise_mask</span><span class="p">,</span>
+        <span class="n">subpixel_method</span><span class="o">=</span><span class="n">settings</span><span class="o">.</span><span class="n">subpixel_method</span><span class="p">,</span>
+        <span class="n">sig2noise_method</span><span class="o">=</span><span class="n">settings</span><span class="o">.</span><span class="n">sig2noise_method</span><span class="p">,</span>
+        <span class="n">correlation_method</span><span class="o">=</span><span class="n">settings</span><span class="o">.</span><span class="n">correlation_method</span><span class="p">,</span>
+        <span class="n">normalized_correlation</span><span class="o">=</span><span class="n">settings</span><span class="o">.</span><span class="n">normalized_correlation</span><span class="p">,</span>
+        <span class="n">use_vectorized</span> <span class="o">=</span> <span class="n">settings</span><span class="o">.</span><span class="n">use_vectorized</span><span class="p">,</span>
+    <span class="p">)</span>
+
+    <span class="c1"># get_field_shape expects tuples for rectangular windows</span>
+    <span class="n">shapes</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">get_field_shape</span><span class="p">(</span><span class="n">frame_a</span><span class="o">.</span><span class="n">shape</span><span class="p">,</span>
+                                      <span class="p">(</span><span class="n">window_size</span><span class="p">,</span> <span class="n">window_size</span><span class="p">),</span>
+                                      <span class="p">(</span><span class="n">overlap</span><span class="p">,</span> <span class="n">overlap</span><span class="p">)))</span>
+    <span class="n">u</span> <span class="o">=</span> <span class="n">u</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="n">shapes</span><span class="p">)</span>
+    <span class="n">v</span> <span class="o">=</span> <span class="n">v</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="n">shapes</span><span class="p">)</span>
+    <span class="n">s2n</span> <span class="o">=</span> <span class="n">s2n</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="n">shapes</span><span class="p">)</span>
+
+    <span class="n">u</span> <span class="o">+=</span> <span class="n">u_pre</span>
+    <span class="n">v</span> <span class="o">+=</span> <span class="n">v_pre</span>
+
+    <span class="c1"># reapply the image mask to the new grid</span>
+    <span class="k">if</span> <span class="n">mask_coords</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">grid_mask</span> <span class="o">=</span> <span class="n">preprocess</span><span class="o">.</span><span class="n">prepare_mask_on_grid</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">mask_coords</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">grid_mask</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros_like</span><span class="p">(</span><span class="n">u</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">bool</span><span class="p">)</span>
+
+    <span class="n">u</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">ma</span><span class="o">.</span><span class="n">masked_array</span><span class="p">(</span><span class="n">u</span><span class="p">,</span> <span class="n">mask</span><span class="o">=</span><span class="n">grid_mask</span><span class="p">)</span>
+    <span class="n">v</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">ma</span><span class="o">.</span><span class="n">masked_array</span><span class="p">(</span><span class="n">v</span><span class="p">,</span> <span class="n">mask</span><span class="o">=</span><span class="n">grid_mask</span><span class="p">)</span>
+
+    <span class="c1"># validate in the multi-pass by default</span>
+    <span class="n">invalid_mask</span> <span class="o">=</span> <span class="n">validation</span><span class="o">.</span><span class="n">typical_validation</span><span class="p">(</span><span class="n">u</span><span class="p">,</span> <span class="n">v</span><span class="p">,</span> <span class="n">s2n</span><span class="p">,</span> <span class="n">settings</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">np</span><span class="o">.</span><span class="n">all</span><span class="p">(</span><span class="n">invalid_mask</span><span class="p">):</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Something happened in the validation&quot;</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">settings</span><span class="o">.</span><span class="n">show_all_plots</span><span class="p">:</span>
+        <span class="n">plt</span><span class="o">.</span><span class="n">figure</span><span class="p">()</span>
+        <span class="n">nans</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">nonzero</span><span class="p">(</span><span class="n">invalid_mask</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="n">plt</span><span class="o">.</span><span class="n">quiver</span><span class="p">(</span><span class="n">x</span><span class="p">[</span><span class="o">~</span><span class="n">nans</span><span class="p">],</span> <span class="n">y</span><span class="p">[</span><span class="o">~</span><span class="n">nans</span><span class="p">],</span> <span class="n">u</span><span class="p">[</span><span class="o">~</span><span class="n">nans</span><span class="p">],</span> <span class="o">-</span><span class="n">v</span><span class="p">[</span><span class="o">~</span><span class="n">nans</span><span class="p">],</span> <span class="n">color</span><span class="o">=</span><span class="s1">&#39;b&#39;</span><span class="p">)</span>
+        <span class="n">plt</span><span class="o">.</span><span class="n">quiver</span><span class="p">(</span><span class="n">x</span><span class="p">[</span><span class="n">nans</span><span class="p">],</span> <span class="n">y</span><span class="p">[</span><span class="n">nans</span><span class="p">],</span> <span class="n">u</span><span class="p">[</span><span class="n">nans</span><span class="p">],</span> <span class="o">-</span><span class="n">v</span><span class="p">[</span><span class="n">nans</span><span class="p">],</span> <span class="n">color</span><span class="o">=</span><span class="s1">&#39;r&#39;</span><span class="p">)</span>
+        <span class="n">plt</span><span class="o">.</span><span class="n">gca</span><span class="p">()</span><span class="o">.</span><span class="n">invert_yaxis</span><span class="p">()</span>
+        <span class="n">plt</span><span class="o">.</span><span class="n">gca</span><span class="p">()</span><span class="o">.</span><span class="n">set_aspect</span><span class="p">(</span><span class="mf">1.</span><span class="p">)</span>
+        <span class="n">plt</span><span class="o">.</span><span class="n">title</span><span class="p">(</span><span class="s1">&#39;After sig2noise, inverted&#39;</span><span class="p">)</span>
+        <span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
+
+    <span class="c1"># we have to replace outliers</span>
+    <span class="n">u</span><span class="p">,</span> <span class="n">v</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">filters</span><span class="o">.</span><span class="n">replace_outliers</span><span class="p">(</span>
+        <span class="n">u</span><span class="p">,</span>
+        <span class="n">v</span><span class="p">,</span>
+        <span class="n">invalid_mask</span><span class="p">,</span>
+        <span class="n">grid_mask</span><span class="p">,</span>
+        <span class="n">method</span><span class="o">=</span><span class="n">settings</span><span class="o">.</span><span class="n">filter_method</span><span class="p">,</span>
+        <span class="n">max_iter</span><span class="o">=</span><span class="n">settings</span><span class="o">.</span><span class="n">max_filter_iteration</span><span class="p">,</span>
+        <span class="n">kernel_size</span><span class="o">=</span><span class="n">settings</span><span class="o">.</span><span class="n">filter_kernel_size</span><span class="p">,</span>
+    <span class="p">)</span>
+
+    <span class="c1"># # reapply the image mask to the new grid</span>
+    <span class="c1"># if settings.dynamic_masking_method is not None:</span>
+    <span class="c1">#     grid_mask = preprocess.prepare_mask_on_grid(x, y, mask_coords)</span>
+    <span class="c1">#     u = np.ma.masked_array(u, mask=grid_mask)</span>
+    <span class="c1">#     v = np.ma.masked_array(v, mask=grid_mask)</span>
+    <span class="c1"># else:</span>
+    <span class="c1">#     u = np.ma.masked_array(u, np.ma.nomask)</span>
+    <span class="c1">#     v = np.ma.masked_array(v, np.ma.nomask)</span>
+
+    <span class="k">if</span> <span class="n">settings</span><span class="o">.</span><span class="n">show_all_plots</span><span class="p">:</span>
+        <span class="n">plt</span><span class="o">.</span><span class="n">figure</span><span class="p">()</span>
+        <span class="n">plt</span><span class="o">.</span><span class="n">quiver</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">u</span><span class="p">,</span> <span class="n">v</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="s1">&#39;r&#39;</span><span class="p">)</span>
+        <span class="n">plt</span><span class="o">.</span><span class="n">quiver</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">u_pre</span><span class="p">,</span> <span class="n">v_pre</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="s1">&#39;b&#39;</span><span class="p">)</span>
+        <span class="n">plt</span><span class="o">.</span><span class="n">gca</span><span class="p">()</span><span class="o">.</span><span class="n">invert_yaxis</span><span class="p">()</span>
+        <span class="n">plt</span><span class="o">.</span><span class="n">gca</span><span class="p">()</span><span class="o">.</span><span class="n">set_aspect</span><span class="p">(</span><span class="mf">1.</span><span class="p">)</span>
+        <span class="n">plt</span><span class="o">.</span><span class="n">title</span><span class="p">(</span><span class="s1">&#39; after replaced outliers, red, invert&#39;</span><span class="p">)</span>
+        <span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
+
+    <span class="k">return</span> <span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">u</span><span class="p">,</span> <span class="n">v</span><span class="p">,</span> <span class="n">s2n</span><span class="p">,</span> <span class="n">grid_mask</span></div>
+
+<div class="viewcode-block" id="simple_multipass"><a class="viewcode-back" href="../../src/openpiv.html#openpiv.windef.simple_multipass">[docs]</a><span class="k">def</span> <span class="nf">simple_multipass</span><span class="p">(</span>
+    <span class="n">frame_a</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span>
+    <span class="n">frame_b</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span>
+    <span class="n">settings</span><span class="p">:</span> <span class="s2">&quot;PIVSettings&quot;</span><span class="p">,</span>
+    <span class="n">windows</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="o">...</span><span class="p">]]</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+    <span class="p">)</span><span class="o">-&gt;</span><span class="n">Tuple</span><span class="p">:</span>
+    <span class="sd">&quot;&quot;&quot; Simple windows deformation multipass run with </span>
+<span class="sd">    default settings</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">if</span> <span class="n">windows</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">settings</span><span class="o">.</span><span class="n">num_iterations</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">windows</span><span class="p">)</span>
+        <span class="n">settings</span><span class="o">.</span><span class="n">windowsizes</span> <span class="o">=</span> <span class="n">windows</span>
+        <span class="n">settings</span><span class="o">.</span><span class="n">overlap</span> <span class="o">=</span> <span class="nb">tuple</span><span class="p">(</span><span class="nb">int</span><span class="p">(</span><span class="n">w</span><span class="o">/</span><span class="mi">2</span><span class="p">)</span> <span class="k">for</span> <span class="n">w</span> <span class="ow">in</span> <span class="n">windows</span><span class="p">)</span>
+
+    <span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">u</span><span class="p">,</span> <span class="n">v</span><span class="p">,</span> <span class="n">s2n</span> <span class="o">=</span> <span class="n">first_pass</span><span class="p">(</span>
+                                <span class="n">frame_a</span><span class="p">,</span>
+                                <span class="n">frame_b</span><span class="p">,</span>
+                                <span class="n">settings</span>
+                                <span class="p">)</span>
+
+    <span class="n">grid_mask</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros_like</span><span class="p">(</span><span class="n">u</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">bool</span><span class="p">)</span>
+
+    <span class="n">u</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">ma</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">u</span><span class="p">,</span> <span class="n">mask</span><span class="o">=</span><span class="n">grid_mask</span><span class="p">)</span>
+    <span class="n">v</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">ma</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">v</span><span class="p">,</span> <span class="n">mask</span><span class="o">=</span><span class="n">grid_mask</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">settings</span><span class="o">.</span><span class="n">validation_first_pass</span><span class="p">:</span>
+        <span class="n">invalid_mask</span> <span class="o">=</span> <span class="n">validation</span><span class="o">.</span><span class="n">typical_validation</span><span class="p">(</span><span class="n">u</span><span class="p">,</span> <span class="n">v</span><span class="p">,</span> <span class="n">s2n</span><span class="p">,</span> <span class="n">settings</span><span class="p">)</span>
+
+        <span class="n">u</span><span class="p">,</span> <span class="n">v</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">filters</span><span class="o">.</span><span class="n">replace_outliers</span><span class="p">(</span><span class="n">u</span><span class="p">,</span> <span class="n">v</span><span class="p">,</span> <span class="n">invalid_mask</span><span class="p">,</span> <span class="n">grid_mask</span><span class="p">)</span>
+
+    <span class="c1"># multipass </span>
+    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">settings</span><span class="o">.</span><span class="n">num_iterations</span><span class="p">):</span>
+
+        <span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">u</span><span class="p">,</span> <span class="n">v</span><span class="p">,</span> <span class="n">s2n</span><span class="p">,</span> <span class="n">grid_mask</span> <span class="o">=</span> <span class="n">multipass_img_deform</span><span class="p">(</span>
+            <span class="n">frame_a</span><span class="p">,</span>
+            <span class="n">frame_b</span><span class="p">,</span>
+            <span class="n">i</span><span class="p">,</span>
+            <span class="n">x</span><span class="p">,</span>
+            <span class="n">y</span><span class="p">,</span>
+            <span class="n">u</span><span class="p">,</span>
+            <span class="n">v</span><span class="p">,</span>
+            <span class="n">settings</span>
+        <span class="p">)</span>
+
+    <span class="c1"># replance NaNs by zeros</span>
+    <span class="n">u</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">ma</span><span class="o">.</span><span class="n">fix_invalid</span><span class="p">(</span><span class="n">u</span><span class="p">,</span> <span class="n">fill_value</span><span class="o">=</span><span class="mf">0.</span><span class="p">)</span>
+    <span class="n">v</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">ma</span><span class="o">.</span><span class="n">fix_invalid</span><span class="p">(</span><span class="n">v</span><span class="p">,</span> <span class="n">fill_value</span><span class="o">=</span><span class="mf">0.</span><span class="p">)</span>
+
+    <span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">u</span><span class="p">,</span> <span class="n">v</span> <span class="o">=</span> <span class="n">transform_coordinates</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">u</span><span class="o">.</span><span class="n">data</span><span class="p">,</span> <span class="n">v</span><span class="o">.</span><span class="n">data</span><span class="p">)</span> <span class="c1"># note the use of .data for masked arrays</span>
+    <span class="k">return</span> <span class="p">(</span><span class="n">x</span><span class="p">,</span><span class="n">y</span><span class="p">,</span><span class="n">u</span><span class="p">,</span><span class="n">v</span><span class="p">,</span><span class="n">s2n</span><span class="p">)</span></div>
+
+
+
+<span class="c1"># if __name__ == &quot;__main__&quot;:</span>
+<span class="c1">#     &quot;&quot;&quot; Run windef.py as a script:</span>
+
+<span class="c1">#     python windef.py</span>
+
+<span class="c1">#     &quot;&quot;&quot;</span>
+
+<span class="c1">#     settings = PIVSettings()</span>
+<span class="c1">#     piv(settings)</span>
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2014, OpenPIV group.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

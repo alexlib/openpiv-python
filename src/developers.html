@@ -1,180 +1,200 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
 
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Information for developers and contributors &mdash; OpenPIV  documentation</title>
+      <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
+  <!--[if lt IE 9]>
+    <script src="../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js"></script>
+        <script src="../_static/jquery.js"></script>
+        <script src="../_static/underscore.js"></script>
+        <script src="../_static/_sphinx_javascript_frameworks_compat.js"></script>
+        <script src="../_static/doctools.js"></script>
+        <script src="../_static/sphinx_highlight.js"></script>
+        <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+    <script src="../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="API reference" href="api_reference.html" />
+    <link rel="prev" title="OpenPIV masking tutorial" href="masking.html" /> 
+</head>
 
-<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
-  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+            <a href="../index.html" class="icon icon-home"> OpenPIV
+          </a>
+              <div class="version">
+                0.24.4a
+              </div>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="piv_basics.html">Basics of the PIV algorithms</a></li>
+<li class="toctree-l1"><a class="reference internal" href="installation_instruction.html">Installation instruction</a></li>
+<li class="toctree-l1"><a class="reference internal" href="tutorial1.html">OpenPIV tutorial</a></li>
+<li class="toctree-l1"><a class="reference internal" href="windef.html">Multi-grid window deformation algorithm tutorial</a></li>
+<li class="toctree-l1"><a class="reference internal" href="masking.html">OpenPIV masking tutorial</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Information for developers and contributors</a></li>
+<li class="toctree-l1"><a class="reference internal" href="api_reference.html">API reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="faq.html">Frequently Asked Questions about PIV parameters</a></li>
+</ul>
 
+        </div>
+      </div>
+    </nav>
 
-<html xmlns="http://www.w3.org/1999/xhtml">
-  <head>
-    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
-    
-    <title>Information for developers and contributors &mdash; OpenPIV 0.0.1 documentation</title>
-    
-    <link rel="stylesheet" href="../_static/default.css" type="text/css" />
-    <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
-    
-    <script type="text/javascript">
-      var DOCUMENTATION_OPTIONS = {
-        URL_ROOT:    '../',
-        VERSION:     '0.0.1',
-        COLLAPSE_INDEX: false,
-        FILE_SUFFIX: '.html',
-        HAS_SOURCE:  true
-      };
-    </script>
-    <script type="text/javascript" src="../_static/jquery.js"></script>
-    <script type="text/javascript" src="../_static/underscore.js"></script>
-    <script type="text/javascript" src="../_static/doctools.js"></script>
-    <script type="text/javascript" src="http://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
-    <link rel="top" title="OpenPIV 0.0.1 documentation" href="../index.html" />
-    <link rel="next" title="Tutorial" href="tutorial.html" />
-    <link rel="prev" title="Installation instruction" href="installation_instruction.html" /> 
-  </head>
-  <body>
-    <div class="related">
-      <h3>Navigation</h3>
-      <ul>
-        <li class="right" style="margin-right: 10px">
-          <a href="../genindex.html" title="General Index"
-             accesskey="I">index</a></li>
-        <li class="right" >
-          <a href="../py-modindex.html" title="Python Module Index"
-             >modules</a> |</li>
-        <li class="right" >
-          <a href="tutorial.html" title="Tutorial"
-             accesskey="N">next</a> |</li>
-        <li class="right" >
-          <a href="installation_instruction.html" title="Installation instruction"
-             accesskey="P">previous</a> |</li>
-        <li><a href="../index.html">OpenPIV 0.0.1 documentation</a> &raquo;</li> 
-      </ul>
-    </div>  
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">OpenPIV</a>
+      </nav>
 
-    <div class="document">
-      <div class="documentwrapper">
-        <div class="bodywrapper">
-          <div class="body">
-            
-  <div class="section" id="information-for-developers-and-contributors">
-<h1>Information for developers and contributors<a class="headerlink" href="#information-for-developers-and-contributors" title="Permalink to this headline">¶</a></h1>
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../index.html" class="icon icon-home"></a> &raquo;</li>
+      <li>Information for developers and contributors</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="../_sources/src/developers.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  
+<style>
+/* CSS overrides for sphinx_rtd_theme */
+
+/* 24px margin */
+.nbinput.nblast.container,
+.nboutput.nblast.container {
+    margin-bottom: 19px;  /* padding has already 5px */
+}
+
+/* ... except between code cells! */
+.nblast.container + .nbinput.container {
+    margin-top: -19px;
+}
+
+.admonition > p:before {
+    margin-right: 4px;  /* make room for the exclamation icon */
+}
+
+/* Fix math alignment, see https://github.com/rtfd/sphinx_rtd_theme/pull/686 */
+.math {
+    text-align: unset;
+}
+</style>
+<section id="information-for-developers-and-contributors">
+<h1>Information for developers and contributors<a class="headerlink" href="#information-for-developers-and-contributors" title="Permalink to this heading"></a></h1>
 <p>OpenPiv need developers to improve further. Your support, code and contribution is very welcome and
-we are grateful you can provide some. Please send us an email to <a class="reference external" href="mailto:openpiv-develop&#37;&#52;&#48;lists&#46;sourceforge&#46;net">openpiv-develop<span>&#64;</span>lists<span>&#46;</span>sourceforge<span>&#46;</span>net</a>
+we are grateful you can provide some. Please send us an email to <a class="reference external" href="mailto:openpiv-develop&#37;&#52;&#48;googlegroups&#46;com">openpiv-develop<span>&#64;</span>googlegroups<span>&#46;</span>com</a>
 to get started, or for any kind of information.</p>
 <p>We use <a class="reference external" href="http://git-scm.com/">git</a> for development version control, and we have a main repository on <a class="reference external" href="https://github.com/">github</a>.</p>
-<div class="section" id="development-workflow">
-<h2>Development workflow<a class="headerlink" href="#development-workflow" title="Permalink to this headline">¶</a></h2>
+<section id="development-workflow">
+<h2>Development workflow<a class="headerlink" href="#development-workflow" title="Permalink to this heading"></a></h2>
 <p>This is absolutely not a comprehensive guide of git development, and it is only an indication of our workflow.</p>
 <ol class="arabic">
-<li><p class="first">Download and install git. Instruction can be found <a class="reference external" href="http://help.github.com/">here</a>.</p>
-</li>
-<li><p class="first">Set up a github account.</p>
-</li>
-<li><p class="first">Clone OpenPiv repository using:</p>
-<div class="highlight-python"><pre>git clone http://github.com/alexlib/openpiv-python.git</pre>
+<li><p>Download and install git. Instruction can be found <a class="reference external" href="http://help.github.com/">here</a>.</p></li>
+<li><p>Set up a github account.</p></li>
+<li><p>Clone OpenPiv repository using:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">git</span> <span class="n">clone</span> <span class="n">http</span><span class="p">:</span><span class="o">//</span><span class="n">github</span><span class="o">.</span><span class="n">com</span><span class="o">/</span><span class="n">openpiv</span><span class="o">/</span><span class="n">openpiv</span><span class="o">-</span><span class="n">python</span><span class="o">.</span><span class="n">git</span>
+</pre></div>
 </div>
 </li>
-<li><p class="first">create a branch <cite>new_feature</cite> where you implement your new feature.</p>
-</li>
-<li><p class="first">Fix, change, implement, document code, ...</p>
-</li>
-<li><p class="first">From time to time fetch and merge your master branch with that of the main repository.</p>
-</li>
-<li><p class="first">Be sure that everything is ok and works in your branch.</p>
-</li>
-<li><p class="first">Merge your master branch with your <cite>new_feature</cite> branch.</p>
-</li>
-<li><p class="first">Be sure that everything is now ok and works in you master branch.</p>
-</li>
-<li><p class="first">Send a <a class="reference external" href="http://help.github.com/pull-requests/">pull request</a>.</p>
-</li>
-<li><p class="first">Create another branch for a new feature.</p>
-</li>
+<li><p>create a branch <cite>new_feature</cite> where you implement your new feature.</p></li>
+<li><p>Fix, change, implement, document code, …</p></li>
+<li><p>From time to time fetch and merge your master branch with that of the main repository.</p></li>
+<li><p>Be sure that everything is ok and works in your branch.</p></li>
+<li><p>Merge your master branch with your <cite>new_feature</cite> branch.</p></li>
+<li><p>Be sure that everything is now ok and works in you master branch.</p></li>
+<li><p>Send a <a class="reference external" href="http://help.github.com/pull-requests/">pull request</a>.</p></li>
+<li><p>Create another branch for a new feature.</p></li>
 </ol>
-</div>
-<div class="section" id="which-language-can-i-use">
-<h2>Which language can i use?<a class="headerlink" href="#which-language-can-i-use" title="Permalink to this headline">¶</a></h2>
+</section>
+<section id="which-language-can-i-use">
+<h2>Which language can I use?<a class="headerlink" href="#which-language-can-i-use" title="Permalink to this heading"></a></h2>
 <p>As a general rule, we use Python where it does not make any difference with code speed. In those situations where Python speed is
 the bottleneck, we have some possibilities, depending on your skills and background. If something has to be written from scratch
-use the first language from the following which you are confortable with: cython, c, c++, fortran. If you have existing, debugged, tested code that
+use the first language from the following which you are confortable with: Cython, C, C++, FORTRAN. If you have existing, debugged, tested code that
 you would like to share, then no problem. We accept it, whichever language may be written in!</p>
-</div>
-<div class="section" id="things-openpiv-currently-needs-in-order-of-importance">
-<h2>Things OpenPiv currently needs, (in order of importance)<a class="headerlink" href="#things-openpiv-currently-needs-in-order-of-importance" title="Permalink to this headline">¶</a></h2>
+</section>
+<section id="things-openpiv-currently-needs-in-order-of-importance">
+<h2>Things OpenPIV currently needs, (in order of importance)<a class="headerlink" href="#things-openpiv-currently-needs-in-order-of-importance" title="Permalink to this heading"></a></h2>
 <ul class="simple">
-<li>The implementation of advanced processing algorithms</li>
-<li>Good documentations</li>
-<li>Flow field filtering and validation functions</li>
-<li>Cython wrappers for c/c++ codes.</li>
-<li>a good graphical user interface</li>
+<li><p>Good documentation (in progress)</p></li>
+<li><p>The implementation of advanced processing algorithms (in progress)</p></li>
+<li><p>Flow field filtering and validation functions</p></li>
+<li><p>Cython wrappers for C/C++ codes.</p></li>
+<li><p>A good graphical user interface (in progress)</p></li>
 </ul>
-</div>
-</div>
+</section>
+<section id="how-to-test-all-the-notebooks">
+<h2>How to test all the notebooks::<a class="headerlink" href="#how-to-test-all-the-notebooks" title="Permalink to this heading"></a></h2>
+<blockquote>
+<div><p>conda create -n openpiv
+conda activate openpiv
+conda install -c conda-forge openpiv
+conda install ipykernel
+python -m ipykernel install –user –name openpiv –display-name=”openpiv”
+jupyter nbconvert –to html –ExecutePreprocessor.kernel_name=openpiv –execute <a href="#id1"><span class="problematic" id="id2">*</span></a>.ipynb</p>
+</div></blockquote>
+<p>Then open the <cite>openpiv/examples/notebooks</cite> and check the HTML files. If one of those will fail, the error message will be in the command shell</p>
+</section>
+<section id="if-you-need-to-install-cv2">
+<h2>If you need to install cv2::<a class="headerlink" href="#if-you-need-to-install-cv2" title="Permalink to this heading"></a></h2>
+<blockquote>
+<div><p>conda install -c conda-forge opencv</p>
+</div></blockquote>
+</section>
+</section>
 
 
+           </div>
           </div>
-        </div>
-      </div>
-      <div class="sphinxsidebar">
-        <div class="sphinxsidebarwrapper">
-  <h3><a href="../index.html">Table Of Contents</a></h3>
-  <ul>
-<li><a class="reference internal" href="#">Information for developers and contributors</a><ul>
-<li><a class="reference internal" href="#development-workflow">Development workflow</a></li>
-<li><a class="reference internal" href="#which-language-can-i-use">Which language can i use?</a></li>
-<li><a class="reference internal" href="#things-openpiv-currently-needs-in-order-of-importance">Things OpenPiv currently needs, (in order of importance)</a></li>
-</ul>
-</li>
-</ul>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="masking.html" class="btn btn-neutral float-left" title="OpenPIV masking tutorial" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="api_reference.html" class="btn btn-neutral float-right" title="API reference" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
 
-  <h4>Previous topic</h4>
-  <p class="topless"><a href="installation_instruction.html"
-                        title="previous chapter">Installation instruction</a></p>
-  <h4>Next topic</h4>
-  <p class="topless"><a href="tutorial.html"
-                        title="next chapter">Tutorial</a></p>
-  <h3>This Page</h3>
-  <ul class="this-page-menu">
-    <li><a href="../_sources/src/developers.txt"
-           rel="nofollow">Show Source</a></li>
-  </ul>
-<div id="searchbox" style="display: none">
-  <h3>Quick search</h3>
-    <form class="search" action="../search.html" method="get">
-      <input type="text" name="q" />
-      <input type="submit" value="Go" />
-      <input type="hidden" name="check_keywords" value="yes" />
-      <input type="hidden" name="area" value="default" />
-    </form>
-    <p class="searchtip" style="font-size: 90%">
-    Enter search terms or a module, class or function name.
-    </p>
-</div>
-<script type="text/javascript">$('#searchbox').show(0);</script>
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2014, OpenPIV team.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
         </div>
       </div>
-      <div class="clearer"></div>
-    </div>
-    <div class="related">
-      <h3>Navigation</h3>
-      <ul>
-        <li class="right" style="margin-right: 10px">
-          <a href="../genindex.html" title="General Index"
-             >index</a></li>
-        <li class="right" >
-          <a href="../py-modindex.html" title="Python Module Index"
-             >modules</a> |</li>
-        <li class="right" >
-          <a href="tutorial.html" title="Tutorial"
-             >next</a> |</li>
-        <li class="right" >
-          <a href="installation_instruction.html" title="Installation instruction"
-             >previous</a> |</li>
-        <li><a href="../index.html">OpenPIV 0.0.1 documentation</a> &raquo;</li> 
-      </ul>
-    </div>
-    <div class="footer">
-        &copy; Copyright 2014, OpenPIV group.
-      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.1.3.
-    </div>
-  </body>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
 </html>
