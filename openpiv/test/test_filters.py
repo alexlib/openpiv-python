@@ -81,3 +81,42 @@ def test_replace_outliers():
 
     assert np.ma.allclose(v_copy,uf)
     assert isinstance(uf, np.ma.MaskedArray)
+
+
+def test_smoothn():
+    """ tests smoothing 
+    """
+    from openpiv import smoothn
+    
+    u = np.ones((3, 3))
+    v = np.eye(3)
+    uf, vf = filters.gaussian(u, v, 1)
+
+    u, *_ = smoothn.smoothn(uf, s=0.1)
+    v, *_ = smoothn.smoothn(vf, s=0.1)
+
+    print(u)
+    print(v)
+
+    assert np.allclose(
+        u,
+        np.array(
+        [
+                [0.62973305, 0.7856917, 0.62973305],
+                [0.7856917 , 0.97467919 ,0.7856917 ],
+                [0.62973305 ,0.7856917 , 0.62973305]
+        ],
+        )
+    )
+    assert np.allclose(
+        v,
+        np.array(
+        [
+            [0.37068633, 0.25044881, 0.05154146],
+            [0.25044881, 0.39582139, 0.25044881],
+            [0.05154146, 0.25044881, 0.37068633]
+        ]
+        ),
+    )
+
+
