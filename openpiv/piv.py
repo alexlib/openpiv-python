@@ -1,13 +1,3 @@
-import numpy as np
-import matplotlib.pyplot as plt
-
-from openpiv import pyprocess, tools
-import pkg_resources as pkg
-
-# import numpy as np
-
-import matplotlib.animation as animation
-
 """This module contains image processing routines that improve
 images prior to PIV processing."""
 
@@ -24,6 +14,14 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 """
+
+import numpy as np
+import matplotlib.pyplot as plt
+
+import pkg_resources as pkg
+from openpiv import pyprocess, tools
+
+import matplotlib.animation as animation
 
 
 def simple_piv(im1, im2, plot=True):
