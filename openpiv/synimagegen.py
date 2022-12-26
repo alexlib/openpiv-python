@@ -1,10 +1,8 @@
-from typing import List, Tuple, Optional
-import pathlib
+from typing import List, Tuple, Optional, Union
 import numpy as np
-import scipy
 from scipy.special import erf
-import scipy.interpolate
-import matplotlib.pyplot as pl
+from scipy.interpolate import interp2d
+import matplotlib.pyplot as plt
 
 """This module generates synthetic images for OpenPIV """
 
@@ -25,136 +23,91 @@ you should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 """
 
+def synthetic_flow_data(
+    x: np.array,
+    y: np.array
+    )->Tuple[np.array, np.array]:
+    """ Create a synthetic flow data on a discrete grid
 
-class ContinousFlowField:
-    """Continuous flow field class"""
+    Args:
+        x (np.array): 2D array
+        y (np.array): 2D array
 
-    def __init__(self, data, inter=False):
-        """
-        Checks if the continous flow should be created from a set of data points
-        if so it interpolates them for a continuous flow field
-        """
-        self.inter = inter
-        self.data = data
+    Returns:
+        Tuple(np.array, np.array): (u,v) on a fixed grid (x,y)
+    """
+    if np.min(np.r_[np.atleast_2d(x).shape, np.atleast_2d(y).shape]) < 2:
+        raise ValueError("Expecting 2D x,y, use np.meshgrid ")
+    
+    u = 2.5 + 0.5 * np.sin((x**2 + y**2) / 0.01)
+    v = 0.5 + 0.1 * np.cos((x**2 + y**2) / 0.01)
+    return u,v
 
-    # Defining a synthetic flow field
-    def f_u(self, x, y):
-        """_summary_
+def continuous_flow_field(
+    x: np.array,
+    y: np.array,
+    u: np.array,
+    v:np.array
+    )->Tuple:
+    """_summary_
 
-        Args:
-            x (_type_): _description_
-            y (_type_): _description_
+    Args:
+        x (_type_): _description_
+        y (_type_): _description_
+        u (_type_): _description_
+        v (_type_): _description_
 
-        Returns:
-            _type_: _description_
-        """
-        # example for synthetic U velocity
-        u = 2.5 + 0.5 * np.sin((x**2 + y**2) / 0.01)
-        return u
+    Returns:
+        List of two interpolants: _description_
+    """
+    
+    f_u = interp2d(x, y, u)
+    f_v = interp2d(x, y, v)
+    
+    return f_u, f_v
 
-    def f_v(self, x, y):
-        """_summary_
-
-        Args:
-            x (_type_): _description_
-            y (_type_): _description_
-
-        Returns:
-            _type_: _description_
-        """
-        # example for synthetic V velocity
-        v = 0.5 + 0.1 * np.cos((x**2 + y**2) / 0.01)
-        return v
-
-    def get_uv(self, x, y):
-        """_summary_
-
-        Args:
-            x (_type_): _description_
-            y (_type_): _description_
-
-        Returns:
-            _type_: _description_
-        """
-        # return the U and V velocity at a certain position
-        if self.inter:
-            f_u = scipy.interpolate.interp2d(self.data[:, 0], self.data[:, 1], self.data[:, 2])
-            f_v = scipy.interpolate.interp2d(self.data[:, 0], self.data[:, 1], self.data[:, 3])
-            return f_u(x, y)[0], f_v(x, y)[0]
-        else:
-            return self.f_u(x, y), self.f_v(x, y)
-
-    def create_syn_quiver(self, number_of_grid_points, path=None):
-        """return and save a synthetic flow map
-
-        Args:
-            number_of_grid_points (_type_): _description_
-            path (_type_, optional): _description_. Defaults to None.
-
-        Returns:
-            _type_: _description_
-        """
-
-        x, y = np.meshgrid(
-            np.linspace(0, 1, number_of_grid_points),
-            np.linspace(0, 1, number_of_grid_points),
-        )
-        U = np.zeros(x.shape)
-        V = np.zeros(y.shape)
-        for r in range(x.shape[0]):
-            for c in range(x.shape[1]):
-                u, v = self.get_uv(x[r, c], y[r, c])
-                U[r, c] = u
-                V[r, c] = v
-
-        m = np.sqrt(np.power(U, 2) + np.power(V, 2))
-        fig = pl.quiver(
-            x,
-            y,
-            U,
-            V,
-            m,
-            clim=[1.5, m.max()],
-            scale=100,
-            width=0.002,
-            headwidth=6,
-            minshaft=2,
-        )
-        cb = pl.colorbar(fig)
-        cb.set_clim(vmin=1.5, vmax=m.max())
-
-        if not path:
-            pl.savefig("syn_quiver.png", dpi=400)
-            pl.close()
-        else:
-            pl.savefig(path + "syn_quiver.png", dpi=400)
-            pl.close()
-
-        return x, y, U, V
-
+def plot_synthetic_field_example():
+    """ Plot an example of a synthetic flow field 
+    
+    """
+    
+    x = np.linspace(0,1,20)
+    xx,yy = np.meshgrid(x,x)
+    u,v = synthetic_flow_data(xx,yy)
+    
+    # continuous field
+    x1 = np.linspace(0,1,50)
+    f_u, f_v = continuous_flow_field(x,x,u,v)
+    
+    fig = plt.figure()
+    plt.quiver(x,x,u,v,angles='uv',color='b',scale=.1)
+    plt.quiver(x1,x1,f_u(x1,x1),f_v(x1,x1),angles='uv',color='r',scale=.1)
+    plt.show()
+    return fig    
+    
 
 def create_synimage_parameters(
     input_data: np.array = None,
     x_bound: Tuple = (0, 1),
     y_bound: Tuple = (0, 1),
     image_size: Tuple[int, int] = (256, 256),
-    path: Optional[pathlib.Path] = None,
-    inter: bool = False,
-    den: float = 0.008,
+    particle_density: float = 0.008,
     per_loss_pairs: int = 2,
-    par_diam_mean: float = 3.87, 
+    par_diam_mean: float = 3.87,
     par_diam_std: float = 1.5,
     par_int_std: float = 0.25,
     dt: float = 0.1,
-):
+) -> Tuple:
     """Creates the synthetic image with the synthetic image parameters
 
     Parameters
     ----------
-    input_data: None or numpy array
+    input_data: None or numpy array or path to the file
         If you have data from which to genrate the flow feild the synthetic image.
         It should be passed on as a numpy array with columns being (x grid position,y grid position,U velocity at (x,y) grid point,V velocity at (x,y) grid point)
+
         Else, pass None and define a synthetic flow field in ContinousFlowField class.
+
 
     x_bound,y_bound: list/tuple of floats
         The boundries of interest in the synthetic flow field.
@@ -162,14 +115,7 @@ def create_synimage_parameters(
     image_size: list/tuple of ints
         The desired image size in pixels.
 
-    path: str('None' for no generating data)
-        Path to txt file of input data.
-
-    inter: boolean
-        False if no interpolation of input data is needed.
-        True if there is data you want to interpolate from.
-
-    den: float
+    particle_density: float
         Defines the number of particles per image.
 
     per_loss_pairs: float
@@ -217,84 +163,62 @@ def create_synimage_parameters(
         Particle intensities for the second synthetic image.
     """
 
-    # Data processing
 
-    if path is not None:
-        with open(path, "r", encoding="utf-8") as f:
-            data = f.readlines()
-
-        data = [line.split("\t") for line in data]
-        data = np.array(data).astype(float)
-        data = np.array(
-            [
-                line
-                for line in data.tolist()
-                if 1.2 * x_bound[1] >= line[1] >= 0.8 * x_bound[0]
-                and 1.2 * y_bound[1] >= line[2] >= 0.8 * y_bound[0]
-            ]
-        )
-
-    else:
-        data = input_data
-
-    if inter:
-        cff = ContinousFlowField(data, inter=inter)
-    else:
-        cff = ContinousFlowField(None)
 
     # Creating syn particles
 
-    num_of_par = int(image_size[0] * image_size[1] * den)
-    num_of_lost_pairs = num_of_par * (per_loss_pairs / 100)
-    x_1 = np.random.uniform(x_bound[0] * 0.8, x_bound[1] * 1.2, num_of_par)
-    y_1 = np.random.uniform(y_bound[0] * 0.8, y_bound[1] * 1.2, num_of_par)
-    par_diam1 = np.random.normal(par_diam_mean, par_diam_std, num_of_par)
-    particle_centers = np.random.uniform(size=num_of_par) - 0.5
+    n_particles = int(image_size[0] * image_size[1] * particle_density)
+    num_of_lost_pairs = n_particles * (per_loss_pairs / 100)
+    
+    # distribute particles in the flow
+    # we expect data in the form of 3D np.array with 
+    # [x; y; u; v]
+    x,y,u,v = input_data
+    f_u, f_v = continuous_flow_field(x,y,u,v)
+    
+    x_bound = [np.min(x), np.max(x)]
+    y_bound = [np.min(y), np.max(y)]
+
+       
+    x_1 = np.random.uniform(x_bound[0] * 0.8, x_bound[1] * 1.2, n_particles)
+    y_1 = np.random.uniform(y_bound[0] * 0.8, y_bound[1] * 1.2, n_particles)
+    par_diam1 = np.random.normal(par_diam_mean, par_diam_std, n_particles)
+    particle_centers = np.random.uniform(size=n_particles) - 0.5
     par_int1 = np.exp(-(particle_centers**2) / (2 * par_int_std**2))
-    u_par = np.zeros(x_1.shape)
-    v_par = np.zeros(y_1.shape)
-    x_2 = np.zeros(x_1.shape)
-    y_2 = np.zeros(y_1.shape)
-    par_diam2 = np.zeros(par_diam1.shape)
-    par_int2 = np.zeros(par_int1.shape)
-
-    def move_particle(i):
-        u_par[i], v_par[i] = cff.get_uv(x_1[i], y_1[i])
-        x_2[i] = x_1[i] + u_par[i] * dt
-        y_2[i] = y_1[i] + v_par[i] * dt
-        par_diam2[i] = par_diam1[i]
-        par_int2[i] = par_int1[i]
-
-    cpl = 0
-    for i in range(num_of_par):
-        if cpl < num_of_lost_pairs:
-            if -0.4 > particle_centers[i] or 0.4 < particle_centers[i]:
-                per_to_lose = 1 - (0.5 - np.abs(particle_centers[i])) / 0.1
-                if np.random.uniform() < min(per_loss_pairs / 10, 1) * per_to_lose:
-                    x_2[i] = np.random.uniform(x_bound[0] * 0.8, x_bound[1] * 1.2)
-                    y_2[i] = np.random.uniform(y_bound[0] * 0.8, y_bound[1] * 1.2)
-                    par_diam2[i] = np.random.normal(par_diam_mean, par_diam_std)
-                    par_int2[i] = np.exp(
-                        -((np.random.uniform() - 0.5) ** 2) / (2 * par_int_std**2)
-                    )
-                    cpl += 1
-                else:
-                    move_particle(i)
-            else:
-                move_particle(i)
-        else:
-            move_particle(i)
-
-    print(
-        "Requested pair loss:",
-        str(int(num_of_lost_pairs)),
-        " Actual pair loss:",
-        str(cpl),
-    )
-    xy_1 = np.transpose(np.vstack((x_1, y_1, u_par, v_par, par_diam1, par_int1)))
+    
+    # assign them velocities
+    u_par = f_u(x_1, y_1)
+    v_par = f_v(x_1, y_1)
+    
+    # shift particles to the second image
+    x_2 = x_1 + u_par*dt
+    y_2 = y_1 + v_par*dt
+    
+    # copy the particle parameters to the second image
+    par_diam2 = par_diam1.copy()
+    par_int2 = par_int1.copy()
+    
+    # Now loose some pairs by selecting a sub-sample
+    par_diam2 = np.random.choice(par_diam2, n_particles - num_of_lost_pairs)
+    par_int2 = np.random.choice(par_int2, n_particles - num_of_lost_pairs)
+    
+    # add some new randomly located particles
+    x_3 = np.random.uniform(x_bound[0] * 0.8, x_bound[1] * 1.2, num_of_lost_pairs)
+    y_3 = np.random.uniform(y_bound[0] * 0.8, y_bound[1] * 1.2, num_of_lost_pairs)
+    par_diam3 = np.random.normal(par_diam_mean, par_diam_std, num_of_lost_pairs)
+    particle_centers = np.random.uniform(size=num_of_lost_pairs) - 0.5
+    par_int3 = np.exp(-(particle_centers**2) / (2 * par_int_std**2))
+    
+    
+    x_2 = np.concatenate([x_2, x_3])
+    y_2 = np.concatenate([y_2, y_3])
+    par_diam2 = np.concatenate([par_diam2, par_diam3])
+    par_int2 = np.concatenate([par_int2, par_int3])
+    
+    xy_1 = np.transpose(np.vstack((x_1, y_1, par_diam1, par_int1)))
     xy_2 = np.transpose(np.vstack((x_2, y_2, par_diam2, par_int2)))
 
-    # Choosing particles in boundary area
+    # Choosing particles inside boundary area
 
     bounded_xy_1 = np.asarray(
         [
@@ -350,7 +274,7 @@ def generate_particle_image(
     y: np.array,
     particle_diameters: np.array,
     particle_max_intensity: float,
-    bit_depth: int=8,
+    bit_depth: int = 8,
 ):
     """Creates the synthetic image with the synthetic image parameters
     Should be run with the parameters of each image (first,second) separately.
@@ -407,8 +331,9 @@ def generate_particle_image(
 
         for c in range(bl, br):
             for r in range(bu, bd):
-                image_out[r, c] = image_out[r,c] + max_int * par_diam**2 * np.pi / 32 * \
-                (
+                image_out[r, c] = image_out[
+                    r, c
+                ] + max_int * par_diam**2 * np.pi / 32 * (
                     erf(sqrt8 * (c - x[ind] - 0.5) / par_diam)
                     - erf(sqrt8 * (c - x[ind] + 0.5) / par_diam)
                 ) * (
