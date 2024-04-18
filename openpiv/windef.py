@@ -5,9 +5,9 @@ Created on Fri Oct  4 14:04:04 2019
 @modified: Alex, Erich
 """
 
-import pathlib
-from dataclasses import dataclass
-from typing import Optional, Tuple, Union
+import json
+from pathlib import Path
+from typing import Optional, Tuple
 import numpy as np
 import scipy.ndimage as scn
 from skimage.util import invert
@@ -15,166 +15,251 @@ from skimage.util import invert
 from scipy.interpolate import RectBivariateSpline
 import matplotlib.pyplot as plt
 
-from importlib_resources import files
 from openpiv.tools import Multiprocesser, display_vector_field, transform_coordinates
 from openpiv import validation, filters, tools, scaling, preprocess
 from openpiv.pyprocess import extended_search_area_piv, get_rect_coordinates, \
     get_field_shape
 from openpiv import smoothn
+from box import Box
 
 
-@dataclass
-class PIVSettings:
-    """ All the PIV settings for the batch analysis with multi-processing and
-    window deformation. Default settings are set at the initiation
-    """
-    # "Data related settings"
-    # Folder with the images to process
-    filepath_images: Union[pathlib.Path, str] = files('openpiv') / "data" / "test1"  # type: ignore
-    # Folder for the outputs
-    save_path: pathlib.Path = filepath_images.parent
-    # Root name of the output Folder for Result Files
-    save_folder_suffix: str = 'test1'
-    # Format and Image Sequence
-    frame_pattern_a: str = 'exp1_001_a.bmp'
-    frame_pattern_b: str = 'exp1_001_b.bmp'
 
-    # "Region of interest"
-    # (50,300,50,300) #Region of interest: (xmin,xmax,ymin,ymax) or 'full'
-    # for full image
-    roi: Union[Tuple[int, int, int, int], str] = "full"
 
-    # "Image preprocessing"
-    # Every image would be processed separately and the
-    # average mask is applied to both A, B, but it's varying
-    # for the frames sequence
-    #: None for no masking
-    #: 'edges' for edges masking, 
-    #: 'intensity' for intensity masking
-    dynamic_masking_method: Optional[str] = None # ['edge','intensity']
-    dynamic_masking_threshold: float = 0.005
-    dynamic_masking_filter_size: int = 7
+# @dataclass
+# class PIVSettings:
+#     """ All the PIV settings for the batch analysis with multi-processing and
+#     window deformation. Default settings are set at the initiation
+#     """
+#     # "Data related settings"
+#     # Folder with the images to process
+#     filepath_images: Union[Path, str] = files('openpiv') / "data" / "test1"  # type: ignore
+#     # Folder for the outputs
+#     save_path: Path = filepath_images.parent
+#     # Root name of the output Folder for Result Files
+#     save_folder_suffix: str = 'test1'
+#     # Format and Image Sequence
+#     frame_pattern_a: str = 'exp1_001_a.bmp'
+#     frame_pattern_b: str = 'exp1_001_b.bmp'
 
-    # Static masking applied to all images, A,B
-    static_mask: Optional[np.ndarray] = None # or a boolean matrix of image shape
+#     # "Region of interest"
+#     # (50,300,50,300) #Region of interest: (xmin,xmax,ymin,ymax) or 'full'
+#     # for full image
+#     roi: Union[Tuple[int, int, int, int], str] = "full"
 
-    # "Processing Parameters"
-    correlation_method: str="circular"  # ['circular', 'linear']
-    normalized_correlation: bool=False
+#     # "Image preprocessing"
+#     # Every image would be processed separately and the
+#     # average mask is applied to both A, B, but it's varying
+#     # for the frames sequence
+#     #: None for no masking
+#     #: 'edges' for edges masking, 
+#     #: 'intensity' for intensity masking
+#     dynamic_masking_method: Optional[str] = None # ['edge','intensity']
+#     dynamic_masking_threshold: float = 0.005
+#     dynamic_masking_filter_size: int = 7
 
-    # add the interroagtion window size for each pass.
-    # For the moment, it should be a power of 2
-    windowsizes: Tuple[int, ...]=(64,32,16)
+#     # Static masking applied to all images, A,B
+#     static_mask: Optional[np.ndarray] = None # or a boolean matrix of image shape
+
+#     # "Processing Parameters"
+#     correlation_method: str="circular"  # ['circular', 'linear']
+#     normalized_correlation: bool=False
+
+#     # add the interroagtion window size for each pass.
+#     # For the moment, it should be a power of 2
+#     windowsizes: Tuple[int, ...]=(64,32,16)
     
-    # The overlap of the interroagtion window for each pass.
-    overlap: Tuple[int, ...] = (32, 16, 8)  # This is 50% overlap
+#     # The overlap of the interroagtion window for each pass.
+#     overlap: Tuple[int, ...] = (32, 16, 8)  # This is 50% overlap
 
-    # Has to be a value with base two. In general window size/2 is a good
-    # choice.
+#     # Has to be a value with base two. In general window size/2 is a good
+#     # choice.
 
-    num_iterations: int = len(windowsizes)  # select the number of PIV
-    # passes
+#     num_iterations: int = len(windowsizes)  # select the number of PIV
+#     # passes
 
-    # methode used for subpixel interpolation:
-    # 'gaussian','centroid','parabolic'
-    subpixel_method: str = "gaussian"
-    # use vectorized sig2noise and subpixel approximation functions
-    use_vectorized: bool = False
-    # 'symmetric' or 'second image', 'symmetric' splits the deformation
-    # both images, while 'second image' does only deform the second image.
-    deformation_method: str = 'symmetric'  # 'symmetric' or 'second image'
-    # order of the image interpolation for the window deformation
-    interpolation_order: int=3
-    scaling_factor: float = 1.0  # scaling factor pixel/meter
-    dt: float = 1.0  # time between to frames (in seconds)
+#     # methode used for subpixel interpolation:
+#     # 'gaussian','centroid','parabolic'
+#     subpixel_method: str = "gaussian"
+#     # use vectorized sig2noise and subpixel approximation functions
+#     use_vectorized: bool = False
+#     # 'symmetric' or 'second image', 'symmetric' splits the deformation
+#     # both images, while 'second image' does only deform the second image.
+#     deformation_method: str = 'symmetric'  # 'symmetric' or 'second image'
+#     # order of the image interpolation for the window deformation
+#     interpolation_order: int=3
+#     scaling_factor: float = 1.0  # scaling factor pixel/meter
+#     dt: float = 1.0  # time between to frames (in seconds)
 
-    # Signal to noise ratio:
-    # we can decide to estimate it or not at every vector position
-    # we can decided if we use it for validation or only store it for 
-    # later post-processing
-    # plus we need some parameters for threshold validation and for the 
-    # calculations:
+#     # Signal to noise ratio:
+#     # we can decide to estimate it or not at every vector position
+#     # we can decided if we use it for validation or only store it for 
+#     # later post-processing
+#     # plus we need some parameters for threshold validation and for the 
+#     # calculations:
 
-    sig2noise_method: Optional[str]="peak2mean" # or "peak2peak" or "None"
-    # select the width of the masked to masked out pixels next to the main
-    # peak
-    sig2noise_mask: int=2
-    # If extract_sig2noise::False the values in the signal to noise ratio
-    # output column are set to NaN
+#     sig2noise_method: Optional[str]="peak2mean" # or "peak2peak" or "None"
+#     # select the width of the masked to masked out pixels next to the main
+#     # peak
+#     sig2noise_mask: int=2
+#     # If extract_sig2noise::False the values in the signal to noise ratio
+#     # output column are set to NaN
     
-    # "Validation based on the signal to noise ratio"
-    # Note: only available when extract_sig2noise::True and only for the
-    # last pass of the interrogation
-    # Enable the signal to noise ratio validation. Options: True or False
-    # sig2noise_validate: False  # This is time consuming
-    # minmum signal to noise ratio that is need for a valid vector
-    sig2noise_threshold: float=1.0
-    sig2noise_validate: bool=True # when it's False we can save time by not
-    #estimating sig2noise ratio at all, so we can set both sig2noise_method to None 
+#     # "Validation based on the signal to noise ratio"
+#     # Note: only available when extract_sig2noise::True and only for the
+#     # last pass of the interrogation
+#     # Enable the signal to noise ratio validation. Options: True or False
+#     # sig2noise_validate: False  # This is time consuming
+#     # minmum signal to noise ratio that is need for a valid vector
+#     sig2noise_threshold: float=1.0
+#     sig2noise_validate: bool=True # when it's False we can save time by not
+#     #estimating sig2noise ratio at all, so we can set both sig2noise_method to None 
     
 
-    # "vector validation options"
-    # choose if you want to do validation of the first pass: True or False
-    validation_first_pass: bool=True
-    # only effecting the first pass of the interrogation the following
-    # passes
-    # in the multipass will be validated
+#     # "vector validation options"
+#     # choose if you want to do validation of the first pass: True or False
+#     validation_first_pass: bool=True
+#     # only effecting the first pass of the interrogation the following
+#     # passes
+#     # in the multipass will be validated
 
-    # "Validation Parameters"
-    # The validation is done at each iteration based on three filters.
-    # The first filter is based on the min/max ranges. Observe that these
-    # values are defined in
-    # terms of minimum and maximum displacement in pixel/frames.
-    min_max_u_disp: Tuple=(-30, 30)
-    min_max_v_disp: Tuple=(-30, 30)
-    # The second filter is based on the global STD threshold
-    std_threshold: int=10  # threshold of the std validation
-    # The third filter is the median test (not normalized at the moment)
-    median_threshold: int=3  # threshold of the median validation
-    # On the last iteration, an additional validation can be done based on
-    # the S/N.
-    median_size: int=1  # defines the size of the local median
+#     # "Validation Parameters"
+#     # The validation is done at each iteration based on three filters.
+#     # The first filter is based on the min/max ranges. Observe that these
+#     # values are defined in
+#     # terms of minimum and maximum displacement in pixel/frames.
+#     min_max_u_disp: Tuple=(-30, 30)
+#     min_max_v_disp: Tuple=(-30, 30)
+#     # The second filter is based on the global STD threshold
+#     std_threshold: int=10  # threshold of the std validation
+#     # The third filter is the median test (not normalized at the moment)
+#     median_threshold: int=3  # threshold of the median validation
+#     # On the last iteration, an additional validation can be done based on
+#     # the S/N.
+#     median_size: int=1  # defines the size of the local median
 
 
 
-    # "Outlier replacement or Smoothing options"
-    # Replacment options for vectors which are masked as invalid by the
-    # validation
-    # Choose: True or False
-    replace_vectors: bool=True  # Enable the replacement.
-    smoothn: bool=False  # Enables smoothing of the displacement field
-    smoothn_p: float=0.05  # This is a smoothing parameter
-    # select a method to replace the outliers:
-    # 'localmean', 'disk', 'distance'
-    filter_method: str="localmean"
-    # maximum iterations performed to replace the outliers
-    max_filter_iteration: int=4
-    filter_kernel_size: int=2  # kernel size for the localmean method
+#     # "Outlier replacement or Smoothing options"
+#     # Replacment options for vectors which are masked as invalid by the
+#     # validation
+#     # Choose: True or False
+#     replace_vectors: bool=True  # Enable the replacement.
+#     smoothn: bool=False  # Enables smoothing of the displacement field
+#     smoothn_p: float=0.05  # This is a smoothing parameter
+#     # select a method to replace the outliers:
+#     # 'localmean', 'disk', 'distance'
+#     filter_method: str="localmean"
+#     # maximum iterations performed to replace the outliers
+#     max_filter_iteration: int=4
+#     filter_kernel_size: int=2  # kernel size for the localmean method
     
-    # "Output options"
-    # Select if you want to save the plotted vectorfield: True or False
-    save_plot: bool=False
-    # Choose wether you want to see the vectorfield or not:True or False
-    show_plot: bool=False
-    scale_plot: int=100  # select a value to scale the quiver plot of
-    # the vectorfield run the script with the given settings
+#     # "Output options"
+#     # Select if you want to save the plotted vectorfield: True or False
+#     save_plot: bool=False
+#     # Choose wether you want to see the vectorfield or not:True or False
+#     show_plot: bool=False
+#     scale_plot: int=100  # select a value to scale the quiver plot of
+#     # the vectorfield run the script with the given settings
 
-    show_all_plots: bool=False
+#     show_all_plots: bool=False
 
-    invert: bool=False  # for the test_invert
+#     invert: bool=False  # for the test_invert
 
-    fmt: str="%.4e"
+#     fmt: str="%.4e"
+
+
+
+# Define a function to load settings from a JSON file
+def load_settings(file_path):
+    return Box.from_json(filename=file_path)
+    # with open(file_path, 'r') as file:
+    #     return Box(json.load(file))
+
+# Define a function to save settings to a JSON file
+def save_settings(settings, file_path):
+    settings.to_json(filename=file_path)
+    # with open(file_path, 'w') as file:
+    #     json.dump(settings, file, indent=4)
+
+# Default settings as a dictionary
+piv_settings = {
+    "paths": {
+        "images": str(Path("openpiv/data/test1")),
+        "save_path": str(Path("openpiv/data/test1").parent),
+        "save_folder_suffix": "test1"
+        "frame_pattern_a": "exp1_001_a.bmp",
+        "frame_pattern_b": "exp1_001_b.bmp"
+    },
+    "roi": "full",
+    "masking": {
+        "dynamic": {
+            "method": "edges",
+            "threshold": 0.005,
+            "filter_size": 7
+        },
+        "static_mask": None
+    },
+    "processing": {
+        "correlation_method": "circular",
+        "normalized_correlation": False,
+        "windowsizes": [64, 32, 16],
+        "overlap": [32, 16, 8],
+        "subpixel_method": "gaussian",
+        "use_vectorized": False,
+        "interpolation_order": 3,
+        "scaling_factor": 1.0,
+        "dt": 1.0
+    },
+    "validation": {
+        "sig2noise": {
+            "method": "peak2mean",
+            "mask": 2,
+            "threshold": 1.0,
+            "validate": True
+        },
+        "first_pass": True,
+        "min_max_u_disp": [-30, 30],
+        "min_max_v_disp": [-30, 30],
+        "std_threshold": 10,
+        "median_threshold": 3,
+        "median_size": 1,
+        "replace_vectors": True,
+        "smoothn": False,
+        "smoothn_p": 0.05,
+        "filter_method": "localmean",
+        "max_filter_iterations": 4,
+        "filter_kernel_size": 2
+    },
+    "output_options": {
+        "save_plot": False,
+        "show_plot": False,
+        "scale_plot": 100,
+        "show_all_plots": False,
+        "invert": False,
+        "fmt": "%.4e"
+    }
+}
+
+# use python-box to convert the dictionary to a Box object
+piv_settings = Box(piv_settings)
+
+# Save the initial configuration to a file
+save_settings(piv_settings, 'piv_settings.json')
+
+# Load the configuration back from the file
+loaded_settings = load_settings('piv_settings.json')
+
 
 def prepare_images(
-    file_a: pathlib.Path,
-    file_b: pathlib.Path,
-    settings: "PIVSettings",
+    file_a: Path,
+    file_b: Path,
+    settings: dict,
     )-> Tuple[np.ndarray, np.ndarray, Optional[np.ndarray]]:
     """ prepares two images for the PIV pass
 
     Args:
-        file_a (pathlib.Path): filename of frame A
-        file_b (pathlib.Path): filename of frame B
+        file_a (Path): filename of frame A
+        file_b (Path): filename of frame B
         settings (_type_): windef.Settings() 
     """
     image_mask = None
@@ -210,9 +295,9 @@ def prepare_images(
         ax.set_title('Frames overlayed')
         plt.show()
 
-    if settings.static_mask is not None:
+    if settings.masking.static_mask is not None:
 
-        image_mask = settings.static_mask
+        image_mask = settings.masking.static_mask
         frame_a = np.where(image_mask, 0, frame_a)
         frame_b = np.where(image_mask, 0, frame_b)
 
@@ -223,16 +308,16 @@ def prepare_images(
             ax.imshow(np.c_[frame_a, frame_b])
     
 
-    if settings.dynamic_masking_method in ("edge", "intensity"):
+    if settings.masking.dynamic_masking_method in ("edge", "intensity"):
         frame_a, mask_a = preprocess.dynamic_masking(
             frame_a,
-            method=settings.dynamic_masking_method,
+            method=settings.masking.dynamic_masking_method,
             filter_size=settings.dynamic_masking_filter_size,
             threshold=settings.dynamic_masking_threshold,
         )
         frame_b, mask_b = preprocess.dynamic_masking(
             frame_b,
-            method=settings.dynamic_masking_method,
+            method=settings.masking.dynamic_masking_method,
             filter_size=settings.dynamic_masking_filter_size,
             threshold=settings.dynamic_masking_threshold,
         )
@@ -484,11 +569,11 @@ def piv(settings):
         print(file_a.stem, file_b.stem)
 
     # if teh settings.save_path is a string convert it to the Path
-    settings.filepath_images = pathlib.Path(settings.filepath_images) 
-    settings.save_path = pathlib.Path(settings.save_path)
+    settings.paths.images = Path(settings.paths.images) 
+    settings.save_path = Path(settings.save_path)
     # "Below is code to read files and create a folder to store the results"
     save_path_string = \
-        f"OpenPIV_results_{settings.windowsizes[settings.num_iterations-1]}_{settings.save_folder_suffix}"
+        f"OpenPIV_results_{settings.processing.windowsizes[settings.num_iterations-1]}_{settings.save_folder_suffix}"
 
     save_path = \
         settings.save_path / save_path_string
@@ -498,7 +583,7 @@ def piv(settings):
         save_path.mkdir(parents=True, exist_ok=True)
 
     task = Multiprocesser(
-        data_dir=settings.filepath_images,
+        data_dir=settings.paths.images,
         pattern_a=settings.frame_pattern_a,
         pattern_b=settings.frame_pattern_b,
     )
@@ -694,26 +779,26 @@ def first_pass(frame_a, frame_b, settings):
     u, v, s2n = extended_search_area_piv(
         frame_a,
         frame_b,
-        window_size=settings.windowsizes[0],
+        window_size=settings.processing.windowsizes[0],
         overlap=settings.overlap[0],
-        search_area_size=settings.windowsizes[0],
+        search_area_size=settings.processing.windowsizes[0],
         width=settings.sig2noise_mask,
         subpixel_method=settings.subpixel_method,
         sig2noise_method=settings.sig2noise_method,
         correlation_method=settings.correlation_method,
-        normalized_correlation=settings.normalized_correlation,
-        use_vectorized = settings.use_vectorized,
+        normalized_correlation=settings.processing.normalized_correlation,
+        use_vectorized = settings.processing.use_vectorized,
     )
 
     shapes = np.array(get_field_shape(frame_a.shape,
-                                      settings.windowsizes[0],
+                                      settings.processing.windowsizes[0],
                                       settings.overlap[0]))
     u = u.reshape(shapes)
     v = v.reshape(shapes)
     s2n = s2n.reshape(shapes)
 
     x, y = get_rect_coordinates(frame_a.shape,
-                           settings.windowsizes[0],
+                           settings.processing.windowsizes[0],
                            settings.overlap[0])
 
     return x, y, u, v, s2n
@@ -727,7 +812,7 @@ def multipass_img_deform(
     y_old: np.ndarray,
     u_old: np.ndarray,
     v_old: np.ndarray,
-    settings: "PIVSettings",
+    settings: dict,
     # mask_coords: Union[np.ndarray, None]=None,
 ):
     """
@@ -810,7 +895,7 @@ def multipass_img_deform(
     # are the coordinates of the old grid. x_int and y_int are the coordinates
     # of the new grid
 
-    window_size = settings.windowsizes[current_iteration] # integer only
+    window_size = settings.processing.windowsizes[current_iteration] # integer only
     overlap = settings.overlap[current_iteration] # integer only, won't work for rectangular windows
 
     x, y = get_rect_coordinates(frame_a.shape,
@@ -907,8 +992,8 @@ def multipass_img_deform(
         subpixel_method=settings.subpixel_method,
         sig2noise_method=settings.sig2noise_method,
         correlation_method=settings.correlation_method,
-        normalized_correlation=settings.normalized_correlation,
-        use_vectorized = settings.use_vectorized,
+        normalized_correlation=settings.processing.normalized_correlation,
+        use_vectorized = settings.processing.use_vectorized,
     )
 
     # get_field_shape expects tuples for rectangular windows
@@ -924,9 +1009,9 @@ def multipass_img_deform(
     v += v_pre
 
     # reapply the image mask to the new grid
-    if settings.static_mask is not None:
+    if settings.masking.static_mask is not None:
         # grid_mask = preprocess.prepare_mask_on_grid(x, y, mask_coords)
-        grid_mask = scn.map_coordinates(settings.static_mask, [y, x]).astype(bool)
+        grid_mask = scn.map_coordinates(settings.masking.static_mask, [y, x]).astype(bool)
         print(x.shape, y.shape, grid_mask.shape)
     else:
         grid_mask = np.zeros_like(u, dtype=bool)
@@ -974,7 +1059,7 @@ def multipass_img_deform(
 def simple_multipass(
     frame_a: np.ndarray,
     frame_b: np.ndarray,
-    settings: Optional["PIVSettings"]=None,
+    settings: Optional[dict]=None,
     )->Tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray, np.ndarray]:
     """_summary_
 
@@ -987,8 +1072,8 @@ def simple_multipass(
         Tuple: _description_
     """
     if settings is None:
-        settings = PIVSettings()
-        settings.windowsizes = (64, 32)
+        settings = piv_settings
+        settings.processing.windowsizes = (64, 32)
         settings.overlap = (32, 16)
 
     x, y, u, v, s2n = first_pass(

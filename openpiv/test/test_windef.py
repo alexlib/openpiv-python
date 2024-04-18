@@ -20,8 +20,8 @@ shift_u, shift_v, threshold = test_process.SHIFT_U, test_process.SHIFT_V, \
 # function the validation methods are not tested here ant therefore
 # are disabled.
 
-# settings = windef.PIVSettings()
-# settings.windowsizes = (64,)
+# settings = windef.piv_settings
+# settings.processing.windowsizes = (64,)
 # settings.overlap = (32,)
 # settings.num_iterations = 1
 # settings.correlation_method = 'circular'
@@ -33,8 +33,8 @@ shift_u, shift_v, threshold = test_process.SHIFT_U, test_process.SHIFT_V, \
 # circular cross correlation
 def test_first_pass_circ():
     """ test of the first pass """
-    settings = windef.PIVSettings()
-    settings.windowsizes = (64,)
+    settings = windef.piv_settings
+    settings.processing.windowsizes = (64,)
     settings.overlap = (32,)
     settings.num_iterations = 1
     settings.correlation_method = 'circular'
@@ -57,11 +57,11 @@ def test_first_pass_circ():
 
 def test_multi_pass_circ():
     """ test fot the multipass """
-    settings = windef.PIVSettings()
-    settings.windowsizes = (64, 64, 16)
-    settings.overlap = (32, 32, 8)
-    settings.num_iterations = 2
-    settings.interpolation_order = 3
+    settings = windef.piv_settings
+    settings.processing.windowsizes = (64, 64, 16)
+    settings.processing.overlap = (32, 32, 8)
+    settings.processing.num_iterations = 2
+    settings.processing.interpolation_order = 3
     settings.validation_first_pass = True
     settings.sig2noise_validate = False
     # settings.show_all_plots = True
@@ -79,11 +79,11 @@ def test_multi_pass_circ():
     u = np.ma.masked_array(u, mask=np.ma.nomask)
     v = np.ma.masked_array(v, mask=np.ma.nomask)
 
-    for i in range(1,settings.num_iterations):
+    for ind in range(1,settings.num_iterations):
         x, y, u, v, s2n, _ = windef.multipass_img_deform(
             frame_a,
             frame_b,
-            i,
+            ind,
             x,
             y,
             u,
@@ -91,7 +91,7 @@ def test_multi_pass_circ():
             settings
         )
 
-    print(f"Pass {i}\n")
+    print(f"Pass {ind}\n")
     print(x)
     print(y)
     print(u) 
@@ -106,8 +106,8 @@ def test_multi_pass_circ():
 # linear cross correlation
 def test_first_pass_lin():
     """ test of the first pass """
-    settings = windef.PIVSettings()
-    settings.windowsizes = (64,)
+    settings = windef.piv_settings
+    settings.processing.windowsizes = (64,)
     settings.overlap = (32,)
     settings.num_iterations = 1
     settings.correlation_method = 'circular'
@@ -129,15 +129,15 @@ def test_first_pass_lin():
 def test_save_plot():
     """ Test save plot """
 
-    settings = windef.PIVSettings()
-    settings.save_plot = True
-    settings.save_path = settings.filepath_images.parent.parent / "test"
+    settings = windef.piv_settings
+    settings.output_options.save_plot = True
+    settings.output_options.save_path = settings.paths.images.parent.parent / "test"
     windef.piv(settings)
 
     save_path_string = \
-        f"OpenPIV_results_{settings.windowsizes[settings.num_iterations-1]}_{settings.save_folder_suffix}"
+        f"OpenPIV_results_{settings.processing.windowsizes[settings.processing.num_iterations-1]}_{settings.output_options.save_folder_suffix}"
     save_path = \
-        settings.save_path / save_path_string
+        settings.output_options.save_path / save_path_string
 
     png_file = save_path / f'field_A{0:04d}.png'
     assert png_file.exists()
@@ -146,12 +146,12 @@ def test_save_plot():
 def test_invert_and_piv():
     """ Test windef.piv with invert option """
 
-    settings = windef.PIVSettings()
+    settings = windef.piv_settings
     # Folder with the images to process
-    settings.filepath_images = pathlib.Path(__file__).parent / '../data/test1'
-    settings.save_path = pathlib.Path('.')
+    settings.paths.images = pathlib.Path(__file__).parent / '../data/test1'
+    settings.paths.save_path = pathlib.Path('.')
     # Root name of the output Folder for Result Files
-    settings.save_folder_suffix = 'test'
+    settings.output_options.save_folder_suffix = 'test'
     # Format and Image Sequence
     settings.frame_pattern_a = 'exp1_001_a.bmp'
     settings.frame_pattern_b = 'exp1_001_b.bmp'
@@ -167,8 +167,8 @@ def test_invert_and_piv():
 
 def test_multi_pass_lin():
     """ test fot the multipass """
-    settings = windef.PIVSettings()
-    # settings.windowsizes = (64,)
+    settings = windef.piv_settings
+    # settings.processing.windowsizes = (64,)
     # settings.overlap = (32,)
     # settings.num_iterations = 1
     # settings.correlation_method = 'circular'
@@ -176,12 +176,12 @@ def test_multi_pass_lin():
     # settings.subpixel_method = 'gaussian'
     # settings.sig2noise_mask = 2
 
-    settings.windowsizes = (64, 32)
+    settings.processing.windowsizes = (64, 32)
     settings.overlap = (32, 16)
     settings.num_iterations = 1
     settings.sig2noise_validate = True
     settings.correlation_method = 'linear'
-    settings.normalized_correlation = True
+    settings.processing.normalized_correlation = True
     settings.sig2noise_threshold = 1.0 # note the value for linear/normalized
 
     x, y, u, v, s2n = windef.first_pass(
@@ -219,8 +219,8 @@ def test_multi_pass_lin():
 
 def test_simple_multipass():
     """ Test simple multipass """
-    settings = windef.PIVSettings()
-    settings.windowsizes = (64,)
+    settings = windef.piv_settings
+    settings.processing.windowsizes = (64,)
     settings.overlap = (32,)
     settings.num_iterations = 1
     settings.correlation_method = 'circular'
@@ -273,7 +273,7 @@ def test_simple_rectangular_window():
     """ Test simple multipass """
     print('test simple pass with rectangular windows')
 
-    settings = windef.PIVSettings()
+    settings = windef.piv_settings
 
 
     x, y, u, v, _ = windef.simple_multipass(
@@ -283,7 +283,7 @@ def test_simple_rectangular_window():
     )
     
         
-    settings.windowsizes = ((64, 32),)
+    settings.processing.windowsizes = ((64, 32),)
     settings.overlap = ((32, 16),)
     settings.num_iterations = 1
     settings.correlation_method = 'circular'
@@ -304,7 +304,7 @@ def test_simple_rectangular_window():
     assert np.diff(y[:2,0]) == -32
 
 
-    settings.windowsizes = ((32, 64),(16, 32))
+    settings.processing.windowsizes = ((32, 64),(16, 32))
     settings.overlap = ((16, 32), (8, 16))
     settings.num_iterations = 2
 

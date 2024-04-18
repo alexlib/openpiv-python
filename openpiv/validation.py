@@ -23,7 +23,7 @@ from typing import Tuple
 import numpy as np
 from scipy.ndimage import generic_filter
 import matplotlib.pyplot as plt
-from openpiv.windef import PIVSettings
+# from openpiv.windef import PIVSettings
 
 
 
@@ -228,7 +228,7 @@ def typical_validation(
     u: np.ndarray,
     v: np.ndarray,
     s2n: np.ndarray,
-    settings: "PIVSettings"
+    settings: dict,
     )->np.ndarray:
     """
     validation using gloabl limits and std and local median, 
@@ -264,7 +264,7 @@ def typical_validation(
     # flag = np.zeros(u.shape, dtype=bool)
 
     # Global validation
-    flag_g = global_val(u, v, settings.min_max_u_disp, settings.min_max_v_disp)
+    flag_g = global_val(u, v, settings.validation.min_max_u_disp, settings.validation.min_max_v_disp)
 
     # u[flag_g] = np.ma.masked
     # v[flag_g] = np.ma.masked

@@ -8,9 +8,9 @@ print(settings)
 
 # 'Data related settings'
 # Folder with the images to process
-settings.filepath_images = files('openpiv') / "data" / "test1"
+settings.paths.images = files('openpiv') / "data" / "test1"
 # Folder for the outputs
-settings.save_path = settings.filepath_images.parent
+settings.save_path = settings.paths.images.parent
 
 # Root name of the output Folder for Result Files
 settings.save_folder_suffix = 'Test_1'
@@ -25,13 +25,13 @@ settings.roi = 'full'
 # 'Image preprocessing'
 # 'None' for no masking, 'edges' for edges masking, 'intensity' for intensity masking
 # WARNING: This part is under development so better not to use MASKS
-settings.dynamic_masking_method = None
+settings.masking.dynamic_masking_method = None
 settings.dynamic_masking_threshold = 0.005
 settings.dynamic_masking_filter_size = 7
 
 # 'Processing Parameters'
 settings.correlation_method = 'circular'  # 'circular' or 'linear'
-settings.normalized_correlation = False
+settings.processing.normalized_correlation = False
 settings.num_iterations = 2  # select the number of PIV passes
 # add the interroagtion window size for each pass.
 # For the moment, it should be a power of 2
@@ -69,8 +69,8 @@ settings.validation_first_pass = True
 # The validation is done at each iteration based on three filters.
 # The first filter is based on the min/max ranges. Observe that these values are defined in
 # terms of minimum and maximum displacement in pixel/frames.
-settings.min_max_u_disp = (-30, 30)
-settings.min_max_v_disp = (-30, 30)
+settings.validation.min_max_u_disp = (-30, 30)
+settings.validation.min_max_v_disp = (-30, 30)
 # The second filter is based on the global STD threshold
 settings.std_threshold = 7  # threshold of the std validation
 # The third filter is the median test (not normalized at the moment)

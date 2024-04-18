@@ -40,6 +40,7 @@ scipy = "^1.7.3"
 natsort = "^8.4.0"
 tqdm = "^4.66.1"
 importlib_resources = "5.12.0"
+python-box = "^7.1.1"
 
 [tool.poetry.dev-dependencies]
 pytest = "^7.4.3"
