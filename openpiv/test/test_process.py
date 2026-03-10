@@ -5,7 +5,7 @@ from skimage.util import random_noise
 from skimage import img_as_ubyte
 from scipy.ndimage import shift as shift_img
 # import pkg_resources as pkg
-from importlib_resources import files
+from importlib.resources import files
 from openpiv.pyprocess import extended_search_area_piv as piv
 from openpiv.pyprocess import fft_correlate_images, \
                               correlation_to_displacement
